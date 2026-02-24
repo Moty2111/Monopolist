@@ -1,0 +1,34 @@
+﻿@page
+@model Monoplist.Pages.Orders.DeleteModel
+@{
+    ViewData["Title"] = "Удаление заказа";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">Вы уверены, что хотите удалить заказ?</p>
+
+    <div class="delete-confirmation">
+        <dl class="row">
+            <dt class="col-sm-3">Номер заказа</dt>
+            <dd class="col-sm-9">@Model.Order.OrderNumber</dd>
+
+            <dt class="col-sm-3">Клиент</dt>
+            <dd class="col-sm-9">@Model.Order.CustomerName</dd>
+
+            <dt class="col-sm-3">Дата заказа</dt>
+            <dd class="col-sm-9">@Model.Order.OrderDate.ToString("dd.MM.yyyy")</dd>
+
+            <dt class="col-sm-3">Сумма</dt>
+            <dd class="col-sm-9">@Model.Order.TotalAmount.ToString("N0") ₽</dd>
+
+            <dt class="col-sm-3">Статус</dt>
+            <dd class="col-sm-9">@Model.Order.Status</dd>
+        </dl>
+
+        <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Order.Id">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Удалить</button>
+            <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+    </div>
+</div>

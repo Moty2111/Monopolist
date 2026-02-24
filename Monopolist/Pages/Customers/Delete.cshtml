@@ -1,0 +1,34 @@
+﻿@page
+@model Monoplist.Pages.Customers.DeleteModel
+@{
+    ViewData["Title"] = "Удаление клиента";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">Вы уверены, что хотите удалить этого клиента?</p>
+
+    <div class="delete-confirmation">
+        <dl class="row">
+            <dt class="col-sm-3">ФИО / Название</dt>
+            <dd class="col-sm-9">@Model.Customer.FullName</dd>
+
+            <dt class="col-sm-3">Телефон</dt>
+            <dd class="col-sm-9">@Model.Customer.Phone</dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Customer.Email</dd>
+
+            <dt class="col-sm-3">Скидка</dt>
+            <dd class="col-sm-9">@Model.Customer.Discount%</dd>
+
+            <dt class="col-sm-3">Дата регистрации</dt>
+            <dd class="col-sm-9">@Model.Customer.RegistrationDate.ToString("dd.MM.yyyy")</dd>
+        </dl>
+
+        <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Customer.Id">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Удалить</button>
+            <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+    </div>
+</div>

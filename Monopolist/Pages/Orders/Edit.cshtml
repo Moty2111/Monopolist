@@ -1,0 +1,53 @@
+﻿@page
+@model Monoplist.Pages.Orders.EditModel
+@{
+    ViewData["Title"] = "Редактирование заказа";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">Измените данные заказа</p>
+
+    <div class="form-container">
+        <form method="post">
+            <input type="hidden" asp-for="Order.Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Order.CustomerId"></label>
+                <select asp-for="Order.CustomerId" asp-items="Model.Customers" class="form-control">
+                    <option value="">-- Выберите клиента --</option>
+                </select>
+                <span asp-validation-for="Order.CustomerId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.TotalAmount"></label>
+                <input asp-for="Order.TotalAmount" class="form-control" />
+                <span asp-validation-for="Order.TotalAmount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.Status"></label>
+                <select asp-for="Order.Status" asp-items="Model.Statuses" class="form-control"></select>
+                <span asp-validation-for="Order.Status" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.PaymentMethod"></label>
+                <select asp-for="Order.PaymentMethod" asp-items="Model.PaymentMethods" class="form-control">
+                    <option value="">-- Не выбрано --</option>
+                </select>
+                <span asp-validation-for="Order.PaymentMethod" class="text-danger"></span>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Сохранить</button>
+                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

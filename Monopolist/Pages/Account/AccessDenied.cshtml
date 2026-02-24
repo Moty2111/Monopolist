@@ -1,0 +1,9 @@
+﻿@page
+@{
+    ViewData["Title"] = "Доступ запрещён";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">У вас нет прав для доступа к этой странице.</p>
+    <a asp-page="/Index" class="btn-primary">Вернуться на главную</a>
+</div>

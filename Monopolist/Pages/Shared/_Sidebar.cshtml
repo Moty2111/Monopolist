@@ -1,0 +1,57 @@
+﻿@using System.Security.Claims
+@{
+    var role = User.FindFirst(ClaimTypes.Role)?.Value;
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+}
+<aside class="sidebar" aria-label="Боковое меню">
+    <div class="sidebar-header">
+        <h2>Моноплист</h2>
+    </div>
+    <nav class="sidebar-nav" aria-label="Основная навигация">
+        <ul>
+            <li>
+                <a class="@(currentPage == "/Index" ? "active" : "")" asp-page="/Index">
+                    <i class="fas fa-home"></i> Главная панель
+                </a>
+            </li>
+            <li>
+                <a class="@(currentPage?.StartsWith("/Products") == true ? "active" : "")" asp-page="/Products/Index">
+                    <i class="fas fa-box"></i> Каталог товаров
+                </a>
+            </li>
+            <li>
+                <a class="@(currentPage?.StartsWith("/Orders") == true ? "active" : "")" asp-page="/Orders/Index">
+                    <i class="fas fa-shopping-cart"></i> Продажи
+                </a>
+            </li>
+            <li>
+                <a class="@(currentPage?.StartsWith("/Customers") == true ? "active" : "")" asp-page="/Customers/Index">
+                    <i class="fas fa-users"></i> Клиенты
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-warehouse"></i> Склад
+                </a>
+            </li>
+            <li>
+                <a class="@(currentPage?.StartsWith("/Suppliers") == true ? "active" : "")" asp-page="/Suppliers/Index">
+                    <i class="fas fa-truck"></i> Поставщики
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-chart-bar"></i> Отчеты
+                </a>
+            </li>
+            @if (role == "Admin")
+            {
+                <li>
+                    <a class="@(currentPage?.StartsWith("/Admin") == true ? "active" : "")" asp-page="/Admin/Users/Index">
+                        <i class="fas fa-cog"></i> Настройки
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+</aside>

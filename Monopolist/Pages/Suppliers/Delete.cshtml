@@ -1,0 +1,38 @@
+﻿@page
+@model Monoplist.Pages.Suppliers.DeleteModel
+@{
+    ViewData["Title"] = "Удаление поставщика";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">Вы уверены, что хотите удалить этого поставщика?</p>
+
+    <div class="delete-confirmation">
+        <dl class="row">
+            <dt class="col-sm-3">Название</dt>
+            <dd class="col-sm-9">@Model.Supplier.Name</dd>
+
+            <dt class="col-sm-3">Контактная информация</dt>
+            <dd class="col-sm-9">@Model.Supplier.ContactInfo</dd>
+
+            <dt class="col-sm-3">Количество товаров</dt>
+            <dd class="col-sm-9">@Model.Supplier.ProductsCount</dd>
+        </dl>
+
+        @if (Model.Supplier.HasProducts)
+        {
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> У этого поставщика есть товары. Удаление невозможно.
+            </div>
+        }
+
+        <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Supplier.Id">
+            @Html.AntiForgeryToken()
+            @if (!Model.Supplier.HasProducts)
+            {
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Удалить</button>
+            }
+            <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,63 @@
+﻿@page
+@model Monoplist.Pages.Suppliers.DetailsModel
+@{
+    ViewData["Title"] = Model.Supplier.Name;
+}
+<div class="dashboard">
+    <h1>@Model.Supplier.Name</h1>
+    <p class="subtitle">Детальная информация о поставщике</p>
+
+    <div class="details-container">
+        <dl class="row">
+            <dt class="col-sm-3">Название</dt>
+            <dd class="col-sm-9">@Model.Supplier.Name</dd>
+
+            <dt class="col-sm-3">Контактная информация</dt>
+            <dd class="col-sm-9">@Model.Supplier.ContactInfo</dd>
+        </dl>
+
+        <h2>Товары поставщика</h2>
+        @if (Model.Supplier.Products.Any())
+        {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        <th>Категория</th>
+                        <th>Цена</th>
+                        <th>Остаток</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model.Supplier.Products)
+                    {
+                        <tr>
+                            <td>@product.Name</td>
+                            <td>@product.CategoryName</td>
+                            <td>@product.Price.ToString("N0") ₽</td>
+                            <td>@product.CurrentStock</td>
+                            <td>
+                                <a asp-page="/Products/Details" asp-route-id="@product.Id" class="btn-sm btn-info">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted">Нет товаров от этого поставщика.</p>
+        }
+    </div>
+
+    <div class="form-actions">
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a asp-page="Edit" asp-route-id="@Model.Supplier.Id" class="btn-primary">Редактировать</a>
+        }
+        <a asp-page="Index" class="btn-secondary">Назад к списку</a>
+    </div>
+</div>

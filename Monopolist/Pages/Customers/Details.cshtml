@@ -1,0 +1,65 @@
+﻿@page
+@model Monoplist.Pages.Customers.DetailsModel
+@{
+    ViewData["Title"] = "Информация о клиенте";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">@Model.Customer.FullName</p>
+
+    <div class="details-container">
+        <dl class="row">
+            <dt class="col-sm-3">ФИО / Название</dt>
+            <dd class="col-sm-9">@Model.Customer.FullName</dd>
+
+            <dt class="col-sm-3">Телефон</dt>
+            <dd class="col-sm-9">@Model.Customer.Phone</dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Customer.Email</dd>
+
+            <dt class="col-sm-3">Скидка</dt>
+            <dd class="col-sm-9">@Model.Customer.Discount%</dd>
+
+            <dt class="col-sm-3">Дата регистрации</dt>
+            <dd class="col-sm-9">@Model.Customer.RegistrationDate.ToString("dd.MM.yyyy")</dd>
+        </dl>
+    </div>
+
+    @if (Model.Customer.Orders != null && Model.Customer.Orders.Any())
+    {
+        <h2>Заказы клиента</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Номер заказа</th>
+                    <th>Дата</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.Customer.Orders)
+                {
+                    <tr>
+                        <td>@order.OrderNumber</td>
+                        <td>@order.OrderDate.ToShortDateString()</td>
+                        <td>@order.TotalAmount.ToString("N0") ₽</td>
+                        <td>@order.Status</td>
+                        <td>
+                            <a asp-page="/Orders/Details" asp-route-id="@order.Id" class="btn-sm btn-info">
+                                <i class="fas fa-info-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <div class="form-actions">
+        <a asp-page="Edit" asp-route-id="@Model.Customer.Id" class="btn-primary">Редактировать</a>
+        <a asp-page="Index" class="btn-secondary">Назад к списку</a>
+    </div>
+</div>

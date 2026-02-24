@@ -1,0 +1,37 @@
+﻿@page
+@model Monoplist.Pages.Products.DeleteModel
+@{
+    ViewData["Title"] = "Удаление товара";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">Вы уверены, что хотите удалить этот товар?</p>
+
+    <div class="delete-confirmation">
+        <dl class="row">
+            <dt class="col-sm-3">Наименование</dt>
+            <dd class="col-sm-9">@Model.Product.Name</dd>
+
+            <dt class="col-sm-3">Артикул</dt>
+            <dd class="col-sm-9">@Model.Product.Article</dd>
+
+            <dt class="col-sm-3">Категория</dt>
+            <dd class="col-sm-9">@Model.Product.CategoryName</dd>
+
+            <dt class="col-sm-3">Цена продажи</dt>
+            <dd class="col-sm-9">@Model.Product.SalePrice.ToString("N0") ₽</dd>
+
+            <dt class="col-sm-3">Остаток</dt>
+            <dd class="col-sm-9">@Model.Product.CurrentStock @Model.Product.Unit</dd>
+
+            <dt class="col-sm-3">Поставщик</dt>
+            <dd class="col-sm-9">@Model.Product.SupplierName</dd>
+        </dl>
+
+        <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Product.Id">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Удалить</button>
+            <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,51 @@
+﻿@page
+@model Monoplist.Pages.Products.DetailsModel
+@{
+    ViewData["Title"] = Model.Product.Name;
+}
+<div class="dashboard">
+    <h1>@Model.Product.Name</h1>
+    <p class="subtitle">Детальная информация о товаре</p>
+
+    <div class="details-container">
+        <dl class="row">
+            <dt class="col-sm-3">Артикул</dt>
+            <dd class="col-sm-9">@Model.Product.Article</dd>
+
+            <dt class="col-sm-3">Категория</dt>
+            <dd class="col-sm-9">@Model.Product.CategoryName</dd>
+
+            <dt class="col-sm-3">Единица измерения</dt>
+            <dd class="col-sm-9">@Model.Product.Unit</dd>
+
+            <dt class="col-sm-3">Цена закупки</dt>
+            <dd class="col-sm-9">@Model.Product.PurchasePrice.ToString("N0") ₽</dd>
+
+            <dt class="col-sm-3">Цена продажи</dt>
+            <dd class="col-sm-9">@Model.Product.SalePrice.ToString("N0") ₽</dd>
+
+            <dt class="col-sm-3">Текущий остаток</dt>
+            <dd class="col-sm-9">@Model.Product.CurrentStock @Model.Product.Unit</dd>
+
+            <dt class="col-sm-3">Минимальный запас</dt>
+            <dd class="col-sm-9">@Model.Product.MinimumStock @Model.Product.Unit</dd>
+
+            <dt class="col-sm-3">Поставщик</dt>
+            <dd class="col-sm-9">@Model.Product.SupplierName</dd>
+
+            @if (!string.IsNullOrEmpty(Model.Product.SupplierContact))
+            {
+                <dt class="col-sm-3">Контакты поставщика</dt>
+                <dd class="col-sm-9">@Model.Product.SupplierContact</dd>
+            }
+        </dl>
+    </div>
+
+    <div class="form-actions">
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a asp-page="Edit" asp-route-id="@Model.Product.Id" class="btn-primary">Редактировать</a>
+        }
+        <a asp-page="Index" class="btn-secondary">Назад к списку</a>
+    </div>
+</div>

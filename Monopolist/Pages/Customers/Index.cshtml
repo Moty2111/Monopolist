@@ -1,0 +1,64 @@
+﻿@page
+@model Monoplist.Pages.Customers.IndexModel
+@{
+    ViewData["Title"] = "Клиенты";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">Управление клиентами</p>
+
+    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+    {
+        <p>
+            <a asp-page="Create" class="btn-primary">
+                <i class="fas fa-plus"></i> Добавить клиента
+            </a>
+        </p>
+    }
+
+    @if (Model.Customers.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ФИО / Название</th>
+                    <th>Телефон</th>
+                    <th>Email</th>
+                    <th>Скидка</th>
+                    <th>Дата регистрации</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var customer in Model.Customers)
+                {
+                    <tr>
+                        <td>@customer.FullName</td>
+                        <td>@customer.Phone</td>
+                        <td>@customer.Email</td>
+                        <td>@customer.Discount%</td>
+                        <td>@customer.RegistrationDate.ToShortDateString()</td>
+                        <td>
+                            <a asp-page="Details" asp-route-id="@customer.Id" class="btn-sm btn-info" title="Просмотр">
+                                <i class="fas fa-info-circle"></i>
+                            </a>
+                            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                            {
+                                <a asp-page="Edit" asp-route-id="@customer.Id" class="btn-sm btn-primary" title="Редактировать">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a asp-page="Delete" asp-route-id="@customer.Id" class="btn-sm btn-danger" title="Удалить">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted">Нет клиентов.</p>
+    }
+</div>

@@ -1,0 +1,46 @@
+﻿@page
+@model Monoplist.Pages.Admin.Users.CreateModel
+@{
+    ViewData["Title"] = "Создание пользователя";
+}
+<div class="dashboard">
+    <h1>@ViewData["Title"]</h1>
+    <p class="subtitle">Заполните данные нового пользователя</p>
+
+    <div class="form-container">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="UserInput.Username"></label>
+                <input asp-for="UserInput.Username" class="form-control" />
+                <span asp-validation-for="UserInput.Username" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="UserInput.Password"></label>
+                <input asp-for="UserInput.Password" class="form-control" type="password" />
+                <span asp-validation-for="UserInput.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="UserInput.Role"></label>
+                <select asp-for="UserInput.Role" class="form-control">
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Seller">Seller</option>
+                </select>
+                <span asp-validation-for="UserInput.Role" class="text-danger"></span>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Создать</button>
+                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
