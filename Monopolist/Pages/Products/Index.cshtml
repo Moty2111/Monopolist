@@ -31,9 +31,9 @@
             --text-muted: #64748b;
             --border: #e2e8f0;
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 14px rgba(0,0,0,0.07);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
             --shadow-lg: 0 8px 24px rgba(255,107,0,0.15);
-            --shadow-hover: 0 12px 28px rgba(255,215,0,0.2);
+            --shadow-hover: 0 12px 28px rgba(255,215,0,0.25);
             --success: #10b981;
             --success-bg: #d1fae5;
             --danger: #ef4444;
@@ -56,7 +56,7 @@
             --text-secondary: #ccc;
             --text-muted: #999;
             --border: #444;
-            --shadow-md: 0 4px 14px rgba(0,0,0,0.5);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
             --shadow-hover: 0 12px 28px rgba(255,107,0,0.5);
             --success-bg: #064e3b;
             --warning-bg: #92400e;
@@ -86,9 +86,9 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР ===== */
+        /* ===== САЙДБАР (ширина 280px) ===== */
         .sidebar {
-            width: 260px;
+            width: 280px;
             background: var(--surface);
             box-shadow: 2px 0 15px rgba(0,0,0,0.05);
             display: flex;
@@ -101,7 +101,7 @@
         }
 
         .sidebar-header {
-            padding: 20px 20px;
+            padding: 24px 20px;
             border-bottom: 1px solid var(--accent);
             display: flex;
             align-items: center;
@@ -109,7 +109,7 @@
         }
 
             .sidebar-header i {
-                font-size: 36px;
+                font-size: 40px;
                 background: linear-gradient(145deg, var(--primary), var(--accent));
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
@@ -118,7 +118,7 @@
             }
 
             .sidebar-header h2 {
-                font-size: 22px;
+                font-size: 24px;
                 font-weight: 700;
                 background: linear-gradient(135deg, var(--accent), var(--primary));
                 -webkit-background-clip: text;
@@ -130,7 +130,7 @@
         .sidebar-nav {
             flex: 1;
             overflow-y: auto;
-            padding: 12px 0;
+            padding: 16px 0;
         }
 
             .sidebar-nav ul {
@@ -138,26 +138,25 @@
             }
 
             .sidebar-nav li {
-                margin: 2px 8px;
+                margin: 4px 8px;
             }
 
                 .sidebar-nav li a {
                     display: flex;
                     align-items: center;
-                    padding: 10px 16px;
+                    padding: 12px 16px;
                     color: var(--text-secondary);
                     text-decoration: none;
                     font-weight: 500;
-                    border-radius: 10px;
+                    border-radius: 12px;
                     transition: var(--transition);
                     gap: 12px;
-                    font-size: 0.95rem;
                 }
 
                     .sidebar-nav li a i {
-                        width: 22px;
+                        width: 24px;
                         text-align: center;
-                        font-size: 1.2rem;
+                        font-size: 1.25rem;
                         color: var(--text-muted);
                         transition: var(--transition);
                     }
@@ -185,10 +184,10 @@
 
         .top-bar {
             background: var(--surface);
-            padding: 14px 28px;
+            padding: 16px 32px;
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 20px;
             border-bottom: 2px solid var(--accent);
             box-shadow: var(--shadow-sm);
             transition: background 0.3s;
@@ -201,7 +200,7 @@
             font-size: 1.5rem;
             color: var(--text-secondary);
             cursor: pointer;
-            padding: 6px;
+            padding: 8px;
             border-radius: 8px;
             transition: var(--transition);
         }
@@ -212,7 +211,7 @@
             }
 
         .page-title {
-            font-size: 1.6rem;
+            font-size: 1.75rem;
             font-weight: 600;
             color: var(--text-primary);
             margin-right: auto;
@@ -221,26 +220,25 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
         }
 
             .user-info span {
                 font-weight: 500;
                 color: var(--text-secondary);
-                font-size: 0.95rem;
             }
 
         .theme-toggle {
             background: none;
             border: 2px solid var(--accent);
             border-radius: 50px;
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: var(--primary);
             transition: var(--transition);
         }
@@ -254,7 +252,7 @@
         .btn-logout {
             background: none;
             border: 2px solid var(--accent);
-            padding: 7px 16px;
+            padding: 8px 16px;
             border-radius: 30px;
             cursor: pointer;
             color: var(--text-primary);
@@ -263,7 +261,6 @@
             align-items: center;
             gap: 8px;
             transition: var(--transition);
-            font-size: 0.95rem;
         }
 
             .btn-logout:hover {
@@ -278,16 +275,17 @@
                     color: white;
                 }
 
+        /* ===== КОНТЕНТ С УМЕНЬШЕННЫМИ ОТСТУПАМИ ===== */
         .content {
-            padding: 28px;
+            padding: 16px;
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
+        /* ===== КОМПОНЕНТЫ КАТАЛОГА ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
-            padding: 20px;
+            padding: 16px;
             box-shadow: var(--shadow-md);
         }
 
@@ -400,10 +398,113 @@
                 color: white;
             }
 
-        /* Кнопки действий */
+        /* ===== ТАБЛИЦА - УВЕЛИЧЕННЫЙ ШРИФТ ===== */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 1rem;
+            border-radius: 14px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            font-size: 0.8rem; /* увеличен с 0.7rem */
+            table-layout: fixed;
+            word-wrap: break-word;
+        }
+
+            /* Распределение ширины колонок (можно корректировать под свои данные) */
+            .data-table th:nth-child(1) {
+                width: 15%;
+            }
+            /* Наименование */
+            .data-table th:nth-child(2) {
+                width: 8%;
+            }
+            /* Артикул */
+            .data-table th:nth-child(3) {
+                width: 10%;
+            }
+            /* Категория */
+            .data-table th:nth-child(4) {
+                width: 7%;
+            }
+            /* Ед. изм. */
+            .data-table th:nth-child(5) {
+                width: 8%;
+            }
+            /* Закупка */
+            .data-table th:nth-child(6) {
+                width: 8%;
+            }
+            /* Продажа */
+            .data-table th:nth-child(7) {
+                width: 7%;
+            }
+            /* Остаток */
+            .data-table th:nth-child(8) {
+                width: 12%;
+            }
+            /* Поставщик */
+            .data-table th:nth-child(9) {
+                width: 8%;
+            }
+            /* Действия */
+
+            .data-table thead tr {
+                background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
+            }
+
+            .data-table th {
+                text-align: left;
+                padding: 8px 4px; /* увеличены отступы */
+                color: var(--text-primary);
+                font-weight: 700;
+                font-size: 0.75rem; /* увеличен с 0.65rem */
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+                border-bottom: 2px solid var(--accent);
+                white-space: normal;
+                word-break: break-word;
+            }
+
+                .data-table th i {
+                    margin-right: 2px;
+                    color: var(--primary);
+                    font-size: 0.8rem; /* подстроено под новый размер */
+                }
+
+            .data-table td {
+                padding: 8px 4px; /* увеличены отступы */
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-weight: 600;
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            .data-table tbody tr:nth-child(even) {
+                background-color: rgba(0,0,0,0.02);
+            }
+
+            .data-table tbody tr:hover td {
+                background-color: rgba(255,107,0,0.05);
+            }
+
+            /* Символ рубля перед ценами */
+            .data-table td:nth-child(5)::before,
+            .data-table td:nth-child(6)::before {
+                content: '₽';
+                margin-right: 2px;
+                font-size: 0.75rem;
+                opacity: 0.7;
+            }
+
+        /* Кнопки действий (компактные) */
         .action-buttons {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             flex-wrap: wrap;
             justify-content: flex-start;
         }
@@ -412,14 +513,14 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 34px;
-            height: 34px;
-            border-radius: 7px;
+            width: 28px; /* немного увеличены */
+            height: 28px;
+            border-radius: 4px;
             color: white;
             text-decoration: none;
             transition: var(--transition);
-            font-size: 0.95rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 0.8rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
             .btn-sm.btn-info {
@@ -435,186 +536,137 @@
             }
 
             .btn-sm:hover {
-                transform: translateY(-2px) scale(1.05);
-                filter: brightness(1.15);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                transform: translateY(-1px) scale(1.05);
+                filter: brightness(1.1);
+                box-shadow: 0 2px 5px rgba(0,0,0,0.15);
             }
-
-        /* ===== ТАБЛИЦА - ЖИРНЫЙ ШРИФТ В СТРОКАХ ===== */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--surface);
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-            font-size: 0.88rem;
-        }
-
-            .data-table thead tr {
-                background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
-            }
-
-            .data-table th {
-                text-align: left;
-                padding: 11px 5px;
-                color: var(--text-primary);
-                font-weight: 700; /* заголовки остаются жирными */
-                font-size: 0.78rem;
-                text-transform: uppercase;
-                letter-spacing: 0.4px;
-                border-bottom: 2px solid var(--accent);
-                white-space: nowrap;
-            }
-
-                .data-table th i {
-                    margin-right: 4px;
-                    color: var(--primary);
-                    font-size: 0.85rem;
-                }
-
-            .data-table td {
-                padding: 7px 5px;
-                border-bottom: 1px solid var(--border);
-                color: var(--text-secondary);
-                font-weight: 600; /* ЖИРНЫЙ (было 500) */
-            }
-
-            .data-table tbody tr:nth-child(even) {
-                background-color: rgba(0,0,0,0.02);
-            }
-
-            .data-table tbody tr:hover td {
-                background-color: rgba(255,107,0,0.05);
-                transition: background-color 0.2s;
-            }
-
-            /* Для числовых столбцов оставляем жирность, они уже наследуют 600 */
-            .data-table td:nth-child(5),
-            .data-table td:nth-child(6),
-            .data-table td:nth-child(7) {
-                font-weight: 600;
-                color: var(--text-primary);
-            }
-
-                .data-table td:nth-child(5)::before,
-                .data-table td:nth-child(6)::before {
-                    content: '₽';
-                    margin-right: 2px;
-                    font-size: 0.75rem;
-                    opacity: 0.7;
-                }
 
         .text-muted {
             color: var(--text-muted);
             font-style: italic;
             padding: 18px;
             text-align: center;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 18px;
-            border-left: 4px solid;
             font-size: 0.9rem;
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--surface);
-            box-shadow: var(--shadow-sm);
-            font-weight: 500;
-        }
-
-        .alert-danger {
-            border-left-color: var(--danger);
-            color: var(--danger);
         }
 
         /* ===== АДАПТИВНОСТЬ ===== */
-        @@media (max-width: 1024px) {
-            .data-table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
+        @@media (max-width: 1200px) {
+            .data-table
+
+        {
+            font-size: 0.75rem; /* уменьшаем при необходимости */
+        }
+
+        .data-table th {
+            font-size: 0.7rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 6px 3px;
+        }
+
+        }
+
+        @@media (max-width: 992px) {
+            /* Скрываем колонку "Поставщик" */
+            .data-table th:nth-child(8), .data-table td:nth-child(8)
+
+        {
+            display: none;
+        }
+
         }
 
         @@media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                left: -260px;
-                top: 0;
-                bottom: 0;
-                transform: translateX(-100%);
-                box-shadow: none;
-            }
+            .sidebar
 
-            body.sidebar-open .sidebar {
-                transform: translateX(0);
-                box-shadow: 2px 0 15px rgba(0,0,0,0.2);
-            }
+        {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            bottom: 0;
+            transform: translateX(-100%);
+            box-shadow: none;
+        }
 
-            .menu-toggle {
-                display: block;
-            }
+        body.sidebar-open .sidebar {
+            transform: translateX(0);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.2);
+        }
 
-            .main-content {
-                width: 100%;
-            }
+        .menu-toggle {
+            display: block;
+        }
 
-            .top-bar {
-                padding: 12px 18px;
-            }
+        .main-content {
+            width: 100%;
+        }
 
-            .page-title {
-                font-size: 1.3rem;
-            }
+        .top-bar {
+            padding: 12px 16px;
+        }
 
-            .user-info span {
-                display: none;
-            }
+        .page-title {
+            font-size: 1.25rem;
+        }
 
-            .content {
-                padding: 16px;
-            }
+        .user-info span {
+            display: none;
+        }
 
-            .dashboard {
-                padding: 16px;
-            }
+        .content {
+            padding: 12px;
+        }
 
-            .action-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
+        .dashboard {
+            padding: 12px;
+        }
 
-            .search-form {
-                max-width: 100%;
-            }
+        .action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
 
-            .btn-primary {
-                width: 100%;
-                justify-content: center;
-            }
+        .search-form {
+            max-width: 100%;
+        }
+
+        .btn-primary {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Скрываем колонку "Категория" на мобильных */
+        .data-table th:nth-child(3),
+        .data-table td:nth-child(3) {
+            display: none;
+        }
+
         }
 
         @@media (max-width: 480px) {
-            .btn-logout span {
-                display: none;
-            }
+            .btn-logout span
 
-            .btn-logout {
-                padding: 7px 12px;
-            }
+        {
+            display: none;
+        }
+
+        .btn-logout {
+            padding: 8px 12px;
+        }
+
+        /* Скрываем колонку "Артикул" */
+        .data-table th:nth-child(2),
+        .data-table td:nth-child(2) {
+            display: none;
+        }
+
         }
     </style>
 </head>
 <body>
     <div class="app">
-        <!-- Боковое меню с логотипом -->
+        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -636,7 +688,6 @@
 
         <!-- Основной контент -->
         <main class="main-content">
-            <!-- Верхняя панель -->
             <header class="top-bar">
                 <button class="menu-toggle" id="menuToggle">
                     <i class="fas fa-bars"></i>
@@ -683,52 +734,54 @@
 
                     @if (Model.Products.Any())
                     {
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-box"></i> Наименование</th>
-                                    <th><i class="fas fa-barcode"></i> Артикул</th>
-                                    <th><i class="fas fa-tag"></i> Категория</th>
-                                    <th><i class="fas fa-ruler"></i> Ед. изм.</th>
-                                    <th><i class="fas fa-ruble-sign"></i> Цена закупки</th>
-                                    <th><i class="fas fa-ruble-sign"></i> Цена продажи</th>
-                                    <th><i class="fas fa-cubes"></i> Остаток</th>
-                                    <th><i class="fas fa-truck"></i> Поставщик</th>
-                                    <th><i class="fas fa-cogs"></i> Действия</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.Products)
-                                {
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
                                     <tr>
-                                        <td>@item.Name</td>
-                                        <td>@item.Article</td>
-                                        <td>@item.CategoryName</td>
-                                        <td>@item.Unit</td>
-                                        <td>@item.PurchasePrice.ToString("N0")</td>
-                                        <td>@item.SalePrice.ToString("N0")</td>
-                                        <td>@item.CurrentStock</td>
-                                        <td>@item.SupplierName</td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <a asp-page="Details" asp-route-id="@item.Id" class="btn-sm btn-info" title="Просмотр">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </a>
-                                                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-                                                {
-                                                    <a asp-page="Edit" asp-route-id="@item.Id" class="btn-sm btn-primary" title="Редактировать">
-                                                        <i class="fas fa-pencil-alt"></i>
-                                                    </a>
-                                                    <a asp-page="Delete" asp-route-id="@item.Id" class="btn-sm btn-danger" title="Удалить">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
-                                                }
-                                            </div>
-                                        </td>
+                                        <th><i class="fas fa-box"></i> Наименование</th>
+                                        <th><i class="fas fa-barcode"></i> Артикул</th>
+                                        <th><i class="fas fa-tag"></i> Категория</th>
+                                        <th><i class="fas fa-ruler"></i> Ед. изм.</th>
+                                        <th><i class="fas fa-ruble-sign"></i> Закупка</th>
+                                        <th><i class="fas fa-ruble-sign"></i> Продажа</th>
+                                        <th><i class="fas fa-cubes"></i> Остаток</th>
+                                        <th><i class="fas fa-truck"></i> Поставщик</th>
+                                        <th><i class="fas fa-cogs"></i> Действия</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Products)
+                                    {
+                                        <tr>
+                                            <td>@item.Name</td>
+                                            <td>@item.Article</td>
+                                            <td>@item.CategoryName</td>
+                                            <td>@item.Unit</td>
+                                            <td>@item.PurchasePrice.ToString("N0")</td>
+                                            <td>@item.SalePrice.ToString("N0")</td>
+                                            <td>@item.CurrentStock</td>
+                                            <td>@item.SupplierName</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <a asp-page="Details" asp-route-id="@item.Id" class="btn-sm btn-info" title="Просмотр">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </a>
+                                                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                                                    {
+                                                        <a asp-page="Edit" asp-route-id="@item.Id" class="btn-sm btn-primary" title="Редактировать">
+                                                            <i class="fas fa-pencil-alt"></i>
+                                                        </a>
+                                                        <a asp-page="Delete" asp-route-id="@item.Id" class="btn-sm btn-danger" title="Удалить">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     }
                     else
                     {
@@ -739,7 +792,8 @@
         </main>
     </div>
 
-    <!-- Скрипты -->
+    <!-- Скрипты валидации и общие скрипты -->
+    <partial name="_ValidationScriptsPartial" />
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Мобильное меню

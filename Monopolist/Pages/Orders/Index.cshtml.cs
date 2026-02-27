@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.ViewModels;
@@ -16,12 +17,27 @@ public class IndexModel : PageModel
         _context = context;
     }
 
+    [BindProperty(SupportsGet = true)]
+    public string? SearchString { get; set; }
+
     public IList<OrderIndexViewModel> Orders { get; set; } = new List<OrderIndexViewModel>();
 
     public async Task OnGetAsync()
     {
-        Orders = await _context.Orders
+        var query = _context.Orders
             .Include(o => o.Customer)
+            .AsQueryable();
+
+        // Применяем фильтр поиска, если задан SearchString
+        if (!string.IsNullOrEmpty(SearchString))
+        {
+            query = query.Where(o =>
+                EF.Functions.Like(o.OrderNumber, $"%{SearchString}%") ||
+                (o.Customer != null && EF.Functions.Like(o.Customer.FullName, $"%{SearchString}%"))
+            );
+        }
+
+        Orders = await query
             .OrderByDescending(o => o.OrderDate)
             .Select(o => new OrderIndexViewModel
             {
