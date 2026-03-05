@@ -1,8 +1,8 @@
 ﻿@page
-@model Monoplist.Pages.Suppliers.IndexModel
+@model Monoplist.Pages.Warehouse.IndexModel
 @{
     Layout = null;
-    ViewData["Title"] = "Поставщики";
+    ViewData["Title"] = "Склады";
     var userName = User.Identity?.Name ?? "Пользователь";
 }
 
@@ -392,99 +392,110 @@
                 color: white;
             }
 
-        /* ===== ТАБЛИЦА ПОСТАВЩИКОВ ===== */
-        .table-responsive {
-            overflow-x: auto;
-            margin-top: 1rem;
-            border-radius: 14px;
+        /* ===== СЕТКА КАРТОЧЕК СКЛАДОВ ===== */
+        .warehouse-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
         }
 
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
+        .warehouse-card {
             background: var(--surface);
-            font-size: 0.8rem;
-            table-layout: fixed;
-            word-wrap: break-word;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            border-left: 4px solid var(--accent);
         }
 
-            .data-table th:nth-child(1) {
-                width: 25%;
-            }
-            /* Название */
-            .data-table th:nth-child(2) {
-                width: 40%;
-            }
-            /* Контактная информация */
-            .data-table th:nth-child(3) {
-                width: 15%;
-            }
-            /* Кол-во товаров */
-            .data-table th:nth-child(4) {
-                width: 10%;
-            }
-            /* Действия */
-
-            .data-table thead tr {
-                background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
+            .warehouse-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-hover);
             }
 
-            .data-table th {
-                text-align: left;
-                padding: 8px 4px;
-                color: var(--text-primary);
-                font-weight: 700;
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
-                border-bottom: 2px solid var(--accent);
-                white-space: normal;
-                word-break: break-word;
-            }
-
-                .data-table th i {
-                    margin-right: 2px;
-                    color: var(--primary);
-                    font-size: 0.8rem;
-                }
-
-            .data-table td {
-                padding: 8px 4px;
-                border-bottom: 1px solid var(--border);
-                color: var(--text-secondary);
-                font-weight: 600;
-                white-space: normal;
-                word-break: break-word;
-            }
-
-            .data-table tbody tr:nth-child(even) {
-                background-color: rgba(0,0,0,0.02);
-            }
-
-            .data-table tbody tr:hover td {
-                background-color: rgba(255,107,0,0.05);
-            }
-
-        /* Кнопки действий */
-        .action-buttons {
+        .warehouse-image {
+            height: 160px;
+            background-color: var(--surface-hover);
             display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 3rem;
+            border-bottom: 2px solid var(--accent);
+        }
+
+            .warehouse-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .warehouse-content {
+            padding: 16px;
+            flex: 1;
+        }
+
+        .warehouse-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .warehouse-location {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
             gap: 4px;
-            flex-wrap: wrap;
-            justify-content: flex-start;
+        }
+
+        .warehouse-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .warehouse-actions {
+            display: flex;
+            gap: 8px;
+            padding: 16px;
+            border-top: 1px solid var(--border);
         }
 
         .btn-sm {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             color: white;
             text-decoration: none;
             transition: var(--transition);
-            font-size: 0.8rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
             .btn-sm.btn-info {
@@ -500,9 +511,9 @@
             }
 
             .btn-sm:hover {
-                transform: translateY(-1px) scale(1.05);
+                transform: translateY(-2px);
                 filter: brightness(1.1);
-                box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
             }
 
         .text-muted {
@@ -514,28 +525,6 @@
         }
 
         /* ===== АДАПТИВНОСТЬ ===== */
-        @@media (max-width: 1200px) {
-            .data-table {
-                font-size: 0.75rem;
-            }
-
-                .data-table th {
-                    font-size: 0.7rem;
-                }
-
-                .data-table th, .data-table td {
-                    padding: 6px 3px;
-                }
-        }
-
-        @@media (max-width: 992px) {
-            /* Скрываем колонку "Контактная информация" */
-            .data-table th:nth-child(2),
-            .data-table td:nth-child(2) {
-                display: none;
-            }
-        }
-
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -592,11 +581,6 @@
                 width: 100%;
                 justify-content: center;
             }
-            /* Скрываем колонку "Кол-во товаров" */
-            .data-table th:nth-child(3),
-            .data-table td:nth-child(3) {
-                display: none;
-            }
         }
 
         @@media (max-width: 480px) {
@@ -607,8 +591,6 @@
             .btn-logout {
                 padding: 8px 12px;
             }
-            /* Скрываем колонку "Название" (остаются только действия) - не лучший вариант, но можно оставить как есть */
-            /* Вместо этого можно оставить только название и действия, но для простоты не скрываем */
         }
     </style>
 </head>
@@ -626,8 +608,8 @@
                     <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
                     <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
                     <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index" class="active"><i class="fas fa-truck"></i> Поставщики</a></li>
+                    <li><a asp-page="/Warehouse/Index" class="active"><i class="fas fa-warehouse"></i> Склад</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
                     <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
                     <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
                 </ul>
@@ -659,12 +641,12 @@
             <!-- Контент страницы -->
             <div class="content">
                 <div class="dashboard">
-                    <h1 class="subtitle">Управление поставщиками</h1>
+                    <h1 class="subtitle">Управление складами</h1>
 
                     <!-- Панель поиска и действий -->
                     <div class="action-bar">
                         <form method="get" class="search-form">
-                            <input type="text" class="search-input" name="searchString" placeholder="Поиск по названию, контактам..." value="@Model.SearchString" />
+                            <input type="text" class="search-input" name="searchString" placeholder="Поиск по названию, местоположению..." value="@Model.SearchString" />
                             <button type="submit" class="search-btn"><i class="fas fa-search"></i> Найти</button>
                             @if (!string.IsNullOrEmpty(Model.SearchString))
                             {
@@ -675,63 +657,73 @@
                         @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                         {
                             <a asp-page="Create" class="btn-primary">
-                                <i class="fas fa-plus"></i> Добавить поставщика
+                                <i class="fas fa-plus"></i> Добавить склад
                             </a>
                         }
                     </div>
 
-                    @if (Model.Suppliers.Any())
+                    @if (Model.Warehouses.Any())
                     {
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th><i class="fas fa-building"></i> Название</th>
-                                        <th><i class="fas fa-address-card"></i> Контактная информация</th>
-                                        <th><i class="fas fa-boxes"></i> Кол-во товаров</th>
-                                        <th><i class="fas fa-cogs"></i> Действия</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var supplier in Model.Suppliers)
-                                    {
-                                        <tr>
-                                            <td>@supplier.Name</td>
-                                            <td>@supplier.ContactInfo</td>
-                                            <td>@supplier.ProductsCount</td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <a asp-page="Details" asp-route-id="@supplier.Id" class="btn-sm btn-info" title="Просмотр">
-                                                        <i class="fas fa-info-circle"></i>
-                                                    </a>
-                                                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-                                                    {
-                                                        <a asp-page="Edit" asp-route-id="@supplier.Id" class="btn-sm btn-primary" title="Редактировать">
-                                                            <i class="fas fa-pencil-alt"></i>
-                                                        </a>
-                                                        <a asp-page="Delete" asp-route-id="@supplier.Id" class="btn-sm btn-danger" title="Удалить">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
-                                                    }
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                        <div class="warehouse-grid">
+                            @foreach (var warehouse in Model.Warehouses)
+                            {
+                                var occupancyPercent = warehouse.Capacity > 0 ? (int)((double)warehouse.CurrentOccupancy / warehouse.Capacity * 100) : 0;
+                                var imageUrl = !string.IsNullOrEmpty(warehouse.ImageUrl) ? warehouse.ImageUrl : null;
+
+                                <div class="warehouse-card">
+                                    <div class="warehouse-image">
+                                        @if (imageUrl != null)
+                                        {
+                                            <img src="@imageUrl" alt="@warehouse.Name" />
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-warehouse"></i>
+                                        }
+                                    </div>
+                                    <div class="warehouse-content">
+                                        <div class="warehouse-name">@warehouse.Name</div>
+                                        <div class="warehouse-location">
+                                            <i class="fas fa-map-marker-alt"></i> @(warehouse.Location ?? "Местоположение не указано")
+                                        </div>
+                                        <div class="warehouse-stats">
+                                            <span><i class="fas fa-boxes"></i> @warehouse.CurrentOccupancy / @warehouse.Capacity</span>
+                                            <span>@occupancyPercent%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: @occupancyPercent%;"></div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(warehouse.Description))
+                                        {
+                                            <p style="font-size: 0.85rem; color: var(--text-secondary);">@warehouse.Description</p>
+                                        }
+                                    </div>
+                                    <div class="warehouse-actions">
+                                        <a asp-page="Details" asp-route-id="@warehouse.Id" class="btn-sm btn-info" title="Просмотр">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                                        {
+                                            <a asp-page="Edit" asp-route-id="@warehouse.Id" class="btn-sm btn-primary" title="Редактировать">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </a>
+                                            <a asp-page="Delete" asp-route-id="@warehouse.Id" class="btn-sm btn-danger" title="Удалить">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         </div>
                     }
                     else
                     {
-                        <p class="text-muted">Нет поставщиков.</p>
+                        <p class="text-muted">Нет складов.</p>
                     }
                 </div>
             </div>
         </main>
     </div>
-
-    <!-- Скрипты валидации (не обязательны) -->
-    <partial name="_ValidationScriptsPartial" />
 
     <!-- Скрипты для мобильного меню и переключения темы -->
     <script>

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Monoplist.ViewModels;
 using Monoplist.Data;
-using Monopolist.ViewModels.Supplier;
+using Monoplist.ViewModels;
 
 namespace Monoplist.Pages.Suppliers;
 
@@ -17,11 +17,25 @@ public class IndexModel : PageModel
         _context = context;
     }
 
+    [BindProperty(SupportsGet = true)]
+    public string? SearchString { get; set; }
+
     public IList<SupplierIndexViewModel> Suppliers { get; set; } = new List<SupplierIndexViewModel>();
 
     public async Task OnGetAsync()
     {
-        Suppliers = await _context.Suppliers
+        var query = _context.Suppliers
+            .Include(s => s.Products)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(SearchString))
+        {
+            query = query.Where(s =>
+                EF.Functions.Like(s.Name, $"%{SearchString}%") ||
+                EF.Functions.Like(s.ContactInfo, $"%{SearchString}%"));
+        }
+
+        Suppliers = await query
             .OrderBy(s => s.Name)
             .Select(s => new SupplierIndexViewModel
             {

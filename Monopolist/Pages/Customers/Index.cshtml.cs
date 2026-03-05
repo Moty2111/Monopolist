@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
@@ -16,11 +17,24 @@ public class IndexModel : PageModel
         _context = context;
     }
 
+    [BindProperty(SupportsGet = true)]
+    public string? SearchString { get; set; }
+
     public IList<Customer> Customers { get; set; } = new List<Customer>();
 
     public async Task OnGetAsync()
     {
-        Customers = await _context.Customers
+        var query = _context.Customers.AsQueryable();
+
+        if (!string.IsNullOrEmpty(SearchString))
+        {
+            query = query.Where(c =>
+                EF.Functions.Like(c.FullName, $"%{SearchString}%") ||
+                EF.Functions.Like(c.Phone, $"%{SearchString}%") ||
+                EF.Functions.Like(c.Email, $"%{SearchString}%"));
+        }
+
+        Customers = await query
             .OrderBy(c => c.FullName)
             .ToListAsync();
     }
