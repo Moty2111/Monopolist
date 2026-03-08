@@ -3,21 +3,13 @@ using Monoplist.Models;
 
 namespace Monoplist.Data;
 
-/// <summary>
-/// Класс для инициализации базы данных тестовыми данными.
-/// </summary>
 public static class SeedData
 {
-    /// <summary>
-    /// Заполняет базу данных начальными данными, если они отсутствуют.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
     public static void Initialize(AppDbContext context)
     {
         // Гарантируем создание базы данных (для разработки)
         context.Database.EnsureCreated();
 
-        // Используем транзакцию для атомарности всех операций
         using var transaction = context.Database.BeginTransaction();
         try
         {
@@ -33,15 +25,13 @@ public static class SeedData
         catch (Exception ex)
         {
             transaction.Rollback();
-            // В реальном проекте здесь можно добавить логирование через ILogger,
-            // но так как метод статический, пробрасываем исключение дальше
             throw new InvalidOperationException("Ошибка при заполнении базы данных начальными данными.", ex);
         }
     }
 
     private static void SeedUsers(AppDbContext context)
     {
-        if (context.Users.Any()) return;
+        if (context.Users.Any()) return; // пропускаем, если уже есть
 
         var users = new[]
         {
@@ -88,7 +78,6 @@ public static class SeedData
     {
         if (context.Products.Any()) return;
 
-        // Получаем ссылки на связанные сущности с проверкой на null
         var сыпучие = context.Categories.FirstOrDefault(c => c.Name == "Сыпучие материалы");
         var отделочные = context.Categories.FirstOrDefault(c => c.Name == "Отделочные материалы");
         var лакокрасочные = context.Categories.FirstOrDefault(c => c.Name == "Лакокрасочные");
@@ -97,7 +86,6 @@ public static class SeedData
         var стройРесурс = context.Suppliers.FirstOrDefault(s => s.Name == "ООО 'СтройРесурс'");
         var петров = context.Suppliers.FirstOrDefault(s => s.Name == "ИП Петров А.В.");
 
-        // Если какие-то категории или поставщики отсутствуют, используем значения по умолчанию или пропускаем
         var products = new List<Product>();
 
         if (сыпучие != null)
@@ -143,10 +131,8 @@ public static class SeedData
     {
         if (context.Orders.Any()) return;
 
-        // Фиксированные даты для предсказуемости
         var baseDate = new DateTime(2025, 2, 15);
 
-        // Получаем клиентов с проверкой на null
         var customer1 = context.Customers.FirstOrDefault(c => c.FullName.Contains("СтройРисуем"));
         var customer2 = context.Customers.FirstOrDefault(c => c.FullName.Contains("Петров"));
         var customer3 = context.Customers.FirstOrDefault(c => c.FullName.Contains("СтройМастер"));
@@ -171,7 +157,6 @@ public static class SeedData
             context.Orders.AddRange(orders);
             context.SaveChanges();
 
-            // Добавляем позиции заказов
             var product1 = context.Products.FirstOrDefault(p => p.Name.Contains("Цемент"));
             var product2 = context.Products.FirstOrDefault(p => p.Name.Contains("Гипсокартон"));
             var product3 = context.Products.FirstOrDefault(p => p.Name.Contains("Краска"));

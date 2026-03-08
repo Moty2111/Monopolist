@@ -18,7 +18,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Полностью копируем стили из SalesReport.cshtml */
         :root {
             --primary: #FF6B00;
             --primary-dark: #E05E00;
@@ -381,8 +380,62 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
             justify-content: flex-end;
         }
+
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .btn-excel {
+            background: #1D6F42;
+            color: white;
+        }
+
+            .btn-excel:hover {
+                background: #155a33;
+                transform: translateY(-2px);
+            }
+
+        .btn-pdf {
+            background: #F40F02;
+            color: white;
+        }
+
+            .btn-pdf:hover {
+                background: #c00c00;
+                transform: translateY(-2px);
+            }
+
+        .btn-csv {
+            background: #217346;
+            color: white;
+        }
+
+            .btn-csv:hover {
+                background: #1a5c38;
+                transform: translateY(-2px);
+            }
+
+        .btn-word {
+            background: #2B5797;
+            color: white;
+        }
+
+            .btn-word:hover {
+                background: #1e3f6f;
+                transform: translateY(-2px);
+            }
 
         @@media (max-width: 768px) {
             .sidebar {
@@ -402,11 +455,24 @@
             .charts-row {
                 grid-template-columns: 1fr;
             }
+
+            .export-buttons {
+                justify-content: center;
+            }
         }
 
         @@media (max-width: 480px) {
             .btn-logout span {
                 display: none;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+            }
+
+            .btn-export {
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -459,14 +525,17 @@
                     <p class="subtitle">Анализ загрузки складов</p>
 
                     <div class="export-buttons">
-                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="excel" class="btn-secondary">
+                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="excel" class="btn-export btn-excel" target="_blank">
                             <i class="fas fa-file-excel"></i> Excel
                         </a>
-                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="pdf" class="btn-secondary">
+                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="pdf" class="btn-export btn-pdf" target="_blank">
                             <i class="fas fa-file-pdf"></i> PDF
                         </a>
-                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="csv" class="btn-secondary">
+                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="csv" class="btn-export btn-csv" target="_blank">
                             <i class="fas fa-file-csv"></i> CSV
+                        </a>
+                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="word" class="btn-export btn-word" target="_blank">
+                            <i class="fas fa-file-word"></i> Word
                         </a>
                     </div>
 
@@ -556,12 +625,20 @@
                                         <td>@p.Unit</td>
                                     </tr>
                                 }
+                                @if (!Model.Report.ProductLocations.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center" style="padding: 20px; color: var(--text-muted);">
+                                            Нет товаров, распределенных по складам
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
 
                     <div style="margin-top: 30px;">
-                        <a asp-page="Index" class="btn-secondary">
+                        <a asp-page="Index" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border: 2px solid var(--border); border-radius: 30px; background: var(--surface); color: var(--text-secondary); text-decoration: none;">
                             <i class="fas fa-arrow-left"></i> Назад к отчетам
                         </a>
                     </div>
@@ -576,11 +653,14 @@
             const body = document.body;
 
             if (menuToggle) {
-                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
-                document.addEventListener('click', (e) => {
+                menuToggle.addEventListener('click', function() {
+                    body.classList.toggle('sidebar-open');
+                });
+
+                document.addEventListener('click', function(event) {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
                             body.classList.remove('sidebar-open');
                         }
                     }
@@ -597,7 +677,7 @@
                 themeIcon.classList.add('fa-moon');
             }
 
-            themeToggle.addEventListener('click', () => {
+            themeToggle.addEventListener('click', function() {
                 body.classList.toggle('dark-theme');
                 if (body.classList.contains('dark-theme')) {
                     themeIcon.classList.remove('fa-sun');
@@ -633,7 +713,10 @@
                         },
                         options: {
                             responsive: true,
-                            maintainAspectRatio: false
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
                         }
                     });
 
@@ -644,13 +727,16 @@
                             labels: [@Html.Raw(string.Join(",", Model.Report.Warehouses.Select(w => $"'{w.Name}'")))],
                             datasets: [{
                                 data: [@string.Join(",", Model.Report.Warehouses.Select(w => w.CurrentOccupancy))],
-                                backgroundColor: ['#FF6B00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444']
+                                backgroundColor: ['#FF6B00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444'],
+                                borderWidth: 0
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { position: 'bottom' } }
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
                         }
                     });
                     </text>

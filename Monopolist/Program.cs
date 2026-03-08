@@ -40,11 +40,13 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        // Для разработки удаляем и создаём заново (осторожно!)
-        context.Database.EnsureDeleted();
+
+        // Создаём базу данных, если её нет (не удаляем существующую)
         context.Database.EnsureCreated();
+
+        // Добавляем тестовые данные только если таблицы пусты
         SeedData.Initialize(context);
-        SeedDataWarehouse.Initialize(context); // <-- добавляем инициализацию складов
+        SeedDataWarehouse.Initialize(context);
     }
 }
 else

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.ViewModels;
 using Monoplist.Data;
-using Monopolist.ViewModels.Supplier;
 
 namespace Monoplist.Pages.Suppliers;
 

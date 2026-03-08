@@ -16,6 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -288,93 +289,6 @@
             padding-bottom: 12px;
         }
 
-        .filter-panel {
-            background: var(--surface-hover);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 30px;
-            border: 1px solid var(--border);
-        }
-
-        .filter-form {
-            display: flex;
-            gap: 20px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-            .filter-group label {
-                display: block;
-                font-weight: 600;
-                font-size: 0.85rem;
-                color: var(--primary);
-                margin-bottom: 6px;
-                text-transform: uppercase;
-            }
-
-            .filter-group input {
-                width: 100%;
-                padding: 10px 14px;
-                border: 2px solid var(--border);
-                border-radius: 12px;
-                background: var(--surface);
-                color: var(--text-primary);
-                font-family: 'Poppins', sans-serif;
-            }
-
-                .filter-group input:focus {
-                    outline: none;
-                    border-color: var(--primary);
-                }
-
-        .filter-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 24px;
-            border: none;
-            border-radius: 30px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-            .btn-primary:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 15px rgba(255,107,0,0.4);
-            }
-
-        .btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 24px;
-            border: 2px solid var(--border);
-            border-radius: 30px;
-            background: var(--surface);
-            color: var(--text-secondary);
-            font-weight: 600;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-            .btn-secondary:hover {
-                background: var(--surface-hover);
-                border-color: var(--text-muted);
-            }
-
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -466,12 +380,89 @@
             text-align: right;
         }
 
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-low {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .status-normal {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .status-empty {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
         .export-buttons {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
             justify-content: flex-end;
         }
+
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .btn-excel {
+            background: #1D6F42;
+            color: white;
+        }
+
+            .btn-excel:hover {
+                background: #155a33;
+                transform: translateY(-2px);
+            }
+
+        .btn-pdf {
+            background: #F40F02;
+            color: white;
+        }
+
+            .btn-pdf:hover {
+                background: #c00c00;
+                transform: translateY(-2px);
+            }
+
+        .btn-csv {
+            background: #217346;
+            color: white;
+        }
+
+            .btn-csv:hover {
+                background: #1a5c38;
+                transform: translateY(-2px);
+            }
+
+        .btn-word {
+            background: #2B5797;
+            color: white;
+        }
+
+            .btn-word:hover {
+                background: #1e3f6f;
+                transform: translateY(-2px);
+            }
 
         @@media (max-width: 768px) {
             .sidebar {
@@ -492,13 +483,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .filter-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .filter-group {
-                width: 100%;
+            .export-buttons {
+                justify-content: center;
             }
         }
 
@@ -506,16 +492,59 @@
             .btn-logout span {
                 display: none;
             }
+
+            .export-buttons {
+                flex-direction: column;
+            }
+
+            .btn-export {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="app">
-        <!-- Боковое меню (копия) -->
-        <aside class="sidebar">...</aside>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-helmet-safety"></i>
+                <h2>Моноплист</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
+                    <li><a asp-page="/Reports/Index" class="active"><i class="fas fa-chart-line"></i> Отчеты</a></li>
+                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
+                </ul>
+            </nav>
+        </aside>
 
         <main class="main-content">
-            <header class="top-bar">...</header>
+            <header class="top-bar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="user-info">
+                    <span><i class="fas fa-user-circle"></i> @userName</span>
+                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Выйти</span>
+                        </button>
+                    </form>
+                </div>
+            </header>
 
             <div class="content">
                 <div class="dashboard">
@@ -523,9 +552,18 @@
                     <p class="subtitle">Анализ товарных запасов</p>
 
                     <div class="export-buttons">
-                        <a asp-page="Export" asp-route-type="products" asp-route-format="excel" class="btn-secondary"><i class="fas fa-file-excel"></i> Excel</a>
-                        <a asp-page="Export" asp-route-type="products" asp-route-format="pdf" class="btn-secondary"><i class="fas fa-file-pdf"></i> PDF</a>
-                        <a asp-page="Export" asp-route-type="products" asp-route-format="csv" class="btn-secondary"><i class="fas fa-file-csv"></i> CSV</a>
+                        <a asp-page="Export" asp-route-type="products" asp-route-format="excel" class="btn-export btn-excel" target="_blank">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                        <a asp-page="Export" asp-route-type="products" asp-route-format="pdf" class="btn-export btn-pdf" target="_blank">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a asp-page="Export" asp-route-type="products" asp-route-format="csv" class="btn-export btn-csv" target="_blank">
+                            <i class="fas fa-file-csv"></i> CSV
+                        </a>
+                        <a asp-page="Export" asp-route-type="products" asp-route-format="word" class="btn-export btn-word" target="_blank">
+                            <i class="fas fa-file-word"></i> Word
+                        </a>
                     </div>
 
                     <div class="kpi-grid">
@@ -567,10 +605,12 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Товар</th>
+                                    <th>Артикул</th>
+                                    <th>Наименование</th>
                                     <th>Категория</th>
-                                    <th>Остаток</th>
-                                    <th>Минимум</th>
+                                    <th class="text-right">Остаток</th>
+                                    <th class="text-right">Минимум</th>
+                                    <th>Статус</th>
                                     <th class="text-right">Цена закупки</th>
                                     <th class="text-right">Цена продажи</th>
                                 </tr>
@@ -579,12 +619,82 @@
                                 @foreach (var p in Model.Report.LowStockProducts)
                                 {
                                     <tr>
+                                        <td>@p.Article</td>
                                         <td>@p.Name</td>
                                         <td>@p.Category</td>
-                                        <td>@p.CurrentStock</td>
-                                        <td>@p.MinimumStock</td>
+                                        <td class="text-right">@p.CurrentStock</td>
+                                        <td class="text-right">@p.MinimumStock</td>
+                                        <td>
+                                            @{
+                                                string statusClass = p.CurrentStock == 0 ? "status-empty" : "status-low";
+                                                string statusText = p.CurrentStock == 0 ? "Отсутствует" : "Малый остаток";
+                                            }
+                                            <span class="status-badge @statusClass">@statusText</span>
+                                        </td>
                                         <td class="text-right">@p.PurchasePrice.ToString("N0") ₽</td>
                                         <td class="text-right">@p.SalePrice.ToString("N0") ₽</td>
+                                    </tr>
+                                }
+                                @if (!Model.Report.LowStockProducts.Any())
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center" style="padding: 20px; color: var(--text-muted);">
+                                            Нет товаров с низким остатком
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 style="margin: 30px 0 15px; color: var(--primary);">Статистика по категориям</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Категория</th>
+                                    <th class="text-right">Кол-во товаров</th>
+                                    <th class="text-right">Общий остаток</th>
+                                    <th class="text-right">Стоимость</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in Model.Report.CategoryStock)
+                                {
+                                    <tr>
+                                        <td>@c.CategoryName</td>
+                                        <td class="text-right">@c.ProductsCount</td>
+                                        <td class="text-right">@c.TotalStock</td>
+                                        <td class="text-right">@c.TotalValue.ToString("N0") ₽</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 style="margin: 30px 0 15px; color: var(--primary);">Топ-10 товаров по стоимости</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Артикул</th>
+                                    <th>Наименование</th>
+                                    <th>Категория</th>
+                                    <th class="text-right">Остаток</th>
+                                    <th class="text-right">Цена закупки</th>
+                                    <th class="text-right">Стоимость</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.Report.TopProducts)
+                                {
+                                    <tr>
+                                        <td>@p.Article</td>
+                                        <td>@p.Name</td>
+                                        <td>@p.Category</td>
+                                        <td class="text-right">@p.CurrentStock</td>
+                                        <td class="text-right">@p.PurchasePrice.ToString("N0") ₽</td>
+                                        <td class="text-right">@p.StockValue.ToString("N0") ₽</td>
                                     </tr>
                                 }
                             </tbody>
@@ -592,7 +702,9 @@
                     </div>
 
                     <div style="margin-top: 30px;">
-                        <a asp-page="Index" class="btn-secondary"><i class="fas fa-arrow-left"></i> Назад к отчетам</a>
+                        <a asp-page="Index" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border: 2px solid var(--border); border-radius: 30px; background: var(--surface); color: var(--text-secondary); text-decoration: none;">
+                            <i class="fas fa-arrow-left"></i> Назад к отчетам
+                        </a>
                     </div>
                 </div>
             </div>
@@ -601,35 +713,105 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Код для меню и темы (копия)
+            const menuToggle = document.getElementById('menuToggle');
+            const body = document.body;
 
-            // Графики
-            const catCtx = document.getElementById('categoryChart').getContext('2d');
-            new Chart(catCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: [@Html.Raw(string.Join(",", Model.Report.CategoryStock.Select(c => $"'{c.CategoryName}'")))],
-                    datasets: [{
-                        data: [@string.Join(",", Model.Report.CategoryStock.Select(c => c.TotalValue))],
-                        backgroundColor: ['#FF6B00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f59e0b'],
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    body.classList.toggle('sidebar-open');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.querySelector('.sidebar');
+                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                            body.classList.remove('sidebar-open');
+                        }
+                    }
+                });
+            }
+
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+
+            themeToggle.addEventListener('click', function() {
+                body.classList.toggle('dark-theme');
+                if (body.classList.contains('dark-theme')) {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    localStorage.setItem('theme', 'light');
+                }
             });
 
-            const topCtx = document.getElementById('topProductsChart').getContext('2d');
-            new Chart(topCtx, {
-                type: 'bar',
-                data: {
-                    labels: [@Html.Raw(string.Join(",", Model.Report.TopProducts.Select(p => $"'{p.Name}'")))],
-                    datasets: [{
-                        label: 'Стоимость (₽)',
-                        data: [@string.Join(",", Model.Report.TopProducts.Select(p => p.StockValue))],
-                        backgroundColor: '#FF6B00'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
+            @if (Model.Report.CategoryStock.Any())
+            {
+                    <text>
+                    const catCtx = document.getElementById('categoryChart').getContext('2d');
+                    new Chart(catCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.Report.CategoryStock.Select(c => $"'{c.CategoryName}'")))],
+                            datasets: [{
+                                data: [@string.Join(",", Model.Report.CategoryStock.Select(c => c.TotalValue))],
+                                backgroundColor: ['#FF6B00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f59e0b', '#ec4899', '#14b8a6', '#f97316', '#6366f1'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                    </text>
+            }
+
+            @if (Model.Report.TopProducts.Any())
+            {
+                    <text>
+                    const topCtx = document.getElementById('topProductsChart').getContext('2d');
+                    new Chart(topCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.Report.TopProducts.Select(p => $"'{p.Name}'")))],
+                            datasets: [{
+                                label: 'Стоимость (₽)',
+                                data: [@string.Join(",", Model.Report.TopProducts.Select(p => p.StockValue))],
+                                backgroundColor: '#FF6B00'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString() + ' ₽';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    </text>
+            }
         });
     </script>
 </body>

@@ -23,6 +23,11 @@ public class ProductsReportModel : PageModel
 
     public async Task OnGetAsync()
     {
+        await LoadReportData();
+    }
+
+    private async Task LoadReportData()
+    {
         try
         {
             var products = await _context.Products
@@ -43,7 +48,7 @@ public class ProductsReportModel : PageModel
                 {
                     Id = p.Id,
                     Name = p.Name,
-                    Article = p.Article,
+                    Article = p.Article ?? "-",
                     Category = p.Category?.Name ?? "Без категории",
                     CurrentStock = p.CurrentStock,
                     MinimumStock = p.MinimumStock,
@@ -56,12 +61,12 @@ public class ProductsReportModel : PageModel
             Report.LowStockProducts = products
                 .Where(p => p.CurrentStock > 0 && p.CurrentStock < p.MinimumStock)
                 .OrderBy(p => (double)p.CurrentStock / p.MinimumStock)
-                .Take(10)
+                .Take(20)
                 .Select(p => new ProductStockViewModel
                 {
                     Id = p.Id,
                     Name = p.Name,
-                    Article = p.Article,
+                    Article = p.Article ?? "-",
                     Category = p.Category?.Name ?? "Без категории",
                     CurrentStock = p.CurrentStock,
                     MinimumStock = p.MinimumStock,

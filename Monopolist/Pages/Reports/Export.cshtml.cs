@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
+using Monoplist.Models; // добавлено для доступа к моделям
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
@@ -373,6 +374,24 @@ public class ExportModel : PageModel
     {
         try
         {
+            // Загружаем данные в зависимости от типа отчета
+            object reportData = null;
+            switch (type)
+            {
+                case "sales":
+                    reportData = await LoadSalesData(start, end);
+                    break;
+                case "products":
+                    reportData = await LoadProductsData();
+                    break;
+                case "customers":
+                    reportData = await LoadCustomersData();
+                    break;
+                case "warehouse":
+                    reportData = await LoadWarehouseData();
+                    break;
+            }
+
             var document = QuestPDF.Fluent.Document.Create(container =>
             {
                 container.Page(page =>
@@ -404,7 +423,22 @@ public class ExportModel : PageModel
                                     .FontSize(10);
                             }
 
-                            col.Item().Element(container => BuildPdfContent(container, type, start, end));
+                            // Передаем загруженные данные в соответствующий метод построения
+                            switch (type)
+                            {
+                                case "sales":
+                                    col.Item().Element(c => BuildSalesPdf(c, reportData as SalesData));
+                                    break;
+                                case "products":
+                                    col.Item().Element(c => BuildProductsPdf(c, reportData as ProductsData));
+                                    break;
+                                case "customers":
+                                    col.Item().Element(c => BuildCustomersPdf(c, reportData as CustomersData));
+                                    break;
+                                case "warehouse":
+                                    col.Item().Element(c => BuildWarehousePdf(c, reportData as WarehouseData));
+                                    break;
+                            }
                         });
 
                     page.Footer()
@@ -429,26 +463,28 @@ public class ExportModel : PageModel
         }
     }
 
-    private void BuildPdfContent(QuestPDF.Infrastructure.IContainer container, string type, DateTime? start, DateTime? end)
+    // Вспомогательные классы для передачи данных
+    private class SalesData
     {
-        switch (type)
-        {
-            case "sales":
-                BuildSalesPdf(container, start, end);
-                break;
-            case "products":
-                BuildProductsPdf(container);
-                break;
-            case "customers":
-                BuildCustomersPdf(container);
-                break;
-            case "warehouse":
-                BuildWarehousePdf(container);
-                break;
-        }
+        public List<Order> Orders { get; set; } = new();
     }
 
-    private async void BuildSalesPdf(QuestPDF.Infrastructure.IContainer container, DateTime? start, DateTime? end)
+    private class ProductsData
+    {
+        public List<Product> Products { get; set; } = new();
+    }
+
+    private class CustomersData
+    {
+        public List<Customer> Customers { get; set; } = new();
+    }
+
+    private class WarehouseData
+    {
+        public List<Monoplist.Models.Warehouse> Warehouses { get; set; } = new(); // используем полное имя
+    }
+
+    private async Task<SalesData> LoadSalesData(DateTime? start, DateTime? end)
     {
         var startDate = start ?? DateTime.Now.AddMonths(-1);
         var endDate = end ?? DateTime.Now;
@@ -460,7 +496,42 @@ public class ExportModel : PageModel
             .OrderBy(o => o.OrderDate)
             .ToListAsync();
 
-        if (!orders.Any())
+        return new SalesData { Orders = orders };
+    }
+
+    private async Task<ProductsData> LoadProductsData()
+    {
+        var products = await _context.Products
+            .Include(p => p.Category)
+            .Include(p => p.Warehouse)
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+
+        return new ProductsData { Products = products };
+    }
+
+    private async Task<CustomersData> LoadCustomersData()
+    {
+        var customers = await _context.Customers
+            .Include(c => c.Orders)
+            .OrderBy(c => c.FullName)
+            .ToListAsync();
+
+        return new CustomersData { Customers = customers };
+    }
+
+    private async Task<WarehouseData> LoadWarehouseData()
+    {
+        var warehouses = await _context.Warehouses
+            .Include(w => w.Products)
+            .ToListAsync();
+
+        return new WarehouseData { Warehouses = warehouses };
+    }
+
+    private void BuildSalesPdf(IContainer container, SalesData data)
+    {
+        if (data == null || !data.Orders.Any())
         {
             container.Column(col =>
             {
@@ -491,7 +562,7 @@ public class ExportModel : PageModel
             });
 
             decimal totalSum = 0;
-            foreach (var order in orders)
+            foreach (var order in data.Orders)
             {
                 table.Cell().Element(CellStyle).Text(order.OrderDate.ToString("dd.MM.yyyy"));
                 table.Cell().Element(CellStyle).Text(order.OrderNumber);
@@ -512,15 +583,9 @@ public class ExportModel : PageModel
         });
     }
 
-    private async void BuildProductsPdf(QuestPDF.Infrastructure.IContainer container)
+    private void BuildProductsPdf(IContainer container, ProductsData data)
     {
-        var products = await _context.Products
-            .Include(p => p.Category)
-            .Include(p => p.Warehouse)
-            .OrderBy(p => p.Name)
-            .ToListAsync();
-
-        if (!products.Any())
+        if (data == null || !data.Products.Any())
         {
             container.Column(col =>
             {
@@ -552,7 +617,7 @@ public class ExportModel : PageModel
                     container.DefaultTextStyle(x => x.Bold()).PaddingVertical(5).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Black);
             });
 
-            foreach (var p in products.Take(30))
+            foreach (var p in data.Products.Take(30))
             {
                 table.Cell().Element(CellStyle).Text(p.Name);
                 table.Cell().Element(CellStyle).Text(p.Category?.Name ?? "-");
@@ -564,25 +629,42 @@ public class ExportModel : PageModel
                     container.PaddingVertical(3).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
             }
 
-            if (products.Count > 30)
+            if (data.Products.Count > 30)
             {
-                table.Cell().ColumnSpan(5).Text($"... и еще {products.Count - 30} товаров").Italic().FontSize(9);
+                table.Cell().ColumnSpan(5).Text($"... и еще {data.Products.Count - 30} товаров").Italic().FontSize(9);
             }
         });
     }
 
-    private async void BuildCustomersPdf(QuestPDF.Infrastructure.IContainer container)
+    private void BuildCustomersPdf(IContainer container, CustomersData data)
     {
-        var customers = await _context.Customers
-            .Include(c => c.Orders)
-            .OrderBy(c => c.FullName)
-            .ToListAsync();
-
-        if (!customers.Any())
+        if (data == null || !data.Customers.Any())
         {
             container.Column(col =>
             {
                 col.Item().Text("Нет данных о клиентах").FontSize(12).Italic();
+            });
+            return;
+        }
+
+        var topCustomers = data.Customers
+            .Where(c => c.Orders != null && c.Orders.Any())
+            .Select(c => new
+            {
+                c.FullName,
+                c.Phone,
+                OrderCount = c.Orders.Count,
+                TotalSpent = c.Orders.Sum(o => o.TotalAmount)
+            })
+            .OrderByDescending(c => c.TotalSpent)
+            .Take(20)
+            .ToList();
+
+        if (!topCustomers.Any())
+        {
+            container.Column(col =>
+            {
+                col.Item().Text("Нет данных о клиентах с заказами").FontSize(12).Italic();
             });
             return;
         }
@@ -609,16 +691,13 @@ public class ExportModel : PageModel
             });
 
             decimal totalSpent = 0;
-            foreach (var c in customers.OrderByDescending(c => c.Orders?.Sum(o => o.TotalAmount) ?? 0).Take(20))
+            foreach (var c in topCustomers)
             {
-                var orderCount = c.Orders?.Count ?? 0;
-                var orderSum = c.Orders?.Sum(o => o.TotalAmount) ?? 0;
-
                 table.Cell().Element(CellStyle).Text(c.FullName);
                 table.Cell().Element(CellStyle).Text(c.Phone ?? "-");
-                table.Cell().Element(CellStyle).Text(orderCount.ToString());
-                table.Cell().Element(CellStyle).Text($"{orderSum:N0} ₽").AlignRight();
-                totalSpent += orderSum;
+                table.Cell().Element(CellStyle).Text(c.OrderCount.ToString());
+                table.Cell().Element(CellStyle).Text($"{c.TotalSpent:N0} ₽").AlignRight();
+                totalSpent += c.TotalSpent;
 
                 static IContainer CellStyle(IContainer container) =>
                     container.PaddingVertical(3).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
@@ -626,13 +705,9 @@ public class ExportModel : PageModel
         });
     }
 
-    private async void BuildWarehousePdf(QuestPDF.Infrastructure.IContainer container)
+    private void BuildWarehousePdf(IContainer container, WarehouseData data)
     {
-        var warehouses = await _context.Warehouses
-            .Include(w => w.Products)
-            .ToListAsync();
-
-        if (!warehouses.Any())
+        if (data == null || !data.Warehouses.Any())
         {
             container.Column(col =>
             {
@@ -662,7 +737,7 @@ public class ExportModel : PageModel
                     container.DefaultTextStyle(x => x.Bold()).PaddingVertical(5).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Black);
             });
 
-            foreach (var w in warehouses)
+            foreach (var w in data.Warehouses)
             {
                 var occupancy = w.Products?.Sum(p => p.CurrentStock) ?? 0;
                 var percent = w.Capacity > 0 ? occupancy * 100 / w.Capacity : 0;

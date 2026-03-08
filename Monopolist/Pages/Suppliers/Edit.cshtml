@@ -47,7 +47,6 @@
             --transition: all 0.2s ease;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
         body.dark-theme {
             --bg: #1a1a1a;
             --surface: #2d2d2d;
@@ -86,7 +85,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -173,7 +171,6 @@
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -280,7 +277,6 @@
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
@@ -303,9 +299,8 @@
             padding-bottom: 10px;
         }
 
-        /* ===== СТИЛИ ФОРМ ===== */
         .form-container {
-            max-width: 800px;
+            max-width: 1000px;
         }
 
         .form-group {
@@ -396,7 +391,99 @@
             display: block;
         }
 
-        /* ===== АДАПТИВНОСТЬ ===== */
+        /* Стили для выбора продуктов */
+        .products-section {
+            margin-top: 30px;
+            border-top: 2px solid var(--accent);
+            padding-top: 20px;
+        }
+
+            .products-section h3 {
+                color: var(--primary);
+                font-size: 1.3rem;
+                margin-bottom: 15px;
+            }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+        }
+
+            .products-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: 600;
+                color: var(--primary);
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .products-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
+
+            .products-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
+            }
+
+            .products-table input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+                accent-color: var(--primary);
+            }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+            .search-box input {
+                width: 100%;
+                padding: 10px 15px;
+                border: 2px solid var(--border);
+                border-radius: 30px;
+                font-size: 0.95rem;
+                background: var(--surface);
+                color: var(--text-primary);
+            }
+
+        .select-all {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: var(--surface-hover);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stock-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .stock-low {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .stock-normal {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -448,6 +535,14 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .products-table {
+                font-size: 0.8rem;
+            }
+
+                .products-table th, .products-table td {
+                    padding: 6px 4px;
+                }
         }
 
         @@media (max-width: 480px) {
@@ -463,7 +558,6 @@
 </head>
 <body>
     <div class="app">
-        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -485,14 +579,21 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
                     <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему"><i class="fas fa-sun"></i></div>
+                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
+                        <i class="fas fa-sun"></i>
+                    </div>
                     <form method="post" asp-page="/Account/Logout" style="display: inline;">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> <span>Выйти</span></button>
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Выйти</span>
+                        </button>
                     </form>
                 </div>
             </header>
@@ -500,23 +601,74 @@
             <div class="content">
                 <div class="dashboard">
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">Измените данные поставщика</p>
+                    <p class="subtitle">@Model.SupplierInput.Name</p>
 
                     <div class="form-container">
                         <form method="post">
-                            <input type="hidden" asp-for="Supplier.Id" />
+                            <input type="hidden" asp-for="SupplierInput.Id" />
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                             <div class="form-group">
-                                <label asp-for="Supplier.Name">Название</label>
-                                <input asp-for="Supplier.Name" class="form-control" />
-                                <span asp-validation-for="Supplier.Name" class="text-danger"></span>
+                                <label asp-for="SupplierInput.Name">Название</label>
+                                <input asp-for="SupplierInput.Name" class="form-control" />
+                                <span asp-validation-for="SupplierInput.Name" class="text-danger"></span>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Supplier.ContactInfo">Контактная информация</label>
-                                <textarea asp-for="Supplier.ContactInfo" class="form-control" rows="3"></textarea>
-                                <span asp-validation-for="Supplier.ContactInfo" class="text-danger"></span>
+                                <label asp-for="SupplierInput.ContactInfo">Контактная информация</label>
+                                <textarea asp-for="SupplierInput.ContactInfo" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="SupplierInput.ContactInfo" class="text-danger"></span>
+                            </div>
+
+                            <div class="products-section">
+                                <h3><i class="fas fa-boxes"></i> Товары поставщика</h3>
+                                <p class="text-muted">Выберите товары, которые поставляет этот поставщик</p>
+
+                                <div class="search-box">
+                                    <input type="text" id="productSearch" class="form-control" placeholder="Поиск товаров..." />
+                                </div>
+
+                                <div class="select-all">
+                                    <input type="checkbox" id="selectAll" />
+                                    <label for="selectAll">Выбрать все товары</label>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="products-table" id="productsTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 50px;">Выбрать</th>
+                                                <th>Товар</th>
+                                                <th>Артикул</th>
+                                                <th>Остаток</th>
+                                                <th>Ед.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for (int i = 0; i < Model.SupplierInput.AvailableProducts.Count; i++)
+                                            {
+                                                var product = Model.SupplierInput.AvailableProducts[i];
+                                                <tr class="product-row" data-name="@product.Name.ToLower()" data-article="@product.Article?.ToLower()">
+                                                    <td>
+                                                        <input type="checkbox"
+                                                               name="SupplierInput.SelectedProductIds"
+                                                               value="@product.Id"
+                                                               @(product.IsSelected ? "checked" : "")
+                                                               class="product-checkbox" />
+                                                    </td>
+                                                    <td>@product.Name</td>
+                                                    <td>@product.Article</td>
+                                                    <td>
+                                                        <span class="stock-badge @(product.CurrentStock < 10 ? "stock-low" : "stock-normal")">
+                                                            @product.CurrentStock
+                                                        </span>
+                                                    </td>
+                                                    <td>@product.Unit</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             <div class="form-actions">
@@ -531,8 +683,8 @@
     </div>
 
     <partial name="_ValidationScriptsPartial" />
+
     <script>
-        // Тот же скрипт, что в Create.cshtml
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
@@ -547,6 +699,7 @@
                     }
                 });
             }
+
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = themeToggle.querySelector('i');
             const savedTheme = localStorage.getItem('theme');
@@ -567,6 +720,40 @@
                     localStorage.setItem('theme', 'light');
                 }
             });
+
+            // Поиск по товарам
+            const searchInput = document.getElementById('productSearch');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function() {
+                    const term = this.value.toLowerCase();
+                    document.querySelectorAll('.product-row').forEach(row => {
+                        const name = row.getAttribute('data-name') || '';
+                        const article = row.getAttribute('data-article') || '';
+                        row.style.display = (name.includes(term) || article.includes(term)) ? '' : 'none';
+                    });
+                });
+            }
+
+            // Выделить все
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    document.querySelectorAll('.product-checkbox:visible').forEach(cb => {
+                        if (cb.closest('tr').style.display !== 'none') {
+                            cb.checked = selectAll.checked;
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.product-checkbox').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        const visible = document.querySelectorAll('.product-checkbox:visible');
+                        const checked = document.querySelectorAll('.product-checkbox:visible:checked');
+                        selectAll.checked = visible.length === checked.length;
+                        selectAll.indeterminate = checked.length > 0 && checked.length < visible.length;
+                    });
+                });
+            }
         });
     </script>
 </body>

@@ -19,7 +19,6 @@ public class WarehouseReportModel : PageModel
         _logger = logger;
     }
 
-    [BindProperty]
     public WarehouseReportViewModel Report { get; set; } = new();
 
     public async Task OnGetAsync()
@@ -50,7 +49,7 @@ public class WarehouseReportModel : PageModel
                 ProductsCount = w.Products?.Count ?? 0
             }).OrderBy(w => w.Name).ToList();
 
-            // Распределение товаров по складам (для таблицы детализации)
+            // Распределение товаров по складам (первые 100 для производительности)
             Report.ProductLocations = await _context.Products
                 .Include(p => p.Warehouse)
                 .Where(p => p.Warehouse != null)
@@ -64,7 +63,7 @@ public class WarehouseReportModel : PageModel
                 })
                 .OrderBy(p => p.WarehouseName)
                 .ThenBy(p => p.ProductName)
-                .Take(100) // ограничим для производительности
+                .Take(100)
                 .ToListAsync();
         }
         catch (Exception ex)
