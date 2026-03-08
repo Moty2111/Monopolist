@@ -1,0 +1,629 @@
+﻿@page
+@model Monoplist.Pages.Reports.CustomersReportModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Отчет по клиентам";
+    var userName = User.Identity?.Name ?? "Пользователь";
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Моноплист</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Полностью копируем стили из SalesReport.cshtml */
+        :root {
+            --primary: #FF6B00;
+            --primary-dark: #E05E00;
+            --primary-light: #FF9500;
+            --accent: #FFD700;
+            --accent-dark: #CC5500;
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --surface-hover: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --transition: all 0.2s ease;
+        }
+
+        body.dark-theme {
+            --bg: #1a1a1a;
+            --surface: #2d2d2d;
+            --surface-hover: #3a3a3a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #ccc;
+            --text-muted: #999;
+            --border: #444;
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            transition: transform 0.3s ease, background 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .sidebar-header i {
+                font-size: 40px;
+                background: linear-gradient(145deg, var(--primary), var(--accent));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                filter: drop-shadow(0 0 5px rgba(255,107,0,0.5));
+            }
+
+            .sidebar-header h2 {
+                font-size: 24px;
+                font-weight: 700;
+                background: linear-gradient(135deg, var(--accent), var(--primary));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin: 0;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+            .sidebar-nav ul {
+                list-style: none;
+            }
+
+            .sidebar-nav li {
+                margin: 4px 8px;
+            }
+
+                .sidebar-nav li a {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 16px;
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    font-weight: 500;
+                    border-radius: 12px;
+                    transition: var(--transition);
+                    gap: 12px;
+                }
+
+                    .sidebar-nav li a i {
+                        width: 24px;
+                        text-align: center;
+                        font-size: 1.25rem;
+                        color: var(--text-muted);
+                        transition: var(--transition);
+                    }
+
+                    .sidebar-nav li a:hover,
+                    .sidebar-nav li a.active {
+                        background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
+                        color: var(--primary);
+                        transform: translateX(4px);
+                    }
+
+                        .sidebar-nav li a:hover i,
+                        .sidebar-nav li a.active i {
+                            color: var(--primary);
+                        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            min-width: 0;
+        }
+
+        .top-bar {
+            background: var(--surface);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 2px solid var(--accent);
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+            .menu-toggle:hover {
+                background: rgba(255,107,0,0.1);
+                color: var(--primary);
+            }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-right: auto;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .user-info span {
+                font-weight: 500;
+                color: var(--text-secondary);
+            }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--accent);
+            border-radius: 50px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+            .theme-toggle:hover {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+        .btn-logout {
+            background: none;
+            border: 2px solid var(--accent);
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+            .btn-logout:hover {
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                border-color: transparent;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
+            }
+
+                .btn-logout:hover i {
+                    color: white;
+                }
+
+        .content {
+            padding: 24px;
+            flex: 1;
+        }
+
+        .dashboard {
+            background: var(--surface);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+            .dashboard h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--primary);
+                margin-bottom: 8px;
+            }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 12px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--surface-hover);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+        }
+
+        .kpi-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+            .chart-card h3 {
+                font-size: 1.1rem;
+                color: var(--primary);
+                margin-bottom: 15px;
+                font-weight: 600;
+            }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+        }
+
+            .data-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: 600;
+                color: var(--primary);
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .data-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
+
+            .data-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
+            }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: flex-end;
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transform: translateX(-100%);
+            }
+
+            body.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .btn-logout span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-helmet-safety"></i>
+                <h2>Моноплист</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
+                    <li><a asp-page="/Reports/Index" class="active"><i class="fas fa-chart-line"></i> Отчеты</a></li>
+                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="user-info">
+                    <span><i class="fas fa-user-circle"></i> @userName</span>
+                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Выйти</span>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="dashboard">
+                    <h1>@ViewData["Title"]</h1>
+                    <p class="subtitle">Анализ клиентской базы</p>
+
+                    <div class="export-buttons">
+                        <a asp-page="Export" asp-route-type="customers" asp-route-format="excel" class="btn-secondary">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                        <a asp-page="Export" asp-route-type="customers" asp-route-format="pdf" class="btn-secondary">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a asp-page="Export" asp-route-type="customers" asp-route-format="csv" class="btn-secondary">
+                            <i class="fas fa-file-csv"></i> CSV
+                        </a>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value">@Model.Report.TotalCustomers</div>
+                            <div class="kpi-label">Всего клиентов</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value">@Model.Report.NewCustomersThisMonth</div>
+                            <div class="kpi-label">Новых за месяц</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value">@Model.Report.ActiveCustomers</div>
+                            <div class="kpi-label">Активных (3 мес.)</div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <h3><i class="fas fa-chart-bar"></i> Регистрации по месяцам</h3>
+                            <div class="chart-container">
+                                <canvas id="registrationsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3><i class="fas fa-chart-pie"></i> Топ-10 клиентов</h3>
+                            <div class="chart-container">
+                                <canvas id="topCustomersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 30px 0 15px; color: var(--primary);">Топ-10 клиентов по сумме покупок</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Клиент</th>
+                                    <th>Телефон</th>
+                                    <th>Email</th>
+                                    <th class="text-right">Кол-во заказов</th>
+                                    <th class="text-right">Сумма</th>
+                                    <th>Последний заказ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in Model.Report.TopCustomers)
+                                {
+                                    <tr>
+                                        <td>@c.FullName</td>
+                                        <td>@c.Phone</td>
+                                        <td>@c.Email</td>
+                                        <td class="text-right">@c.OrdersCount</td>
+                                        <td class="text-right">@c.TotalSpent.ToString("N0") ₽</td>
+                                        <td>@c.LastOrderDate.ToString("dd.MM.yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <a asp-page="Index" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад к отчетам
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const body = document.body;
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.querySelector('.sidebar');
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
+                            body.classList.remove('sidebar-open');
+                        }
+                    }
+                });
+            }
+
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-theme');
+                if (body.classList.contains('dark-theme')) {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            @if (Model.Report.Registrations.Any())
+            {
+                    <text>
+                    const regCtx = document.getElementById('registrationsChart').getContext('2d');
+                    new Chart(regCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.Report.Registrations.Select(r => $"'{r.Period}'")))],
+                            datasets: [{
+                                label: 'Новые клиенты',
+                                data: [@string.Join(",", Model.Report.Registrations.Select(r => r.Count))],
+                                backgroundColor: '#10b981'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                    </text>
+            }
+
+            @if (Model.Report.TopCustomers.Any())
+            {
+                    <text>
+                    const topCtx = document.getElementById('topCustomersChart').getContext('2d');
+                    new Chart(topCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.Report.TopCustomers.Select(c => $"'{c.FullName}'")))],
+                            datasets: [{
+                                data: [@string.Join(",", Model.Report.TopCustomers.Select(c => c.TotalSpent))],
+                                backgroundColor: ['#FF6B00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f59e0b', '#ec4899', '#14b8a6', '#f97316', '#6366f1']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom' } }
+                        }
+                    });
+                    </text>
+            }
+        });
+    </script>
+</body>
+</html>

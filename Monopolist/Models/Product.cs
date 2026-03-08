@@ -38,4 +38,7 @@ public class Product
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+    // Добавьте эти поля в существующий класс Product
+    public int? WarehouseId { get; set; }
+    public Warehouse? Warehouse { get; set; }
 }

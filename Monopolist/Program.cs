@@ -44,6 +44,7 @@ if (app.Environment.IsDevelopment())
         context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
         SeedData.Initialize(context);
+        SeedDataWarehouse.Initialize(context); // <-- добавляем инициализацию складов
     }
 }
 else

@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ (СВЕТЛАЯ ТЕМА) ===== */
+        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ (как были) ===== */
         :root {
             --primary: #FF6B00;
             --primary-dark: #E05E00;
@@ -41,14 +41,9 @@
             --danger-bg: #fee2e2;
             --warning: #f59e0b;
             --warning-bg: #fed7aa;
-            --card-color-1: #10b981;
-            --card-color-2: #3b82f6;
-            --card-color-3: #8b5cf6;
-            --card-color-4: #f59e0b;
             --transition: all 0.2s ease;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
         body.dark-theme {
             --bg: #1a1a1a;
             --surface: #2d2d2d;
@@ -62,10 +57,6 @@
             --success-bg: #064e3b;
             --warning-bg: #92400e;
             --danger-bg: #7f1d1d;
-            --card-color-1: #34d399;
-            --card-color-2: #60a5fa;
-            --card-color-3: #c084fc;
-            --card-color-4: #fbbf24;
         }
 
         * {
@@ -281,7 +272,6 @@
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
@@ -298,7 +288,7 @@
             padding-bottom: 10px;
         }
 
-        /* ===== ПАНЕЛЬ ПОИСКА И ДЕЙСТВИЙ ===== */
+        /* ===== ПАНЕЛЬ ПОИСКА ===== */
         .action-bar {
             display: flex;
             justify-content: space-between;
@@ -392,17 +382,17 @@
                 color: white;
             }
 
-        /* ===== СЕТКА КАРТОЧЕК СКЛАДОВ ===== */
+        /* ===== СЕТКА КАРТОЧЕК ===== */
         .warehouse-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 24px;
             margin-top: 20px;
         }
 
         .warehouse-card {
             background: var(--surface);
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: var(--shadow-md);
             transition: var(--transition);
@@ -412,34 +402,40 @@
         }
 
             .warehouse-card:hover {
-                transform: translateY(-4px);
+                transform: translateY(-6px);
                 box-shadow: var(--shadow-hover);
             }
 
         .warehouse-image {
-            height: 160px;
+            height: 180px;
             background-color: var(--surface-hover);
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-muted);
-            font-size: 3rem;
+            font-size: 3.5rem;
             border-bottom: 2px solid var(--accent);
+            overflow: hidden;
         }
 
             .warehouse-image img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
+                transition: transform 0.3s;
+            }
+
+            .warehouse-image:hover img {
+                transform: scale(1.05);
             }
 
         .warehouse-content {
-            padding: 16px;
+            padding: 18px;
             flex: 1;
         }
 
         .warehouse-name {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: var(--primary);
             margin-bottom: 8px;
@@ -451,55 +447,86 @@
             margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         .warehouse-stats {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--text-muted);
             margin-bottom: 12px;
         }
 
         .progress-bar {
-            height: 8px;
+            height: 10px;
             background: var(--border);
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
             margin-bottom: 16px;
         }
 
         .progress-fill {
             height: 100%;
-            background: var(--primary);
-            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 5px;
             transition: width 0.3s;
         }
+
+        .products-preview {
+            background: var(--surface-hover);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .products-preview-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .products-preview-list {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+            .products-preview-list li {
+                padding: 4px 0;
+                border-bottom: 1px dashed var(--border);
+            }
+
+                .products-preview-list li:last-child {
+                    border-bottom: none;
+                }
 
         .warehouse-actions {
             display: flex;
             gap: 8px;
-            padding: 16px;
+            padding: 16px 18px;
             border-top: 1px solid var(--border);
+            background: var(--surface-hover);
         }
 
         .btn-sm {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             color: white;
             text-decoration: none;
             transition: var(--transition);
-            font-size: 0.9rem;
+            font-size: 1rem;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
             .btn-sm.btn-info {
-                background: var(--card-color-2);
+                background: #3b82f6;
             }
 
             .btn-sm.btn-primary {
@@ -511,9 +538,9 @@
             }
 
             .btn-sm:hover {
-                transform: translateY(-2px);
+                transform: translateY(-2px) scale(1.05);
                 filter: brightness(1.1);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             }
 
         .text-muted {
@@ -581,6 +608,10 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .warehouse-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @@media (max-width: 480px) {
@@ -596,7 +627,6 @@
 </head>
 <body>
     <div class="app">
-        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -616,7 +646,6 @@
             </nav>
         </aside>
 
-        <!-- Основной контент -->
         <main class="main-content">
             <header class="top-bar">
                 <button class="menu-toggle" id="menuToggle">
@@ -638,12 +667,10 @@
                 </div>
             </header>
 
-            <!-- Контент страницы -->
             <div class="content">
                 <div class="dashboard">
                     <h1 class="subtitle">Управление складами</h1>
 
-                    <!-- Панель поиска и действий -->
                     <div class="action-bar">
                         <form method="get" class="search-form">
                             <input type="text" class="search-input" name="searchString" placeholder="Поиск по названию, местоположению..." value="@Model.SearchString" />
@@ -668,13 +695,13 @@
                             @foreach (var warehouse in Model.Warehouses)
                             {
                                 var occupancyPercent = warehouse.Capacity > 0 ? (int)((double)warehouse.CurrentOccupancy / warehouse.Capacity * 100) : 0;
-                                var imageUrl = !string.IsNullOrEmpty(warehouse.ImageUrl) ? warehouse.ImageUrl : null;
+                                occupancyPercent = occupancyPercent > 100 ? 100 : occupancyPercent;
 
                                 <div class="warehouse-card">
                                     <div class="warehouse-image">
-                                        @if (imageUrl != null)
+                                        @if (!string.IsNullOrEmpty(warehouse.ImageUrl))
                                         {
-                                            <img src="@imageUrl" alt="@warehouse.Name" />
+                                            <img src="@warehouse.ImageUrl" alt="@warehouse.Name" />
                                         }
                                         else
                                         {
@@ -687,15 +714,37 @@
                                             <i class="fas fa-map-marker-alt"></i> @(warehouse.Location ?? "Местоположение не указано")
                                         </div>
                                         <div class="warehouse-stats">
-                                            <span><i class="fas fa-boxes"></i> @warehouse.CurrentOccupancy / @warehouse.Capacity</span>
-                                            <span>@occupancyPercent%</span>
+                                            <span><i class="fas fa-boxes"></i> @warehouse.CurrentOccupancy / @warehouse.Capacity ед.</span>
+                                            <span><i class="fas fa-tag"></i> @warehouse.ProductsCount товаров</span>
                                         </div>
                                         <div class="progress-bar">
                                             <div class="progress-fill" style="width: @occupancyPercent%;"></div>
                                         </div>
+
+                                        @if (warehouse.ProductNames.Any())
+                                        {
+                                            <div class="products-preview">
+                                                <div class="products-preview-title">
+                                                    <i class="fas fa-cubes"></i> Товары на складе:
+                                                </div>
+                                                <ul class="products-preview-list">
+                                                    @foreach (var productName in warehouse.ProductNames)
+                                                    {
+                                                        <li>• @productName</li>
+                                                    }
+                                                    @if (warehouse.ProductsCount > 3)
+                                                    {
+                                                        <li><em>и еще @(warehouse.ProductsCount - 3) товаров...</em></li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        }
+
                                         @if (!string.IsNullOrEmpty(warehouse.Description))
                                         {
-                                            <p style="font-size: 0.85rem; color: var(--text-secondary);">@warehouse.Description</p>
+                                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 10px;">
+                                                @warehouse.Description
+                                            </p>
                                         }
                                     </div>
                                     <div class="warehouse-actions">
@@ -718,14 +767,16 @@
                     }
                     else
                     {
-                        <p class="text-muted">Нет складов.</p>
+                        <p class="text-muted">Склады не найдены. @if (User.IsInRole("Admin") || User.IsInRole("Manager")) {
+                        <span><a asp-page="Create">Добавьте первый склад</a>.</span>
                     }
+</p>
+                                        }
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Скрипты для мобильного меню и переключения темы -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');

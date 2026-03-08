@@ -49,5 +49,12 @@ public class AppDbContext : DbContext
             .WithMany(c => c.Orders)
             .HasForeignKey(o => o.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Добавьте в метод OnModelCreating после существующих настроек
+
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.Warehouse)
+            .WithMany(w => w.Products)
+            .HasForeignKey(p => p.WarehouseId)
+            .OnDelete(DeleteBehavior.SetNull); // При удалении склада товары остаются без склада
     }
 }

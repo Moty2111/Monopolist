@@ -7,11 +7,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="EPPlus" Version="7.5.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
-			<PrivateAssets>all</PrivateAssets>
+		    <PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="QuestPDF" Version="2025.12.1" />
 	</ItemGroup>
 
 </Project>
