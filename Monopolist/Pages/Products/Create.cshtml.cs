@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+ï»¿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Monoplist.Models;
 using Monoplist.ViewModels;
 using Monoplist.Data;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
 
@@ -27,8 +28,16 @@ public class CreateModel : PageModel
     public SelectList Categories { get; set; } = default!;
     public SelectList Suppliers { get; set; } = default!;
 
+    // Ğ¡Ğ²Ğ¾Ğ¹ÑÑ‚Ğ²Ğ° Ğ´Ğ»Ñ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ¸Ğ·Ğ°Ñ†Ğ¸Ğ¸
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task OnGetAsync()
     {
+        await LoadUserSettings();
         await PopulateDropdownsAsync();
     }
 
@@ -36,6 +45,7 @@ public class CreateModel : PageModel
     {
         if (!ModelState.IsValid)
         {
+            await LoadUserSettings();
             await PopulateDropdownsAsync(Product.CategoryId, Product.SupplierId);
             return Page();
         }
@@ -58,13 +68,14 @@ public class CreateModel : PageModel
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Òîâàğ «{product.Name}» óñïåøíî äîáàâëåí.";
+            TempData["Success"] = GetLocalizedMessage($"Ğ¢Ğ¾Ğ²Ğ°Ñ€ Â«{product.Name}Â» ÑƒÑĞ¿ĞµÑˆĞ½Ğ¾ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½.", $"Product Â«{product.Name}Â» added successfully.", $"Â«{product.Name}Â» Ñ‚Ğ°ÑƒĞ°Ñ€Ñ‹ ÑÓ™Ñ‚Ñ‚Ñ– Ò›Ğ¾ÑÑ‹Ğ»Ğ´Ñ‹.");
             return RedirectToPage("./Index");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Îøèáêà ïğè ñîçäàíèè òîâàğà");
-            ModelState.AddModelError(string.Empty, "Ïğîèçîøëà îøèáêà ïğè ñîõğàíåíèè. Ïîïğîáóéòå ñíîâà.");
+            _logger.LogError(ex, "ĞÑˆĞ¸Ğ±ĞºĞ° Ğ¿Ñ€Ğ¸ ÑĞ¾Ğ·Ğ´Ğ°Ğ½Ğ¸Ğ¸ Ñ‚Ğ¾Ğ²Ğ°Ñ€Ğ°");
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage("ĞŸÑ€Ğ¾Ğ¸Ğ·Ğ¾ÑˆĞ»Ğ° Ğ¾ÑˆĞ¸Ğ±ĞºĞ° Ğ¿Ñ€Ğ¸ ÑĞ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¸Ğ¸. ĞŸĞ¾Ğ¿Ñ€Ğ¾Ğ±ÑƒĞ¹Ñ‚Ğµ ÑĞ½Ğ¾Ğ²Ğ°.", "An error occurred while saving. Please try again.", "Ğ¡Ğ°Ò›Ñ‚Ğ°Ñƒ ĞºĞµĞ·Ñ–Ğ½Ğ´Ğµ Ò›Ğ°Ñ‚Ğµ Ğ¾Ñ€Ñ‹Ğ½ Ğ°Ğ»Ğ´Ñ‹. ÒšĞ°Ğ¹Ñ‚Ğ°Ğ»Ğ°Ğ¿ ĞºÓ©Ñ€Ñ–Ò£Ñ–Ğ·."));
+            await LoadUserSettings();
             await PopulateDropdownsAsync(Product.CategoryId, Product.SupplierId);
             return Page();
         }
@@ -72,7 +83,6 @@ public class CreateModel : PageModel
 
     private async Task PopulateDropdownsAsync(object? selectedCategory = null, object? selectedSupplier = null)
     {
-        // Êàòåãîğèè
         var categories = await _context.Categories
             .OrderBy(c => c.Name)
             .Select(c => new SelectListItem
@@ -83,7 +93,6 @@ public class CreateModel : PageModel
             .ToListAsync();
         Categories = new SelectList(categories, "Value", "Text", selectedCategory);
 
-        // Ïîñòàâùèêè
         var suppliers = await _context.Suppliers
             .OrderBy(s => s.Name)
             .Select(s => new SelectListItem
@@ -92,7 +101,31 @@ public class CreateModel : PageModel
                 Text = s.Name
             })
             .ToListAsync();
-        suppliers.Insert(0, new SelectListItem { Value = "", Text = "— Íå âûáğàí —" });
+        suppliers.Insert(0, new SelectListItem { Value = "", Text = GetLocalizedMessage("â€” ĞĞµ Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½ â€”", "â€” Not selected â€”", "â€” Ğ¢Ğ°Ò£Ğ´Ğ°Ğ»Ğ¼Ğ°Ò“Ğ°Ğ½ â€”") });
         Suppliers = new SelectList(suppliers, "Value", "Text", selectedSupplier);
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

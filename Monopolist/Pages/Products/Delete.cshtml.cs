@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+Ôªøusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.ViewModels;
 using Monoplist.Data;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
 
@@ -21,10 +22,19 @@ public class DeleteModel : PageModel
 
     public ProductDeleteViewModel Product { get; set; } = new();
 
+    // –°–≤–æ–π—Å—Ç–≤–∞ –¥–ª—è –ø–µ—Ä—Å–æ–Ω–∞–ª–∏–∑–∞—Ü–∏–∏
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(int? id)
     {
         if (id == null)
             return NotFound();
+
+        await LoadUserSettings();
 
         var product = await _context.Products
             .Include(p => p.Category)
@@ -39,11 +49,11 @@ public class DeleteModel : PageModel
             Id = product.Id,
             Name = product.Name,
             Article = product.Article,
-            CategoryName = product.Category?.Name ?? "¡ÂÁ Í‡ÚÂ„ÓËË",
+            CategoryName = product.Category?.Name ?? "–ë–µ–∑ –∫–∞—Ç–µ–≥–æ—Ä–∏–∏",
             Unit = product.Unit,
             SalePrice = product.SalePrice,
             CurrentStock = product.CurrentStock,
-            SupplierName = product.Supplier?.Name ?? "ÕÂ ÛÍ‡Á‡Ì"
+            SupplierName = product.Supplier?.Name ?? "–ù–µ —É–∫–∞–∑–∞–Ω"
         };
 
         return Page();
@@ -54,15 +64,14 @@ public class DeleteModel : PageModel
         var product = await _context.Products.FindAsync(id);
         if (product == null)
         {
-            TempData["Error"] = "“Ó‚‡ ÌÂ Ì‡È‰ÂÌ.";
+            TempData["Error"] = GetLocalizedMessage("–¢–æ–≤–∞—Ä –Ω–µ –Ω–∞–π–¥–µ–Ω.", "Product not found.", "–¢–∞—É–∞—Ä —Ç–∞–±—ã–ª–º–∞–¥—ã.");
             return RedirectToPage("./Index");
         }
 
-        // œÓ‚ÂÍ‡ Ì‡ Ì‡ÎË˜ËÂ ‚ Á‡Í‡Á‡ı
         bool hasOrders = await _context.OrderItems.AnyAsync(oi => oi.ProductId == id);
         if (hasOrders)
         {
-            TempData["Error"] = "ÕÂÎ¸Áˇ Û‰‡ÎËÚ¸ ÚÓ‚‡, ÍÓÚÓ˚È ÂÒÚ¸ ‚ Á‡Í‡Á‡ı. —Ì‡˜‡Î‡ Û‰‡ÎËÚÂ ËÎË ËÁÏÂÌËÚÂ Á‡Í‡Á˚.";
+            TempData["Error"] = GetLocalizedMessage("–ù–µ–ª—å–∑—è —É–¥–∞–ª–∏—Ç—å —Ç–æ–≤–∞—Ä, –∫–æ—Ç–æ—Ä—ã–π –µ—Å—Ç—å –≤ –∑–∞–∫–∞–∑–∞—Ö.", "Cannot delete a product that is in orders.", "–¢–∞–ø—Å—ã—Ä—ã—Å—Ç–∞—Ä–¥–∞ –±–∞—Ä —Ç–∞—É–∞—Ä–¥—ã –∂–æ—é –º“Ø–º–∫—ñ–Ω –µ–º–µ—Å.");
             return RedirectToPage("./Index");
         }
 
@@ -71,14 +80,38 @@ public class DeleteModel : PageModel
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"“Ó‚‡ ´{product.Name}ª Û‰‡Î∏Ì.";
+            TempData["Success"] = GetLocalizedMessage($"–¢–æ–≤–∞—Ä ¬´{product.Name}¬ª —É–¥–∞–ª—ë–Ω.", $"Product ¬´{product.Name}¬ª deleted.", $"¬´{product.Name}¬ª —Ç–∞—É–∞—Ä—ã –∂–æ–π—ã–ª–¥—ã.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Œ¯Ë·Í‡ ÔË Û‰‡ÎÂÌËË ÚÓ‚‡‡ {ProductId}", id);
-            TempData["Error"] = "ÕÂ Û‰‡ÎÓÒ¸ Û‰‡ÎËÚ¸ ÚÓ‚‡.";
+            _logger.LogError(ex, "–û—à–∏–±–∫–∞ –ø—Ä–∏ —É–¥–∞–ª–µ–Ω–∏–∏ —Ç–æ–≤–∞—Ä–∞ {ProductId}", id);
+            TempData["Error"] = GetLocalizedMessage("–ù–µ —É–¥–∞–ª–æ—Å—å —É–¥–∞–ª–∏—Ç—å —Ç–æ–≤–∞—Ä.", "Failed to delete product.", "–¢–∞—É–∞—Ä–¥—ã –∂–æ—é –º“Ø–º–∫—ñ–Ω –±–æ–ª–º–∞–¥—ã.");
         }
 
         return RedirectToPage("./Index");
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

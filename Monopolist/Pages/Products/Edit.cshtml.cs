@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
+Ôªøusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
 
@@ -26,10 +27,19 @@ public class EditModel : PageModel
     public SelectList Categories { get; set; } = default!;
     public SelectList Suppliers { get; set; } = default!;
 
+    // –°–≤–æ–π—Å—Ç–≤–∞ –¥–ª—è –ø–µ—Ä—Å–æ–Ω–∞–ª–∏–∑–∞—Ü–∏–∏
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(int? id)
     {
         if (id == null)
             return NotFound();
+
+        await LoadUserSettings();
 
         var product = await _context.Products.FindAsync(id);
         if (product == null)
@@ -54,6 +64,7 @@ public class EditModel : PageModel
     {
         if (!ModelState.IsValid)
         {
+            await LoadUserSettings();
             await PopulateDropdownsAsync(Product.CategoryId, Product.SupplierId);
             return Page();
         }
@@ -77,7 +88,7 @@ public class EditModel : PageModel
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"“Ó‚‡ ´{product.Name}ª Ó·ÌÓ‚Î∏Ì.";
+            TempData["Success"] = GetLocalizedMessage($"–¢–æ–≤–∞—Ä ¬´{product.Name}¬ª –æ–±–Ω–æ–≤–ª—ë–Ω.", $"Product ¬´{product.Name}¬ª updated.", $"¬´{product.Name}¬ª —Ç–∞—É–∞—Ä—ã –∂–∞“£–∞—Ä—Ç—ã–ª–¥—ã.");
             return RedirectToPage("./Index");
         }
         catch (DbUpdateConcurrencyException)
@@ -89,8 +100,9 @@ public class EditModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Œ¯Ë·Í‡ ÔË Ó·ÌÓ‚ÎÂÌËË ÚÓ‚‡‡ {ProductId}", Product.Id);
-            ModelState.AddModelError(string.Empty, "œÓËÁÓ¯Î‡ Ó¯Ë·Í‡ ÔË Ó·ÌÓ‚ÎÂÌËË.");
+            _logger.LogError(ex, "–û—à–∏–±–∫–∞ –ø—Ä–∏ –æ–±–Ω–æ–≤–ª–µ–Ω–∏–∏ —Ç–æ–≤–∞—Ä–∞ {ProductId}", Product.Id);
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage("–ü—Ä–æ–∏–∑–æ—à–ª–∞ –æ—à–∏–±–∫–∞ –ø—Ä–∏ –æ–±–Ω–æ–≤–ª–µ–Ω–∏–∏.", "An error occurred while updating.", "–ñ–∞“£–∞—Ä—Ç—É –∫–µ–∑—ñ–Ω–¥–µ “õ–∞—Ç–µ –æ—Ä—ã–Ω –∞–ª–¥—ã."));
+            await LoadUserSettings();
             await PopulateDropdownsAsync(Product.CategoryId, Product.SupplierId);
             return Page();
         }
@@ -98,7 +110,6 @@ public class EditModel : PageModel
 
     private async Task PopulateDropdownsAsync(object? selectedCategory = null, object? selectedSupplier = null)
     {
-        //  ‡ÚÂ„ÓËË
         var categories = await _context.Categories
             .OrderBy(c => c.Name)
             .Select(c => new SelectListItem
@@ -109,7 +120,6 @@ public class EditModel : PageModel
             .ToListAsync();
         Categories = new SelectList(categories, "Value", "Text", selectedCategory);
 
-        // œÓÒÚ‡‚˘ËÍË
         var suppliers = await _context.Suppliers
             .OrderBy(s => s.Name)
             .Select(s => new SelectListItem
@@ -118,7 +128,31 @@ public class EditModel : PageModel
                 Text = s.Name
             })
             .ToListAsync();
-        suppliers.Insert(0, new SelectListItem { Value = "", Text = "ó ÕÂ ‚˚·‡Ì ó" });
+        suppliers.Insert(0, new SelectListItem { Value = "", Text = GetLocalizedMessage("‚Äî –ù–µ –≤—ã–±—Ä–∞–Ω ‚Äî", "‚Äî Not selected ‚Äî", "‚Äî –¢–∞“£–¥–∞–ª–º–∞“ì–∞–Ω ‚Äî") });
         Suppliers = new SelectList(suppliers, "Value", "Text", selectedSupplier);
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }
