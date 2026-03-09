@@ -1,0 +1,670 @@
+﻿@page
+@model Monoplist.Pages.Settings.ActivityLogModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Журнал активности";
+    var userName = User.Identity?.Name ?? "Пользователь";
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Моноплист</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        :root {
+            --primary: #FF6B00;
+            --primary-dark: #E05E00;
+            --primary-light: #FF9500;
+            --accent: #FFD700;
+            --accent-dark: #CC5500;
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --surface-hover: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --warning: #f59e0b;
+            --warning-bg: #fed7aa;
+            --info: #3b82f6;
+            --info-bg: #dbeafe;
+            --transition: all 0.2s ease;
+        }
+
+        body.dark-theme {
+            --bg: #1a1a1a;
+            --surface: #2d2d2d;
+            --surface-hover: #3a3a3a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #ccc;
+            --text-muted: #999;
+            --border: #444;
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.5);
+            --success-bg: #064e3b;
+            --warning-bg: #92400e;
+            --danger-bg: #7f1d1d;
+            --info-bg: #1e3a5f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            transition: transform 0.3s ease, background 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .sidebar-header i {
+                font-size: 40px;
+                background: linear-gradient(145deg, var(--primary), var(--accent));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                filter: drop-shadow(0 0 5px rgba(255,107,0,0.5));
+            }
+
+            .sidebar-header h2 {
+                font-size: 24px;
+                font-weight: 700;
+                background: linear-gradient(135deg, var(--accent), var(--primary));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin: 0;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+            .sidebar-nav ul {
+                list-style: none;
+            }
+
+            .sidebar-nav li {
+                margin: 4px 8px;
+            }
+
+                .sidebar-nav li a {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 16px;
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    font-weight: 500;
+                    border-radius: 12px;
+                    transition: var(--transition);
+                    gap: 12px;
+                }
+
+                    .sidebar-nav li a i {
+                        width: 24px;
+                        text-align: center;
+                        font-size: 1.25rem;
+                        color: var(--text-muted);
+                        transition: var(--transition);
+                    }
+
+                    .sidebar-nav li a:hover,
+                    .sidebar-nav li a.active {
+                        background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
+                        color: var(--primary);
+                        transform: translateX(4px);
+                    }
+
+                        .sidebar-nav li a:hover i,
+                        .sidebar-nav li a.active i {
+                            color: var(--primary);
+                        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            min-width: 0;
+        }
+
+        .top-bar {
+            background: var(--surface);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 2px solid var(--accent);
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+            .menu-toggle:hover {
+                background: rgba(255,107,0,0.1);
+                color: var(--primary);
+            }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-right: auto;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .user-info span {
+                font-weight: 500;
+                color: var(--text-secondary);
+            }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--accent);
+            border-radius: 50px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+            .theme-toggle:hover {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+        .btn-logout {
+            background: none;
+            border: 2px solid var(--accent);
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+            .btn-logout:hover {
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                border-color: transparent;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
+            }
+
+                .btn-logout:hover i {
+                    color: white;
+                }
+
+        .content {
+            padding: 24px;
+            flex: 1;
+        }
+
+        .dashboard {
+            background: var(--surface);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+            .dashboard h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--primary);
+                margin-bottom: 8px;
+            }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 12px;
+        }
+
+        .filter-panel {
+            background: var(--surface-hover);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            border: 1px solid var(--border);
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+            .filter-group label {
+                display: block;
+                font-weight: 600;
+                font-size: 0.85rem;
+                color: var(--primary);
+                margin-bottom: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                width: 100%;
+                padding: 10px 12px;
+                border: 2px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text-primary);
+                font-family: 'Poppins', sans-serif;
+                transition: var(--transition);
+            }
+
+                .filter-group input:focus,
+                .filter-group select:focus {
+                    outline: none;
+                    border-color: var(--primary);
+                    box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
+                }
+
+        .btn-filter {
+            padding: 10px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(255,107,0,0.3);
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .btn-filter:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(255,107,0,0.4);
+            }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-top: 20px;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+        }
+
+            .log-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: 600;
+                color: var(--primary);
+                border-bottom: 2px solid var(--accent);
+                font-size: 0.9rem;
+            }
+
+            .log-table td {
+                padding: 12px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
+
+            .log-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
+            }
+
+        .action-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .action-login {
+            background: var(--info-bg);
+            color: var(--info);
+        }
+
+        .action-create {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .action-delete {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .action-edit {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            background: var(--surface);
+            color: var(--text-secondary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+            .btn-secondary:hover {
+                background: var(--surface-hover);
+                border-color: var(--text-muted);
+                transform: translateY(-2px);
+            }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transform: translateX(-100%);
+            }
+
+            body.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .filter-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .btn-filter {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .btn-logout span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-helmet-safety"></i>
+                <h2>Моноплист</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
+                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
+                    <li><a asp-page="/Settings/Index" class="active"><i class="fas fa-cog"></i> Настройки</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="user-info">
+                    <span><i class="fas fa-user-circle"></i> @userName</span>
+                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Выйти</span>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="dashboard">
+                    <h1>@ViewData["Title"]</h1>
+                    <p class="subtitle">История действий пользователей в системе</p>
+
+                    <form method="get" class="filter-panel">
+                        <div class="filter-group">
+                            <label>Пользователь</label>
+                            <input type="text" name="UserFilter" value="@Model.UserFilter" placeholder="Все пользователи" />
+                        </div>
+                        <div class="filter-group">
+                            <label>Тип действия</label>
+                            <select name="ActionFilter">
+                                <option value="">Все действия</option>
+                                <option value="Вход" selected="@(Model.ActionFilter == "Вход")">Вход</option>
+                                <option value="Создание" selected="@(Model.ActionFilter == "Создание")">Создание</option>
+                                <option value="Редактирование" selected="@(Model.ActionFilter == "Редактирование")">Редактирование</option>
+                                <option value="Удаление" selected="@(Model.ActionFilter == "Удаление")">Удаление</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Дата с</label>
+                            <input type="date" name="DateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="filter-group">
+                            <label>Дата по</label>
+                            <input type="date" name="DateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Применить</button>
+                    </form>
+
+                    <div class="table-responsive">
+                        @if (Model.Logs.Any())
+                        {
+                            <table class="log-table">
+                                <thead>
+                                    <tr>
+                                        <th>Время</th>
+                                        <th>Пользователь</th>
+                                        <th>Действие</th>
+                                        <th>Детали</th>
+                                        <th>IP адрес</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var log in Model.Logs)
+                                    {
+                                        <tr>
+                                            <td>@log.Timestamp.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td><strong>@log.Username</strong></td>
+                                            <td>
+                                                @{
+                                                    string actionClass = log.Action.Contains("Вход") ? "action-login" :
+                                                    log.Action.Contains("Создание") ? "action-create" :
+                                                    log.Action.Contains("Удаление") ? "action-delete" :
+                                                    log.Action.Contains("Редактирование") ? "action-edit" : "";
+                                                }
+                                                <span class="action-badge @actionClass">@log.Action</span>
+                                            </td>
+                                            <td>@log.Details</td>
+                                            <td>@log.IpAddress</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="empty-message">
+                                <i class="fas fa-history" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                                <p>Нет записей в журнале активности.</p>
+                            </div>
+                        }
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <a asp-page="Index" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад к настройкам
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const body = document.body;
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.querySelector('.sidebar');
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
+                            body.classList.remove('sidebar-open');
+                        }
+                    }
+                });
+            }
+
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-theme');
+                if (body.classList.contains('dark-theme')) {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // Автоматическое скрытие алертов (если они есть)
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

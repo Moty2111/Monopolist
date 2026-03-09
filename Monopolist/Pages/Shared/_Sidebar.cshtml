@@ -5,6 +5,7 @@
 }
 <aside class="sidebar" aria-label="Боковое меню">
     <div class="sidebar-header">
+        <i class="fas fa-helmet-safety"></i>
         <h2>Моноплист</h2>
     </div>
     <nav class="sidebar-nav" aria-label="Основная навигация">
@@ -30,7 +31,7 @@
                 </a>
             </li>
             <li>
-                <a href="#">
+                <a class="@(currentPage?.StartsWith("/Warehouse") == true ? "active" : "")" asp-page="/Warehouse/Index">
                     <i class="fas fa-warehouse"></i> Склад
                 </a>
             </li>
@@ -40,18 +41,15 @@
                 </a>
             </li>
             <li>
-                <a href="#">
-                    <i class="fas fa-chart-bar"></i> Отчеты
+                <a class="@(currentPage?.StartsWith("/Reports") == true ? "active" : "")" asp-page="/Reports/Index">
+                    <i class="fas fa-chart-line"></i> Отчеты
                 </a>
             </li>
-            @if (role == "Admin")
-            {
-                <li>
-                    <a class="@(currentPage?.StartsWith("/Admin") == true ? "active" : "")" asp-page="/Admin/Users/Index">
-                        <i class="fas fa-cog"></i> Настройки
-                    </a>
-                </li>
-            }
+            <li>
+                <a class="@(currentPage?.StartsWith("/Settings") == true ? "active" : "")" asp-page="/Settings/Index">
+                    <i class="fas fa-cog"></i> Настройки
+                </a>
+            </li>
         </ul>
     </nav>
 </aside>

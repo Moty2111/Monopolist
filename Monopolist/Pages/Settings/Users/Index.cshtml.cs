@@ -1,15 +1,14 @@
-// Pages/Customers/Index.cshtml.cs
+// Pages/Settings/Users/Index.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
-using Monoplist.Models;
+using Monoplist.ViewModels;
 using System.Security.Claims;
 
-namespace Monoplist.Pages.Customers;
+namespace Monoplist.Pages.Settings.Users;
 
-[Authorize(Roles = "Admin,Manager,Seller")]
+[Authorize(Roles = "Admin")]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _context;
@@ -21,10 +20,7 @@ public class IndexModel : PageModel
         _logger = logger;
     }
 
-    [BindProperty(SupportsGet = true)]
-    public string? SearchString { get; set; }
-
-    public IList<Customer> Customers { get; set; } = new List<Customer>();
+    public IList<UserSettingsViewModel> Users { get; set; } = new List<UserSettingsViewModel>();
 
     // Свойства для персонализации
     public string Language { get; set; } = "ru";
@@ -37,7 +33,6 @@ public class IndexModel : PageModel
     {
         try
         {
-            // Загружаем настройки текущего пользователя
             var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
@@ -49,24 +44,23 @@ public class IndexModel : PageModel
                 CustomColor = user.CustomColor ?? "#FF6B00";
             }
 
-            var query = _context.Customers.AsQueryable();
-
-            if (!string.IsNullOrEmpty(SearchString))
-            {
-                query = query.Where(c =>
-                    EF.Functions.Like(c.FullName, $"%{SearchString}%") ||
-                    EF.Functions.Like(c.Phone, $"%{SearchString}%") ||
-                    EF.Functions.Like(c.Email, $"%{SearchString}%"));
-            }
-
-            Customers = await query
-                .OrderBy(c => c.FullName)
+            Users = await _context.Users
+                .OrderBy(u => u.Username)
+                .Select(u => new UserSettingsViewModel
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    Role = u.Role,
+                    IsActive = true, // В реальном проекте можно добавить поле IsActive в модель User
+                    CreatedAt = u.CreatedAt,
+                    LastLoginAt = u.UpdatedAt
+                })
                 .ToListAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при загрузке списка клиентов");
-            TempData["Error"] = "Не удалось загрузить список клиентов.";
+            _logger.LogError(ex, "Ошибка при загрузке списка пользователей");
+            TempData["Error"] = "Не удалось загрузить список пользователей.";
         }
     }
 }

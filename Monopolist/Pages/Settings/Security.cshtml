@@ -1,0 +1,1006 @@
+﻿@page
+@model Monoplist.Pages.Settings.SecurityModel
+@{
+    Layout = null;
+    ViewData["Title"] = Model.Language == "ru" ? "Безопасность" : (Model.Language == "en" ? "Security" : "Қауіпсіздік");
+    var userName = User.Identity?.Name ?? "Пользователь";
+}
+
+<!DOCTYPE html>
+<html lang="@Model.Language">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Моноплист</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        :root {
+            --primary: @Model.CustomColor;
+            --primary-dark: #E05E00;
+            --primary-light: #FF9500;
+            --accent: #FFD700;
+            --accent-dark: #CC5500;
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --surface-hover: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --warning: #f59e0b;
+            --warning-bg: #fed7aa;
+            --info: #3b82f6;
+            --info-bg: #dbeafe;
+            --transition: all 0.2s ease;
+        }
+
+        body.dark-theme {
+            --bg: #1a1a1a;
+            --surface: #2d2d2d;
+            --surface-hover: #3a3a3a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #ccc;
+            --text-muted: #999;
+            --border: #444;
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.5);
+            --success-bg: #064e3b;
+            --warning-bg: #92400e;
+            --danger-bg: #7f1d1d;
+            --info-bg: #1e3a5f;
+        }
+
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            transition: transform 0.3s ease, background 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .sidebar-header i {
+                font-size: 40px;
+                background: linear-gradient(145deg, var(--primary), var(--accent));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                filter: drop-shadow(0 0 5px rgba(255,107,0,0.5));
+            }
+
+            .sidebar-header h2 {
+                font-size: 24px;
+                font-weight: 700;
+                background: linear-gradient(135deg, var(--accent), var(--primary));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin: 0;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+            .sidebar-nav ul {
+                list-style: none;
+            }
+
+            .sidebar-nav li {
+                margin: 4px 8px;
+            }
+
+                .sidebar-nav li a {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 16px;
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    font-weight: 500;
+                    border-radius: 12px;
+                    transition: var(--transition);
+                    gap: 12px;
+                }
+
+                    .sidebar-nav li a i {
+                        width: 24px;
+                        text-align: center;
+                        font-size: 1.25rem;
+                        color: var(--text-muted);
+                        transition: var(--transition);
+                    }
+
+                    .sidebar-nav li a:hover,
+                    .sidebar-nav li a.active {
+                        background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
+                        color: var(--primary);
+                        transform: translateX(4px);
+                    }
+
+                        .sidebar-nav li a:hover i,
+                        .sidebar-nav li a.active i {
+                            color: var(--primary);
+                        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            min-width: 0;
+        }
+
+        .top-bar {
+            background: var(--surface);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 2px solid var(--accent);
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+            .menu-toggle:hover {
+                background: rgba(255,107,0,0.1);
+                color: var(--primary);
+            }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-right: auto;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .user-info span {
+                font-weight: 500;
+                color: var(--text-secondary);
+            }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--accent);
+            border-radius: 50px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+            .theme-toggle:hover {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+        .btn-logout {
+            background: none;
+            border: 2px solid var(--accent);
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+            .btn-logout:hover {
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                border-color: transparent;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
+            }
+
+                .btn-logout:hover i {
+                    color: white;
+                }
+
+        .content {
+            padding: 24px;
+            flex: 1;
+        }
+
+        .dashboard {
+            background: var(--surface);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+            .dashboard h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--primary);
+                margin-bottom: 8px;
+            }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 12px;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-info {
+            background: var(--info-bg);
+            color: var(--info);
+            border-left: 4px solid var(--info);
+        }
+
+        .security-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease;
+        }
+
+            .security-card:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-hover);
+            }
+
+        .security-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+            .security-header h3 {
+                font-size: 1.2rem;
+                color: var(--primary);
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .security-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-enabled {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .status-disabled {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .status-verified {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .status-unverified {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .btn-primary, .btn-secondary, .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(255,107,0,0.4);
+            }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+        }
+
+            .btn-secondary:hover {
+                background: var(--surface-hover);
+                border-color: var(--text-muted);
+                transform: translateY(-2px);
+            }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+            .btn-danger:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+                box-shadow: 0 6px 15px rgba(239,68,68,0.4);
+            }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+        }
+
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+            .sessions-table th {
+                text-align: left;
+                padding: 12px 8px;
+                color: var(--text-primary);
+                font-weight: 600;
+                font-size: 0.9rem;
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .sessions-table td {
+                padding: 12px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
+
+        .current-session {
+            background: rgba(255,107,0,0.05);
+            border-radius: 8px;
+        }
+
+        .current-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .device-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--surface-hover);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            margin-right: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .modal.active {
+                display: flex;
+            }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+            .modal-header h3 {
+                color: var(--primary);
+                font-size: 1.3rem;
+            }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .qr-code {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+            .qr-code img {
+                max-width: 200px;
+            }
+
+        .secret-key {
+            background: var(--surface-hover);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            text-align: center;
+            margin: 15px 0;
+            border: 1px solid var(--border);
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transform: translateX(-100%);
+            }
+
+            body.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .security-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .security-status {
+                width: 100%;
+            }
+
+            .sessions-table {
+                font-size: 0.8rem;
+            }
+
+                .sessions-table td {
+                    padding: 8px 4px;
+                }
+        }
+
+        @@media (max-width: 480px) {
+            .btn-logout span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-helmet-safety"></i>
+                <h2>Моноплист</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> @(Model.Language == "ru" ? "Главная панель" : Model.Language == "en" ? "Dashboard" : "Бас панель")</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> @(Model.Language == "ru" ? "Каталог товаров" : Model.Language == "en" ? "Products" : "Тауарлар")</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> @(Model.Language == "ru" ? "Продажи" : Model.Language == "en" ? "Orders" : "Сатулар")</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> @(Model.Language == "ru" ? "Клиенты" : Model.Language == "en" ? "Customers" : "Клиенттер")</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> @(Model.Language == "ru" ? "Склад" : Model.Language == "en" ? "Warehouse" : "Қойма")</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> @(Model.Language == "ru" ? "Поставщики" : Model.Language == "en" ? "Suppliers" : "Жеткізушілер")</a></li>
+                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> @(Model.Language == "ru" ? "Отчеты" : Model.Language == "en" ? "Reports" : "Есептер")</a></li>
+                    <li><a asp-page="/Settings/Index" class="active"><i class="fas fa-cog"></i> @(Model.Language == "ru" ? "Настройки" : Model.Language == "en" ? "Settings" : "Баптаулар")</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="user-info">
+                    <span><i class="fas fa-user-circle"></i> @userName</span>
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>@(Model.Language == "ru" ? "Выйти" : Model.Language == "en" ? "Logout" : "Шығу")</span>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                        </div>
+                    }
+                    @if (TempData["SecretKey"] != null)
+                    {
+                        <div class="modal active" id="qrModal">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3><i class="fas fa-qrcode"></i> @(Model.Language == "ru" ? "Настройка 2FA" : Model.Language == "en" ? "2FA Setup" : "2FA баптау")</h3>
+                                    <button class="modal-close" onclick="document.getElementById('qrModal').classList.remove('active')">&times;</button>
+                                </div>
+                                <p>@(Model.Language == "ru" ? "Отсканируйте QR-код в приложении Google Authenticator или Authy:" : Model.Language == "en" ? "Scan the QR code with Google Authenticator or Authy:" : "QR кодын Google Authenticator немесе Authy қолданбасында сканерлеңіз:")</p>
+                                <div class="qr-code">
+                                    <img src="@TempData["QrCodeUrl"]" alt="QR Code" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNmMGYwZjAiLz48dGV4dCB4PSI1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iTW9ub3RleHQiIGZpbGw9IiM2NjYiPjx0c3BhbiB4PSI1MCIgeT0iMTAwIj5RUiBDb2RlPC90c3Bhbj48dGV4dD4nLz4=" />
+                                </div>
+                                <p>@(Model.Language == "ru" ? "Или введите секретный ключ вручную:" : Model.Language == "en" ? "Or enter the secret key manually:" : "Немесе құпия кілтті қолмен енгізіңіз:")</p>
+                                <div class="secret-key">@TempData["SecretKey"]</div>
+                                <form method="post" asp-page-handler="Verify2fa">
+                                    @Html.AntiForgeryToken()
+                                    <div class="form-group">
+                                        <label>@(Model.Language == "ru" ? "Код подтверждения:" : Model.Language == "en" ? "Verification code:" : "Растау коды:")</label>
+                                        <input type="text" name="code" class="form-control" placeholder="000000" maxlength="6" style="margin-bottom: 15px;" />
+                                    </div>
+                                    <button type="submit" class="btn-primary" style="width: 100%;">@(Model.Language == "ru" ? "Подтвердить" : Model.Language == "en" ? "Verify" : "Растау")</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+
+                    <h1>@ViewData["Title"]</h1>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Управление безопасностью аккаунта" : Model.Language == "en" ? "Account security management" : "Аккаунт қауіпсіздігін басқару")</p>
+
+                    <div class="security-card">
+                        <div class="security-header">
+                            <h3><i class="fas fa-shield-alt"></i> @(Model.Language == "ru" ? "Двухфакторная аутентификация" : Model.Language == "en" ? "Two-factor authentication" : "Екі факторлы аутентификация")</h3>
+                            <div class="security-status">
+                                <span class="status-badge @(Model.Input.TwoFactorEnabled ? "status-enabled" : "status-disabled")">
+                                    @(Model.Input.TwoFactorEnabled
+                                                                        ? (Model.Language == "ru" ? "Включено" : Model.Language == "en" ? "Enabled" : "Қосылған")
+                                                                        : (Model.Language == "ru" ? "Отключено" : Model.Language == "en" ? "Disabled" : "Өшірілген"))
+                                </span>
+                                @if (Model.Input.TwoFactorEnabled)
+                                {
+                                    <form method="post" asp-page-handler="Disable2fa">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-secondary btn-sm">@(Model.Language == "ru" ? "Отключить" : Model.Language == "en" ? "Disable" : "Өшіру")</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="Enable2fa">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-primary btn-sm">@(Model.Language == "ru" ? "Включить" : Model.Language == "en" ? "Enable" : "Қосу")</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary);">
+                            @(Model.Language == "ru" ? "Двухфакторная аутентификация добавляет дополнительный уровень защиты к вашему аккаунту. При входе потребуется ввести код из приложения-аутентификатора." :
+                                                        Model.Language == "en" ? "Two-factor authentication adds an extra layer of security to your account. You will need to enter a code from an authenticator app when logging in." :
+                                                        "Екі факторлы аутентификация сіздің аккаунтыңызға қосымша қорғаныс деңгейін қосады. Кіру кезінде аутентификатор қолданбасынан кодты енгізу қажет болады.")
+                        </p>
+                    </div>
+
+                    <div class="security-card">
+                        <div class="security-header">
+                            <h3><i class="fas fa-envelope"></i> @(Model.Language == "ru" ? "Подтверждение email" : Model.Language == "en" ? "Email confirmation" : "Email растау")</h3>
+                            <div class="security-status">
+                                <span class="status-badge @(Model.Input.EmailConfirmed ? "status-verified" : "status-unverified")">
+                                    @(Model.Input.EmailConfirmed
+                                                                        ? (Model.Language == "ru" ? "Подтвержден" : Model.Language == "en" ? "Confirmed" : "Расталған")
+                                                                        : (Model.Language == "ru" ? "Не подтвержден" : Model.Language == "en" ? "Unconfirmed" : "Расталмаған"))
+                                </span>
+                                @if (!Model.Input.EmailConfirmed)
+                                {
+                                    <form method="post" asp-page-handler="SendEmailConfirmation">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-primary btn-sm">@(Model.Language == "ru" ? "Подтвердить" : Model.Language == "en" ? "Confirm" : "Растау")</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary);">
+                            @(Model.Language == "ru" ? "Подтверждение email позволяет восстановить доступ к аккаунту и получать важные уведомления." :
+                                                        Model.Language == "en" ? "Email confirmation allows you to recover account access and receive important notifications." :
+                                                        "Email растау аккаунтқа кіруді қалпына келтіруге және маңызды хабарландыруларды алуға мүмкіндік береді.")
+                        </p>
+                    </div>
+
+                    <div class="security-card">
+                        <div class="security-header">
+                            <h3><i class="fas fa-phone-alt"></i> @(Model.Language == "ru" ? "Подтверждение телефона" : Model.Language == "en" ? "Phone confirmation" : "Телефонды растау")</h3>
+                            <div class="security-status">
+                                <span class="status-badge @(Model.Input.PhoneConfirmed ? "status-verified" : "status-unverified")">
+                                    @(Model.Input.PhoneConfirmed
+                                                                        ? (Model.Language == "ru" ? "Подтвержден" : Model.Language == "en" ? "Confirmed" : "Расталған")
+                                                                        : (Model.Language == "ru" ? "Не подтвержден" : Model.Language == "en" ? "Unconfirmed" : "Расталмаған"))
+                                </span>
+                                @if (!Model.Input.PhoneConfirmed)
+                                {
+                                    <button class="btn-primary btn-sm" onclick="showPhoneModal()">@(Model.Language == "ru" ? "Подтвердить" : Model.Language == "en" ? "Confirm" : "Растау")</button>
+                                }
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary);">
+                            @(Model.Language == "ru" ? "Подтверждение номера телефона используется для дополнительной защиты и SMS-уведомлений." :
+                                                        Model.Language == "en" ? "Phone number confirmation is used for additional security and SMS notifications." :
+                                                        "Телефон нөмірін растау қосымша қауіпсіздік және SMS хабарландырулар үшін қолданылады.")
+                        </p>
+                    </div>
+
+                    <div class="security-card">
+                        <div class="security-header">
+                            <h3><i class="fas fa-history"></i> @(Model.Language == "ru" ? "Активные сессии" : Model.Language == "en" ? "Active sessions" : "Белсенді сессиялар")</h3>
+                            <form method="post" asp-page-handler="RevokeAllSessions">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-danger btn-sm">
+                                    <i class="fas fa-sign-out-alt"></i> @(Model.Language == "ru" ? "Завершить все" : Model.Language == "en" ? "Terminate all" : "Барлығын аяқтау")
+                                </button>
+                            </form>
+                        </div>
+
+                        <table class="sessions-table">
+                            <thead>
+                                <tr>
+                                    <th>@(Model.Language == "ru" ? "Устройство" : Model.Language == "en" ? "Device" : "Құрылғы")</th>
+                                    <th>IP @(Model.Language == "ru" ? "адрес" : Model.Language == "en" ? "address" : "мекенжайы")</th>
+                                    <th>@(Model.Language == "ru" ? "Время входа" : Model.Language == "en" ? "Login time" : "Кіру уақыты")</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var session in Model.Input.ActiveSessions)
+                                {
+                                    <tr class="@(session.IsCurrent ? "current-session" : "")">
+                                        <td>
+                                            <span class="device-icon">
+                                                @if (session.Device.Contains("Windows"))
+                                                {
+                                                    <i class="fab fa-windows"></i>
+                                                }
+                                                else if (session.Device.Contains("iPhone"))
+                                                {
+                                                    <i class="fab fa-apple"></i>
+                                                }
+                                                else if (session.Device.Contains("Android"))
+                                                {
+                                                    <i class="fab fa-android"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fas fa-laptop"></i>
+                                                }
+                                            </span>
+                                            @session.Device (@session.Browser)
+                                        </td>
+                                        <td>@session.IpAddress</td>
+                                        <td>@session.LoginTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td>
+                                            @if (session.IsCurrent)
+                                            {
+                                                <span class="current-badge">@(Model.Language == "ru" ? "Текущая" : Model.Language == "en" ? "Current" : "Ағымдағы")</span>
+                                            }
+                                            else
+                                            {
+                                                <form method="post" asp-page-handler="RevokeSession" style="display: inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="sessionId" value="@session.Id" />
+                                                    <button type="submit" class="btn-secondary btn-sm">
+                                                        <i class="fas fa-times"></i> @(Model.Language == "ru" ? "Завершить" : Model.Language == "en" ? "Terminate" : "Аяқтау")
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 20px;">
+                        <a asp-page="Index" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> @(Model.Language == "ru" ? "Назад к настройкам" : Model.Language == "en" ? "Back to settings" : "Баптауларға оралу")
+                        </a>
+                        <a asp-page="Profile" class="btn-primary">
+                            <i class="fas fa-user"></i> @(Model.Language == "ru" ? "Перейти к профилю" : Model.Language == "en" ? "Go to profile" : "Профильге өту")
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно подтверждения телефона -->
+    <div class="modal" id="phoneModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-phone-alt"></i> @(Model.Language == "ru" ? "Подтверждение телефона" : Model.Language == "en" ? "Phone confirmation" : "Телефонды растау")</h3>
+                <button class="modal-close" onclick="document.getElementById('phoneModal').classList.remove('active')">&times;</button>
+            </div>
+            <p>@(Model.Language == "ru" ? "Введите код, отправленный на ваш номер телефона:" : Model.Language == "en" ? "Enter the code sent to your phone number:" : "Телефон нөміріңізге жіберілген кодты енгізіңіз:")</p>
+            <form method="post" asp-page-handler="VerifyPhone">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <input type="text" name="code" class="form-control" placeholder="000000" maxlength="6" style="margin-bottom: 15px;" />
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">@(Model.Language == "ru" ? "Подтвердить" : Model.Language == "en" ? "Confirm" : "Растау")</button>
+            </form>
+            <p style="margin-top: 15px; text-align: center;">
+                <a href="#" onclick="event.preventDefault(); sendPhoneCode();">@(Model.Language == "ru" ? "Отправить код повторно" : Model.Language == "en" ? "Resend code" : "Кодты қайта жіберу")</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const body = document.body;
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.querySelector('.sidebar');
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
+                            body.classList.remove('sidebar-open');
+                        }
+                    }
+                });
+            }
+
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+            const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-theme');
+                if (body.classList.contains('dark-theme')) {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
+            });
+
+            window.addEventListener('click', (e) => {
+                const modals = document.querySelectorAll('.modal.active');
+                modals.forEach(modal => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        function showPhoneModal() {
+            document.getElementById('phoneModal').classList.add('active');
+            fetch('?handler=SendPhoneConfirmation', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+        }
+
+        function sendPhoneCode() {
+            fetch('?handler=SendPhoneConfirmation', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            }).then(() => {
+                alert('@(Model.Language == "ru" ? "Код отправлен повторно" : Model.Language == "en" ? "Code resent" : "Код қайта жіберілді")');
+            });
+        }
+    </script>
+</body>
+</html>

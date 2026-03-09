@@ -2,12 +2,11 @@
 @model Monoplist.Pages.Customers.IndexModel
 @{
     Layout = null;
-    ViewData["Title"] = "Клиенты";
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Клиенты" : (Model.Language == "en" ? "Customers" : "Клиенттер");
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,9 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ (СВЕТЛАЯ ТЕМА) ===== */
+        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ ===== */
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -66,6 +65,50 @@
             --card-color-2: #60a5fa;
             --card-color-3: #c084fc;
             --card-color-4: #fbbf24;
+        }
+
+        /* ===== КОМПАКТНЫЙ РЕЖИМ ===== */
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        /* ===== ОТКЛЮЧЕНИЕ АНИМАЦИЙ ===== */
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
         }
 
         * {
@@ -289,7 +332,7 @@
             box-shadow: var(--shadow-md);
         }
 
-        /* Заголовок страницы (как в каталоге товаров) */
+        /* Заголовок страницы */
         .subtitle {
             color: var(--primary);
             font-size: 1.6rem;
@@ -538,11 +581,11 @@
         }
 
         @@media (max-width: 992px) {
-            /* Скрываем колонку "Email" */
             .data-table th:nth-child(3),
             .data-table td:nth-child(3) {
                 display: none;
             }
+            /* Email */
         }
 
         @@media (max-width: 768px) {
@@ -601,11 +644,12 @@
                 width: 100%;
                 justify-content: center;
             }
-            /* Скрываем колонку "Дата регистрации" */
+
             .data-table th:nth-child(5),
             .data-table td:nth-child(5) {
                 display: none;
             }
+            /* Дата регистрации */
         }
 
         @@media (max-width: 480px) {
@@ -616,78 +660,41 @@
             .btn-logout {
                 padding: 8px 12px;
             }
-            /* Скрываем колонку "Телефон" */
+
             .data-table th:nth-child(2),
             .data-table td:nth-child(2) {
                 display: none;
             }
+            /* Телефон */
         }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-helmet-safety"></i>
-                <h2>Моноплист</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index" class="active"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_Sidebar")
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1 class="page-title">@ViewData["Title"]</h1>
-                <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Выйти</span>
-                        </button>
-                    </form>
-                </div>
-            </header>
+            @await Html.PartialAsync("_Header")
 
-            <!-- Контент страницы -->
             <div class="content">
                 <div class="dashboard">
-                    <h1 class="subtitle">Управление клиентами</h1>
+                    <h1 class="subtitle">@(Model.Language == "ru" ? "Управление клиентами" : Model.Language == "en" ? "Customer management" : "Клиенттерді басқару")</h1>
 
                     <!-- Панель поиска и действий -->
                     <div class="action-bar">
                         <form method="get" class="search-form">
-                            <input type="text" class="search-input" name="searchString" placeholder="Поиск по ФИО, телефону, email..." value="@Model.SearchString" />
-                            <button type="submit" class="search-btn"><i class="fas fa-search"></i> Найти</button>
+                            <input type="text" class="search-input" name="searchString" placeholder="@(Model.Language == "ru" ? "Поиск по ФИО, телефону, email..." : Model.Language == "en" ? "Search by name, phone, email..." : "Аты, телефоны, email бойынша іздеу...")" value="@Model.SearchString" />
+                            <button type="submit" class="search-btn"><i class="fas fa-search"></i> @(Model.Language == "ru" ? "Найти" : Model.Language == "en" ? "Search" : "Іздеу")</button>
                             @if (!string.IsNullOrEmpty(Model.SearchString))
                             {
-                                <a asp-page="Index" class="reset-btn"><i class="fas fa-times"></i> Сброс</a>
+                                <a asp-page="Index" class="reset-btn"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Сброс" : Model.Language == "en" ? "Reset" : "Қалпына келтіру")</a>
                             }
                         </form>
 
                         @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                         {
                             <a asp-page="Create" class="btn-primary">
-                                <i class="fas fa-plus"></i> Добавить клиента
+                                <i class="fas fa-plus"></i> @(Model.Language == "ru" ? "Добавить клиента" : Model.Language == "en" ? "Add customer" : "Клиент қосу")
                             </a>
                         }
                     </div>
@@ -698,12 +705,12 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th><i class="fas fa-user"></i> ФИО / Название</th>
-                                        <th><i class="fas fa-phone"></i> Телефон</th>
+                                        <th><i class="fas fa-user"></i> @(Model.Language == "ru" ? "ФИО / Название" : Model.Language == "en" ? "Full name" : "Аты-жөні / Атауы")</th>
+                                        <th><i class="fas fa-phone"></i> @(Model.Language == "ru" ? "Телефон" : Model.Language == "en" ? "Phone" : "Телефон")</th>
                                         <th><i class="fas fa-envelope"></i> Email</th>
-                                        <th><i class="fas fa-percent"></i> Скидка</th>
-                                        <th><i class="fas fa-calendar"></i> Дата регистрации</th>
-                                        <th><i class="fas fa-cogs"></i> Действия</th>
+                                        <th><i class="fas fa-percent"></i> @(Model.Language == "ru" ? "Скидка" : Model.Language == "en" ? "Discount" : "Жеңілдік")</th>
+                                        <th><i class="fas fa-calendar"></i> @(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</th>
+                                        <th><i class="fas fa-cogs"></i> @(Model.Language == "ru" ? "Действия" : Model.Language == "en" ? "Actions" : "Әрекеттер")</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -714,18 +721,18 @@
                                             <td>@customer.Phone</td>
                                             <td>@customer.Email</td>
                                             <td>@customer.Discount%</td>
-                                            <td>@customer.RegistrationDate.ToShortDateString()</td>
+                                            <td>@customer.RegistrationDate.ToString("dd.MM.yyyy")</td>
                                             <td>
                                                 <div class="action-buttons">
-                                                    <a asp-page="Details" asp-route-id="@customer.Id" class="btn-sm btn-info" title="Просмотр">
+                                                    <a asp-page="Details" asp-route-id="@customer.Id" class="btn-sm btn-info" title="@(Model.Language == "ru" ? "Просмотр" : Model.Language == "en" ? "View" : "Қарау")">
                                                         <i class="fas fa-info-circle"></i>
                                                     </a>
                                                     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                                                     {
-                                                        <a asp-page="Edit" asp-route-id="@customer.Id" class="btn-sm btn-primary" title="Редактировать">
+                                                        <a asp-page="Edit" asp-route-id="@customer.Id" class="btn-sm btn-primary" title="@(Model.Language == "ru" ? "Редактировать" : Model.Language == "en" ? "Edit" : "Өңдеу")">
                                                             <i class="fas fa-pencil-alt"></i>
                                                         </a>
-                                                        <a asp-page="Delete" asp-route-id="@customer.Id" class="btn-sm btn-danger" title="Удалить">
+                                                        <a asp-page="Delete" asp-route-id="@customer.Id" class="btn-sm btn-danger" title="@(Model.Language == "ru" ? "Удалить" : Model.Language == "en" ? "Delete" : "Жою")">
                                                             <i class="fas fa-trash"></i>
                                                         </a>
                                                     }
@@ -739,17 +746,17 @@
                     }
                     else
                     {
-                        <p class="text-muted">Нет клиентов.</p>
+                        <div class="empty-message">
+                            <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>@(Model.Language == "ru" ? "Нет клиентов для отображения." : Model.Language == "en" ? "No customers to display." : "Көрсету үшін клиенттер жоқ.")</p>
+                        </div>
                     }
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Скрипты валидации (не обязательны) -->
     <partial name="_ValidationScriptsPartial" />
-
-    <!-- Скрипты для мобильного меню и переключения темы -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
@@ -771,26 +778,36 @@
             }
 
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
+                    themeIcon?.classList.remove('fa-sun');
+                    themeIcon?.classList.add('fa-moon');
+                }
 
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
+                themeToggle.addEventListener('click', function() {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon?.classList.remove('fa-sun');
+                        themeIcon?.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon?.classList.remove('fa-moon');
+                        themeIcon?.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
             }
 
-            themeToggle.addEventListener('click', function() {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
-                    themeIcon.classList.remove('fa-sun');
-                    themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
-                }
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
             });
         });
     </script>

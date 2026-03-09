@@ -1,14 +1,13 @@
 ﻿@page
-@model Monoplist.Pages.Customers.DeleteModel
+@model Monoplist.Pages.Settings.Users.DeleteModel
 @{
     Layout = null;
-    ViewData["Title"] = Model.Language == "ru" ? "Удаление клиента" : (Model.Language == "en" ? "Delete customer" : "Клиентті жою");
-    var userId = User.FindFirst("UserId")?.Value;
-    var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
+    ViewData["Title"] = "Удаление пользователя";
+    var userName = User.Identity?.Name ?? "Пользователь";
 }
 
 <!DOCTYPE html>
-<html lang="@Model.Language">
+<html lang="ru">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,9 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ ===== */
         :root {
-            --primary: @Model.CustomColor;
+            --primary: #FF6B00;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -46,7 +44,6 @@
             --transition: all 0.2s ease;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
         body.dark-theme {
             --bg: #1a1a1a;
             --surface: #2d2d2d;
@@ -61,54 +58,6 @@
             --warning-bg: #92400e;
             --danger-bg: #7f1d1d;
             --info-bg: #1e3a5f;
-        }
-
-        /* ===== КОМПАКТНЫЙ РЕЖИМ ===== */
-        body.compact-mode .sidebar {
-            width: 240px;
-        }
-
-        body.compact-mode .sidebar-header {
-            padding: 16px 16px;
-        }
-
-            body.compact-mode .sidebar-header i {
-                font-size: 32px;
-            }
-
-            body.compact-mode .sidebar-header h2 {
-                font-size: 20px;
-            }
-
-        body.compact-mode .sidebar-nav li a {
-            padding: 8px 12px;
-        }
-
-        body.compact-mode .top-bar {
-            padding: 12px 24px;
-        }
-
-        body.compact-mode .dashboard {
-            padding: 16px;
-        }
-
-            body.compact-mode .dashboard h1 {
-                font-size: 1.8rem;
-            }
-
-        body.compact-mode .subtitle {
-            font-size: 0.9rem;
-            margin-bottom: 16px;
-        }
-
-        body.compact-mode .delete-confirmation dl {
-            padding: 16px;
-        }
-
-        /* ===== ОТКЛЮЧЕНИЕ АНИМАЦИЙ ===== */
-        body.no-animations * {
-            transition: none !important;
-            animation: none !important;
         }
 
         * {
@@ -130,7 +79,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -217,7 +165,6 @@
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -265,119 +212,12 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            position: relative;
         }
 
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 12px;
-            background: var(--surface-hover);
-            border-radius: 40px;
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-            .user-profile:hover {
-                background: var(--surface);
-                box-shadow: var(--shadow-sm);
+            .user-info span {
+                font-weight: 500;
+                color: var(--text-secondary);
             }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-
-            .user-avatar i {
-                font-size: 40px;
-            }
-
-            .user-avatar img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
-
-        .user-role {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .user-menu {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            width: 220px;
-            background: var(--surface);
-            border-radius: 12px;
-            box-shadow: var(--shadow-hover);
-            border: 1px solid var(--border);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.2s ease;
-            z-index: 1000;
-        }
-
-            .user-menu.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
-            width: 100%;
-            text-align: left;
-            border: none;
-            background: none;
-            font-size: 0.95rem;
-            cursor: pointer;
-        }
-
-            .menu-item:hover {
-                background: var(--surface-hover);
-                color: var(--primary);
-            }
-
-            .menu-item.logout {
-                color: var(--danger);
-            }
-
-                .menu-item.logout:hover {
-                    background: var(--danger-bg);
-                }
-
-        .menu-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 8px 0;
-        }
 
         .theme-toggle {
             background: none;
@@ -491,7 +331,7 @@
         }
 
         .delete-confirmation {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
@@ -562,78 +402,67 @@
             }
 
         @@media (max-width: 768px) {
-            .sidebar
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                box-shadow: none;
+            }
 
-        {
-            position: fixed;
-            left: -280px;
-            top: 0;
-            bottom: 0;
-            transform: translateX(-100%);
-            box-shadow: none;
-        }
+            body.sidebar-open .sidebar {
+                transform: translateX(0);
+                box-shadow: 2px 0 15px rgba(0,0,0,0.2);
+            }
 
-        body.sidebar-open .sidebar {
-            transform: translateX(0);
-            box-shadow: 2px 0 15px rgba(0,0,0,0.2);
-        }
+            .menu-toggle {
+                display: block;
+            }
 
-        .menu-toggle {
-            display: block;
-        }
+            .main-content {
+                width: 100%;
+            }
 
-        .main-content {
-            width: 100%;
-        }
+            .top-bar {
+                padding: 12px 16px;
+            }
 
-        .top-bar {
-            padding: 12px 16px;
-        }
+            .page-title {
+                font-size: 1.25rem;
+            }
 
-        .page-title {
-            font-size: 1.25rem;
-        }
+            .user-info span {
+                display: none;
+            }
 
-        .user-info span {
-            display: none;
-        }
+            .content {
+                padding: 16px;
+            }
 
-        .content {
-            padding: 16px;
-        }
+            .delete-confirmation form {
+                flex-direction: column;
+            }
 
-        .dashboard {
-            padding: 16px;
-        }
-
-        .delete-confirmation form {
-            flex-direction: column;
-        }
-
-        .btn-danger, .btn-secondary {
-            width: 100%;
-            justify-content: center;
-        }
-
+            .btn-danger, .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         @@media (max-width: 480px) {
-            .btn-logout span
+            .btn-logout span {
+                display: none;
+            }
 
-        {
-            display: none;
-        }
-
-        .btn-logout {
-            padding: 8px 12px;
-        }
-
+            .btn-logout {
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
-<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
+<body>
     <div class="app">
-        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -641,14 +470,14 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a asp-page="/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Products") == true ? "active" : "")"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Orders") == true ? "active" : "")"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index" class="active"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Warehouse") == true ? "active" : "")"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Suppliers") == true ? "active" : "")"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Reports") == true ? "active" : "")"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Settings") == true ? "active" : "")"><i class="fas fa-cog"></i> Настройки</a></li>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
+                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
+                    <li><a asp-page="/Settings/Index" class="active"><i class="fas fa-cog"></i> Настройки</a></li>
                 </ul>
             </nav>
         </aside>
@@ -660,36 +489,17 @@
                 </button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
+                    <span><i class="fas fa-user-circle"></i> @userName</span>
+                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
                         <i class="fas fa-sun"></i>
                     </div>
-                    <div class="user-profile" onclick="toggleUserMenu()">
-                        <div class="user-avatar">
-                            @if (!string.IsNullOrEmpty(avatarUrl))
-                            {
-                                <img src="@avatarUrl" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
-                            }
-                            else
-                            {
-                                <i class="fas fa-user-circle"></i>
-                            }
-                        </div>
-                        <div class="user-details">
-                            <span class="user-name">@User.Identity?.Name</span>
-                            <span class="user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</span>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="user-menu" id="userMenu">
-                        <a asp-page="/Settings/Profile" class="menu-item"><i class="fas fa-user"></i> Профиль</a>
-                        <a asp-page="/Settings/Security" class="menu-item"><i class="fas fa-shield-alt"></i> Безопасность</a>
-                        <a asp-page="/Settings/Appearance" class="menu-item"><i class="fas fa-palette"></i> Внешний вид</a>
-                        <div class="menu-divider"></div>
-                        <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="menu-item logout"><i class="fas fa-sign-out-alt"></i> Выйти</button>
-                        </form>
-                    </div>
+                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Выйти</span>
+                        </button>
+                    </form>
                 </div>
             </header>
 
@@ -697,34 +507,38 @@
                 <div class="dashboard">
                     @if (TempData["Success"] != null)
                     {
-                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                        </div>
                     }
                     @if (TempData["Error"] != null)
                     {
-                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                        </div>
                     }
 
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">@(Model.Language == "ru" ? "Вы уверены, что хотите удалить этого клиента?" : Model.Language == "en" ? "Are you sure you want to delete this customer?" : "Бұл клиентті жойғыңыз келетініне сенімдісіз бе?")</p>
+                    <p class="subtitle">Вы уверены, что хотите удалить этого пользователя?</p>
 
                     <div class="delete-confirmation">
                         <dl>
-                            <dt>@(Model.Language == "ru" ? "ФИО / Название" : Model.Language == "en" ? "Full name" : "Аты-жөні / Атауы")</dt>
-                            <dd>@Model.Customer.FullName</dd>
-                            <dt>@(Model.Language == "ru" ? "Телефон" : Model.Language == "en" ? "Phone" : "Телефон")</dt>
-                            <dd>@Model.Customer.Phone</dd>
-                            <dt>Email</dt>
-                            <dd>@Model.Customer.Email</dd>
-                            <dt>@(Model.Language == "ru" ? "Скидка" : Model.Language == "en" ? "Discount" : "Жеңілдік")</dt>
-                            <dd>@Model.Customer.Discount%</dd>
-                            <dt>@(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</dt>
-                            <dd>@Model.Customer.RegistrationDate.ToString("dd.MM.yyyy")</dd>
+                            <dt>Имя пользователя</dt>
+                            <dd>@Model.UserInfo.Username</dd>
+                            <dt>Роль</dt>
+                            <dd>@Model.UserInfo.Role</dd>
+                            <dt>Дата регистрации</dt>
+                            <dd>@Model.UserInfo.CreatedAt.ToString("dd.MM.yyyy")</dd>
                         </dl>
 
-                        <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Customer.Id">
+                        <form method="post">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> @(Model.Language == "ru" ? "Удалить" : Model.Language == "en" ? "Delete" : "Жою")</button>
-                            <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Отмена" : Model.Language == "en" ? "Cancel" : "Бас тарту")</a>
+                            <button type="submit" class="btn-danger">
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                            <a asp-page="Index" class="btn-secondary">
+                                <i class="fas fa-times"></i> Отмена
+                            </a>
                         </form>
                     </div>
                 </div>
@@ -754,7 +568,8 @@
 
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = themeToggle.querySelector('i');
-            const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+
+            const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 body.classList.add('dark-theme');
                 themeIcon.classList.remove('fa-sun');
@@ -774,6 +589,7 @@
                 }
             });
 
+            // Автоматическое скрытие алертов через 5 секунд
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -782,18 +598,6 @@
                     setTimeout(() => alert.style.display = 'none', 500);
                 }, 5000);
             });
-        });
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('show');
-        }
-
-        window.addEventListener('click', function(event) {
-            const userInfo = document.querySelector('.user-info');
-            const userMenu = document.getElementById('userMenu');
-            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
         });
     </script>
 </body>

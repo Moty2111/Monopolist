@@ -1,71 +1,105 @@
+Ôªø// Pages/Customers/Delete.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
+using System.Security.Claims;
 
-namespace Monoplist.Pages.Customers
+namespace Monoplist.Pages.Customers;
+
+[Authorize(Roles = "Admin,Manager")]
+public class DeleteModel : PageModel
 {
-    [Authorize(Roles = "Admin,Manager")]
-    public class DeleteModel : PageModel
+    private readonly AppDbContext _context;
+    private readonly ILogger<DeleteModel> _logger;
+
+    public DeleteModel(AppDbContext context, ILogger<DeleteModel> logger)
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<DeleteModel> _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public DeleteModel(AppDbContext context, ILogger<DeleteModel> logger)
+    public Customer Customer { get; set; } = new();
+
+    // –°–≤–æ–π—Å—Ç–≤–∞ –¥–ª—è –ø–µ—Ä—Å–æ–Ω–∞–ª–∏–∑–∞—Ü–∏–∏
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
+    public async Task<IActionResult> OnGetAsync(int? id)
+    {
+        if (id == null)
+            return NotFound();
+
+        await LoadUserSettings();
+
+        Customer = await _context.Customers
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (Customer == null)
+            return NotFound();
+
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostDeleteAsync(int id)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer == null)
         {
-            _context = context;
-            _logger = logger;
-        }
-
-        public Customer Customer { get; set; } = new();
-
-        public async Task<IActionResult> OnGetAsync(int? id)
-        {
-            if (id == null)
-                return NotFound();
-
-            Customer = await _context.Customers
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (Customer == null)
-                return NotFound();
-
-            return Page();
-        }
-
-        public async Task<IActionResult> OnPostAsync(int id)
-        {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
-            {
-                TempData["Error"] = " ÎËÂÌÚ ÌÂ Ì‡È‰ÂÌ.";
-                return RedirectToPage("./Index");
-            }
-
-            // œÓ‚ÂÍ‡ Ì‡ Ì‡ÎË˜ËÂ Á‡Í‡ÁÓ‚
-            bool hasOrders = await _context.Orders.AnyAsync(o => o.CustomerId == id);
-            if (hasOrders)
-            {
-                TempData["Error"] = "ÕÂÎ¸Áˇ Û‰‡ÎËÚ¸ ÍÎËÂÌÚ‡, Û ÍÓÚÓÓ„Ó ÂÒÚ¸ Á‡Í‡Á˚. —Ì‡˜‡Î‡ Û‰‡ÎËÚÂ Á‡Í‡Á˚.";
-                return RedirectToPage("./Index");
-            }
-
-            try
-            {
-                _context.Customers.Remove(customer);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = " ÎËÂÌÚ Û‰‡Î∏Ì.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Œ¯Ë·Í‡ ÔË Û‰‡ÎÂÌËË ÍÎËÂÌÚ‡");
-                TempData["Error"] = "ÕÂ Û‰‡ÎÓÒ¸ Û‰‡ÎËÚ¸ ÍÎËÂÌÚ‡.";
-            }
-
+            TempData["Error"] = GetLocalizedMessage("–ö–ª–∏–µ–Ω—Ç –Ω–µ –Ω–∞–π–¥–µ–Ω.", "Customer not found.", "–ö–ª–∏–µ–Ω—Ç —Ç–∞–±—ã–ª–º–∞–¥—ã.");
             return RedirectToPage("./Index");
         }
+
+        // –ü—Ä–æ–≤–µ—Ä–∫–∞ –Ω–∞ –Ω–∞–ª–∏—á–∏–µ –∑–∞–∫–∞–∑–æ–≤
+        bool hasOrders = await _context.Orders.AnyAsync(o => o.CustomerId == id);
+        if (hasOrders)
+        {
+            TempData["Error"] = GetLocalizedMessage("–ù–µ–ª—å–∑—è —É–¥–∞–ª–∏—Ç—å –∫–ª–∏–µ–Ω—Ç–∞, —É –∫–æ—Ç–æ—Ä–æ–≥–æ –µ—Å—Ç—å –∑–∞–∫–∞–∑—ã. –°–Ω–∞—á–∞–ª–∞ —É–¥–∞–ª–∏—Ç–µ –∑–∞–∫–∞–∑—ã.", "Cannot delete a customer with orders. Delete the orders first.", "–¢–∞–ø—Å—ã—Ä—ã—Å—Ç–∞—Ä—ã –±–∞—Ä –∫–ª–∏–µ–Ω—Ç—Ç—ñ –∂–æ—é –º“Ø–º–∫—ñ–Ω –µ–º–µ—Å. –ê–ª–¥—ã–º–µ–Ω —Ç–∞–ø—Å—ã—Ä—ã—Å—Ç–∞—Ä–¥—ã –∂–æ–π—ã“£—ã–∑.");
+            return RedirectToPage("./Index");
+        }
+
+        try
+        {
+            _context.Customers.Remove(customer);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = GetLocalizedMessage("–ö–ª–∏–µ–Ω—Ç —É–¥–∞–ª—ë–Ω.", "Customer deleted.", "–ö–ª–∏–µ–Ω—Ç –∂–æ–π—ã–ª–¥—ã.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "–û—à–∏–±–∫–∞ –ø—Ä–∏ —É–¥–∞–ª–µ–Ω–∏–∏ –∫–ª–∏–µ–Ω—Ç–∞");
+            TempData["Error"] = GetLocalizedMessage("–ù–µ —É–¥–∞–ª–æ—Å—å —É–¥–∞–ª–∏—Ç—å –∫–ª–∏–µ–Ω—Ç–∞.", "Failed to delete customer.", "–ö–ª–∏–µ–Ω—Ç—Ç—ñ –∂–æ—é –º“Ø–º–∫—ñ–Ω –±–æ–ª–º–∞–¥—ã.");
+        }
+
+        return RedirectToPage("./Index");
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

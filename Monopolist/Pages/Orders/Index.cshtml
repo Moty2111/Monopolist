@@ -2,12 +2,13 @@
 @model Monoplist.Pages.Orders.IndexModel
 @{
     Layout = null;
-    ViewData["Title"] = "Продажи"; // ← добавляем заголовок страницы
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Продажи" : (Model.Language == "en" ? "Orders" : "Сатулар");
+    var userId = User.FindFirst("UserId")?.Value;
+    var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,9 +18,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ (СВЕТЛАЯ ТЕМА) ===== */
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -33,22 +33,18 @@
             --border: #e2e8f0;
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(255,107,0,0.15);
-            --shadow-hover: 0 12px 28px rgba(255,215,0,0.25);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
             --success: #10b981;
             --success-bg: #d1fae5;
             --danger: #ef4444;
             --danger-bg: #fee2e2;
             --warning: #f59e0b;
             --warning-bg: #fed7aa;
-            --card-color-1: #10b981;
-            --card-color-2: #3b82f6;
-            --card-color-3: #8b5cf6;
-            --card-color-4: #f59e0b;
+            --info: #3b82f6;
+            --info-bg: #dbeafe;
             --transition: all 0.2s ease;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
         body.dark-theme {
             --bg: #1a1a1a;
             --surface: #2d2d2d;
@@ -62,10 +58,63 @@
             --success-bg: #064e3b;
             --warning-bg: #92400e;
             --danger-bg: #7f1d1d;
-            --card-color-1: #34d399;
-            --card-color-2: #60a5fa;
-            --card-color-3: #c084fc;
-            --card-color-4: #fbbf24;
+            --info-bg: #1e3a5f;
+        }
+
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.compact-mode .form-group {
+            margin-bottom: 1rem;
+        }
+
+        body.compact-mode .form-control {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .btn-primary,
+        body.compact-mode .btn-secondary,
+        body.compact-mode .btn-danger {
+            padding: 8px 18px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
         }
 
         * {
@@ -222,12 +271,119 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            position: relative;
         }
 
-            .user-info span {
-                font-weight: 500;
-                color: var(--text-secondary);
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface-hover);
+            border-radius: 40px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+            .user-profile:hover {
+                background: var(--surface);
+                box-shadow: var(--shadow-sm);
             }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .user-avatar i {
+                font-size: 40px;
+            }
+
+            .user-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 220px;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+            .user-menu.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+            .menu-item:hover {
+                background: var(--surface-hover);
+                color: var(--primary);
+            }
+
+            .menu-item.logout {
+                color: var(--danger);
+            }
+
+                .menu-item.logout:hover {
+                    background: var(--danger-bg);
+                }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0;
+        }
 
         .theme-toggle {
             background: none;
@@ -277,37 +433,142 @@
                 }
 
         .content {
-            padding: 16px;
+            padding: 24px;
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
-            padding: 16px;
+            padding: 24px;
             box-shadow: var(--shadow-md);
         }
 
-        /* Заголовок страницы (как в каталоге товаров) */
+            .dashboard h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--primary);
+                margin-bottom: 8px;
+            }
+
         .subtitle {
-            color: var(--primary);
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 24px;
             border-bottom: 2px solid var(--accent);
-            padding-bottom: 10px;
+            padding-bottom: 12px;
         }
 
-        /* ===== ПАНЕЛЬ ПОИСКА И ДЕЙСТВИЙ ===== */
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
         .action-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 15px;
         }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 10px rgba(255,107,0,0.3);
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(255,107,0,0.4);
+            }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            background: var(--surface);
+            color: var(--text-secondary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+            .btn-secondary:hover {
+                background: var(--surface-hover);
+                border-color: var(--text-muted);
+                transform: translateY(-2px);
+            }
+
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 10px rgba(239,68,68,0.3);
+        }
+
+            .btn-danger:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+                box-shadow: 0 6px 15px rgba(239,68,68,0.4);
+            }
 
         .search-form {
             display: flex;
@@ -371,122 +632,71 @@
                 border-color: var(--text-muted);
             }
 
-        .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
-            padding: 9px 18px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            text-decoration: none;
-            transition: var(--transition);
-            box-shadow: 0 4px 10px rgba(255,107,0,0.3);
-        }
-
-            .btn-primary:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 15px rgba(255,107,0,0.4);
-                color: white;
-            }
-
-        /* ===== ТАБЛИЦА ЗАКАЗОВ ===== */
         .table-responsive {
             overflow-x: auto;
-            margin-top: 1rem;
-            border-radius: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
             background: var(--surface);
-            font-size: 0.8rem;
-            table-layout: fixed;
-            word-wrap: break-word;
         }
+
+            .data-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: 600;
+                color: var(--primary);
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .data-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
+
+            .data-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
+            }
 
             .data-table th:nth-child(1) {
                 width: 10%;
             }
-            /* Номер */
+
             .data-table th:nth-child(2) {
                 width: 15%;
             }
-            /* Клиент */
+
             .data-table th:nth-child(3) {
                 width: 10%;
             }
-            /* Дата */
+
             .data-table th:nth-child(4) {
                 width: 10%;
             }
-            /* Сумма */
+
             .data-table th:nth-child(5) {
                 width: 12%;
             }
-            /* Статус */
+
             .data-table th:nth-child(6) {
                 width: 12%;
             }
-            /* Оплата */
+
             .data-table th:nth-child(7) {
                 width: 8%;
             }
-            /* Действия */
 
-            .data-table thead tr {
-                background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
-            }
-
-            .data-table th {
-                text-align: left;
-                padding: 8px 4px;
-                color: var(--text-primary);
-                font-weight: 700;
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
-                border-bottom: 2px solid var(--accent);
-                white-space: normal;
-                word-break: break-word;
-            }
-
-                .data-table th i {
-                    margin-right: 2px;
-                    color: var(--primary);
-                    font-size: 0.8rem;
-                }
-
-            .data-table td {
-                padding: 8px 4px;
-                border-bottom: 1px solid var(--border);
-                color: var(--text-secondary);
-                font-weight: 600;
-                white-space: normal;
-                word-break: break-word;
-            }
-
-            .data-table tbody tr:nth-child(even) {
-                background-color: rgba(0,0,0,0.02);
-            }
-
-            .data-table tbody tr:hover td {
-                background-color: rgba(255,107,0,0.05);
-            }
-
-        /* Бейджи статусов */
         .status-badge {
             display: inline-block;
             padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
             font-weight: 600;
-            text-align: center;
-            text-transform: uppercase;
         }
 
         .status-completed {
@@ -504,21 +714,18 @@
             color: var(--danger);
         }
 
-        /* Кнопки действий */
-        .action-buttons {
+        .actions {
             display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            justify-content: flex-start;
+            gap: 5px;
         }
 
         .btn-sm {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             color: white;
             text-decoration: none;
             transition: var(--transition);
@@ -527,7 +734,7 @@
         }
 
             .btn-sm.btn-info {
-                background: var(--card-color-2);
+                background: var(--info);
             }
 
             .btn-sm.btn-primary {
@@ -539,20 +746,18 @@
             }
 
             .btn-sm:hover {
-                transform: translateY(-1px) scale(1.05);
+                transform: translateY(-2px);
                 filter: brightness(1.1);
                 box-shadow: 0 2px 5px rgba(0,0,0,0.15);
             }
 
-        .text-muted {
+        .empty-message {
+            text-align: center;
+            padding: 40px;
             color: var(--text-muted);
             font-style: italic;
-            padding: 18px;
-            text-align: center;
-            font-size: 0.9rem;
         }
 
-        /* ===== АДАПТИВНОСТЬ ===== */
         @@media (max-width: 1200px) {
             .data-table {
                 font-size: 0.75rem;
@@ -610,11 +815,11 @@
             }
 
             .content {
-                padding: 12px;
+                padding: 16px;
             }
 
             .dashboard {
-                padding: 12px;
+                padding: 16px;
             }
 
             .action-bar {
@@ -638,14 +843,6 @@
         }
 
         @@media (max-width: 480px) {
-            .btn-logout span {
-                display: none;
-            }
-
-            .btn-logout {
-                padding: 8px 12px;
-            }
-
             .data-table th:nth-child(1),
             .data-table td:nth-child(1) {
                 display: none;
@@ -653,7 +850,7 @@
         }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
         <!-- Боковое меню -->
         <aside class="sidebar">
@@ -663,14 +860,14 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
+                    <li><a asp-page="/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")"><i class="fas fa-home"></i> Главная панель</a></li>
+                    <li><a asp-page="/Products/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Products") == true ? "active" : "")"><i class="fas fa-box"></i> Каталог товаров</a></li>
                     <li><a asp-page="/Orders/Index" class="active"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
+                    <li><a asp-page="/Customers/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Customers") == true ? "active" : "")"><i class="fas fa-users"></i> Клиенты</a></li>
+                    <li><a asp-page="/Warehouse/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Warehouse") == true ? "active" : "")"><i class="fas fa-warehouse"></i> Склад</a></li>
+                    <li><a asp-page="/Suppliers/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Suppliers") == true ? "active" : "")"><i class="fas fa-truck"></i> Поставщики</a></li>
+                    <li><a asp-page="/Reports/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Reports") == true ? "active" : "")"><i class="fas fa-chart-line"></i> Отчеты</a></li>
+                    <li><a asp-page="/Settings/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Settings") == true ? "active" : "")"><i class="fas fa-cog"></i> Настройки</a></li>
                 </ul>
             </nav>
         </aside>
@@ -681,43 +878,68 @@
                 <button class="menu-toggle" id="menuToggle">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="page-title">@ViewData["Title"]</h1> <!-- Здесь теперь "Продажи" -->
+                <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
                         <i class="fas fa-sun"></i>
                     </div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Выйти</span>
-                        </button>
-                    </form>
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <div class="user-avatar">
+                            @if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <img src="@avatarUrl" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">@User.Identity?.Name</span>
+                            <span class="user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="user-menu" id="userMenu">
+                        <a asp-page="/Settings/Profile" class="menu-item"><i class="fas fa-user"></i> Профиль</a>
+                        <a asp-page="/Settings/Security" class="menu-item"><i class="fas fa-shield-alt"></i> Безопасность</a>
+                        <a asp-page="/Settings/Appearance" class="menu-item"><i class="fas fa-palette"></i> Внешний вид</a>
+                        <div class="menu-divider"></div>
+                        <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="menu-item logout"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+                        </form>
+                    </div>
                 </div>
             </header>
 
-            <!-- Контент страницы -->
             <div class="content">
                 <div class="dashboard">
-                    <!-- Заголовок страницы в стиле каталога товаров -->
-                    <h1 class="subtitle">Управление продажами</h1>
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
 
-                    <!-- Панель поиска и действий -->
+                    <h1 class="subtitle">@(Model.Language == "ru" ? "Управление продажами" : Model.Language == "en" ? "Order management" : "Сатуларды басқару")</h1>
+
                     <div class="action-bar">
                         <form method="get" class="search-form">
-                            <input type="text" class="search-input" name="searchString" placeholder="Поиск по номеру, клиенту..." value="@Model.SearchString" />
-                            <button type="submit" class="search-btn"><i class="fas fa-search"></i> Найти</button>
+                            <input type="text" class="search-input" name="searchString" placeholder="@(Model.Language == "ru" ? "Поиск по номеру, клиенту..." : Model.Language == "en" ? "Search by order number, customer..." : "Нөмірі, клиент бойынша іздеу...")" value="@Model.SearchString" />
+                            <button type="submit" class="search-btn"><i class="fas fa-search"></i> @(Model.Language == "ru" ? "Найти" : Model.Language == "en" ? "Search" : "Іздеу")</button>
                             @if (!string.IsNullOrEmpty(Model.SearchString))
                             {
-                                <a asp-page="Index" class="reset-btn"><i class="fas fa-times"></i> Сброс</a>
+                                <a asp-page="Index" class="reset-btn"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Сброс" : Model.Language == "en" ? "Reset" : "Қалпына келтіру")</a>
                             }
                         </form>
 
                         @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                         {
                             <a asp-page="Create" class="btn-primary">
-                                <i class="fas fa-plus"></i> Создать заказ
+                                <i class="fas fa-plus"></i> @(Model.Language == "ru" ? "Создать заказ" : Model.Language == "en" ? "Create order" : "Тапсырыс құру")
                             </a>
                         }
                     </div>
@@ -728,13 +950,13 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th><i class="fas fa-hashtag"></i> Номер</th>
-                                        <th><i class="fas fa-user"></i> Клиент</th>
-                                        <th><i class="fas fa-calendar"></i> Дата</th>
-                                        <th><i class="fas fa-ruble-sign"></i> Сумма</th>
-                                        <th><i class="fas fa-tag"></i> Статус</th>
-                                        <th><i class="fas fa-credit-card"></i> Оплата</th>
-                                        <th><i class="fas fa-cogs"></i> Действия</th>
+                                        <th><i class="fas fa-hashtag"></i> @(Model.Language == "ru" ? "Номер" : Model.Language == "en" ? "Order #" : "Нөмірі")</th>
+                                        <th><i class="fas fa-user"></i> @(Model.Language == "ru" ? "Клиент" : Model.Language == "en" ? "Customer" : "Клиент")</th>
+                                        <th><i class="fas fa-calendar"></i> @(Model.Language == "ru" ? "Дата" : Model.Language == "en" ? "Date" : "Күні")</th>
+                                        <th><i class="fas fa-ruble-sign"></i> @(Model.Language == "ru" ? "Сумма" : Model.Language == "en" ? "Amount" : "Сома")</th>
+                                        <th><i class="fas fa-tag"></i> @(Model.Language == "ru" ? "Статус" : Model.Language == "en" ? "Status" : "Мәртебе")</th>
+                                        <th><i class="fas fa-credit-card"></i> @(Model.Language == "ru" ? "Оплата" : Model.Language == "en" ? "Payment" : "Төлем")</th>
+                                        <th><i class="fas fa-cogs"></i> @(Model.Language == "ru" ? "Действия" : Model.Language == "en" ? "Actions" : "Әрекеттер")</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -743,31 +965,24 @@
                                         <tr>
                                             <td>@order.OrderNumber</td>
                                             <td>@order.CustomerName</td>
-                                            <td>@order.OrderDate.ToShortDateString()</td>
+                                            <td>@order.OrderDate.ToString("dd.MM.yyyy")</td>
                                             <td>@order.TotalAmount.ToString("N0") ₽</td>
                                             <td>
                                                 @{
-                                                    string statusText;
-                                                    string statusClass;
-                                                    switch (order.Status.ToLower())
+                                                    string statusText = order.Status switch
                                                     {
-                                                        case "completed":
-                                                            statusText = "Выполнен";
-                                                            statusClass = "status-completed";
-                                                            break;
-                                                        case "pending":
-                                                            statusText = "Ожидание";
-                                                            statusClass = "status-pending";
-                                                            break;
-                                                        case "cancelled":
-                                                            statusText = "Отменён";
-                                                            statusClass = "status-cancelled";
-                                                            break;
-                                                        default:
-                                                            statusText = order.Status;
-                                                            statusClass = "";
-                                                            break;
-                                                    }
+                                                        "Completed" => Model.Language == "ru" ? "Выполнен" : Model.Language == "en" ? "Completed" : "Орындалды",
+                                                        "Pending" => Model.Language == "ru" ? "Ожидание" : Model.Language == "en" ? "Pending" : "Күтілуде",
+                                                        "Cancelled" => Model.Language == "ru" ? "Отменён" : Model.Language == "en" ? "Cancelled" : "Бас тартылды",
+                                                        _ => order.Status
+                                                    };
+                                                    string statusClass = order.Status.ToLower() switch
+                                                    {
+                                                        "completed" => "status-completed",
+                                                        "pending" => "status-pending",
+                                                        "cancelled" => "status-cancelled",
+                                                        _ => ""
+                                                    };
                                                 }
                                                 <span class="status-badge @statusClass">@statusText</span>
                                             </td>
@@ -775,29 +990,21 @@
                                                 @{
                                                     string paymentText = order.PaymentMethod switch
                                                     {
-                                                        "Card" => "Карта",
-                                                        "Cash" => "Наличные",
-                                                        "Credit" => "Кредит",
-                                                        _ => order.PaymentMethod
+                                                        "Card" => Model.Language == "ru" ? "Карта" : Model.Language == "en" ? "Card" : "Карта",
+                                                        "Cash" => Model.Language == "ru" ? "Наличные" : Model.Language == "en" ? "Cash" : "Қолма-қол",
+                                                        "Credit" => Model.Language == "ru" ? "Кредит" : Model.Language == "en" ? "Credit" : "Несие",
+                                                        _ => order.PaymentMethod ?? "-"
                                                     };
                                                 }
                                                 @paymentText
                                             </td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <a asp-page="Details" asp-route-id="@order.Id" class="btn-sm btn-info" title="Просмотр">
-                                                        <i class="fas fa-info-circle"></i>
-                                                    </a>
-                                                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-                                                    {
-                                                        <a asp-page="Edit" asp-route-id="@order.Id" class="btn-sm btn-primary" title="Редактировать">
-                                                            <i class="fas fa-pencil-alt"></i>
-                                                        </a>
-                                                        <a asp-page="Delete" asp-route-id="@order.Id" class="btn-sm btn-danger" title="Удалить">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
-                                                    }
-                                                </div>
+                                            <td class="actions">
+                                                <a asp-page="Details" asp-route-id="@order.Id" class="btn-sm btn-info" title="@(Model.Language == "ru" ? "Просмотр" : Model.Language == "en" ? "View" : "Қарау")"><i class="fas fa-info-circle"></i></a>
+                                                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                                                {
+                                                    <a asp-page="Edit" asp-route-id="@order.Id" class="btn-sm btn-primary" title="@(Model.Language == "ru" ? "Редактировать" : Model.Language == "en" ? "Edit" : "Өңдеу")"><i class="fas fa-pencil-alt"></i></a>
+                                                    <a asp-page="Delete" asp-route-id="@order.Id" class="btn-sm btn-danger" title="@(Model.Language == "ru" ? "Удалить" : Model.Language == "en" ? "Delete" : "Жою")"><i class="fas fa-trash"></i></a>
+                                                }
                                             </td>
                                         </tr>
                                     }
@@ -807,17 +1014,17 @@
                     }
                     else
                     {
-                        <p class="text-muted">Нет заказов.</p>
+                        <div class="empty-message">
+                            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>@(Model.Language == "ru" ? "Нет заказов для отображения." : Model.Language == "en" ? "No orders to display." : "Көрсету үшін тапсырыстар жоқ.")</p>
+                        </div>
                     }
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Скрипты валидации (не обязательны) -->
     <partial name="_ValidationScriptsPartial" />
-
-    <!-- Скрипты для мобильного меню и переключения темы -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
@@ -839,27 +1046,49 @@
             }
 
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
-
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-
-            themeToggle.addEventListener('click', function() {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
+
+                themeToggle.addEventListener('click', function() {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
             });
+        });
+
+        function toggleUserMenu() {
+            document.getElementById('userMenu').classList.toggle('show');
+        }
+
+        window.addEventListener('click', function(event) {
+            const userInfo = document.querySelector('.user-info');
+            const userMenu = document.getElementById('userMenu');
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
+                userMenu.classList.remove('show');
+            }
         });
     </script>
 </body>

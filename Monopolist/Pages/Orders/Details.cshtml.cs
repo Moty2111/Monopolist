@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Monoplist.ViewModels;
 using Monoplist.Data;
+using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Orders;
 
@@ -19,10 +20,19 @@ public class DetailsModel : PageModel
 
     public OrderDetailsViewModel Order { get; set; } = new();
 
+    // Свойства для персонализации
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(int? id)
     {
         if (id == null)
             return NotFound();
+
+        await LoadUserSettings();
 
         var order = await _context.Orders
             .Include(o => o.Customer)
@@ -53,5 +63,19 @@ public class DetailsModel : PageModel
         };
 
         return Page();
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
     }
 }

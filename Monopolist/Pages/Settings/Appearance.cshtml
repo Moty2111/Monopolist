@@ -1,14 +1,13 @@
 ﻿@page
-@model Monoplist.Pages.Customers.CreateModel
+@model Monoplist.Pages.Settings.AppearanceModel
 @{
     Layout = null;
-    ViewData["Title"] = Model.Language == "ru" ? "Добавление клиента" : (Model.Language == "en" ? "Add customer" : "Клиент қосу");
-    var userId = User.FindFirst("UserId")?.Value;
-    var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
+    ViewData["Title"] = "Внешний вид";
+    var userName = User.Identity?.Name ?? "Пользователь";
 }
 
 <!DOCTYPE html>
-<html lang="@Model.Language">
+<html lang="@Model.Input.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,9 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ ===== */
         :root {
-            --primary: @Model.CustomColor;
+            --primary: @Model.Input.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -41,12 +39,9 @@
             --danger-bg: #fee2e2;
             --warning: #f59e0b;
             --warning-bg: #fed7aa;
-            --info: #3b82f6;
-            --info-bg: #dbeafe;
             --transition: all 0.2s ease;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
         body.dark-theme {
             --bg: #1a1a1a;
             --surface: #2d2d2d;
@@ -60,10 +55,8 @@
             --success-bg: #064e3b;
             --warning-bg: #92400e;
             --danger-bg: #7f1d1d;
-            --info-bg: #1e3a5f;
         }
 
-        /* ===== КОМПАКТНЫЙ РЕЖИМ ===== */
         body.compact-mode .sidebar {
             width: 240px;
         }
@@ -109,12 +102,10 @@
             padding: 8px 12px;
         }
 
-        body.compact-mode .btn-primary,
-        body.compact-mode .btn-secondary {
+        body.compact-mode .btn-primary, body.compact-mode .btn-secondary {
             padding: 8px 18px;
         }
 
-        /* ===== ОТКЛЮЧЕНИЕ АНИМАЦИЙ ===== */
         body.no-animations * {
             transition: none !important;
             animation: none !important;
@@ -139,7 +130,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -214,19 +204,16 @@
                         transition: var(--transition);
                     }
 
-                    .sidebar-nav li a:hover,
-                    .sidebar-nav li a.active {
+                    .sidebar-nav li a:hover, .sidebar-nav li a.active {
                         background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
                         color: var(--primary);
                         transform: translateX(4px);
                     }
 
-                        .sidebar-nav li a:hover i,
-                        .sidebar-nav li a.active i {
+                        .sidebar-nav li a:hover i, .sidebar-nav li a.active i {
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -274,119 +261,12 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            position: relative;
         }
 
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 12px;
-            background: var(--surface-hover);
-            border-radius: 40px;
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-            .user-profile:hover {
-                background: var(--surface);
-                box-shadow: var(--shadow-sm);
+            .user-info span {
+                font-weight: 500;
+                color: var(--text-secondary);
             }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-
-            .user-avatar i {
-                font-size: 40px;
-            }
-
-            .user-avatar img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
-
-        .user-role {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .user-menu {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            width: 220px;
-            background: var(--surface);
-            border-radius: 12px;
-            box-shadow: var(--shadow-hover);
-            border: 1px solid var(--border);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.2s ease;
-            z-index: 1000;
-        }
-
-            .user-menu.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
-            width: 100%;
-            text-align: left;
-            border: none;
-            background: none;
-            font-size: 0.95rem;
-            cursor: pointer;
-        }
-
-            .menu-item:hover {
-                background: var(--surface-hover);
-                color: var(--primary);
-            }
-
-            .menu-item.logout {
-                color: var(--danger);
-            }
-
-                .menu-item.logout:hover {
-                    background: var(--danger-bg);
-                }
-
-        .menu-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 8px 0;
-        }
 
         .theme-toggle {
             background: none;
@@ -463,28 +343,12 @@
         }
 
         .alert {
-            padding: 16px;
+            padding: 12px 16px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            animation: slideDown 0.3s ease;
-        }
-
-        @@keyframes slideDown {
-            from
-
-        {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+            gap: 10px;
         }
 
         .alert-success {
@@ -493,18 +357,12 @@
             border-left: 4px solid var(--success);
         }
 
-        .alert-danger {
-            background: var(--danger-bg);
-            color: var(--danger);
-            border-left: 4px solid var(--danger);
-        }
-
         .form-container {
-            max-width: 800px;
+            max-width: 600px;
         }
 
         .form-group {
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
         }
 
             .form-group label {
@@ -535,6 +393,36 @@
                 box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
             }
 
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FF6B00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .checkbox-group input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                accent-color: var(--primary);
+            }
+
+        .color-picker {
+            width: 100%;
+            height: 40px;
+            padding: 0;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
         .form-actions {
             display: flex;
             gap: 1rem;
@@ -545,8 +433,8 @@
         .btn-primary, .btn-secondary {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
+            gap: 6px;
+            padding: 10px 22px;
             border: none;
             border-radius: 30px;
             font-weight: 600;
@@ -579,86 +467,89 @@
                 transform: translateY(-2px);
             }
 
-        .text-danger {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 4px;
-            display: block;
+        .preview-card {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--surface-hover);
+            border-radius: 16px;
+            border: 1px solid var(--border);
         }
+
+            .preview-card h3 {
+                color: var(--primary);
+                margin-bottom: 15px;
+                font-size: 1.1rem;
+            }
+
+        .theme-preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .theme-option {
+            width: 150px;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+            .theme-option.selected {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
+            }
+
+            .theme-option.light {
+                background: #ffffff;
+                color: #1e293b;
+            }
+
+            .theme-option.dark {
+                background: #1a1a1a;
+                color: #f0f0f0;
+            }
+
+            .theme-option i {
+                font-size: 24px;
+                margin-bottom: 10px;
+            }
 
         @@media (max-width: 768px) {
-            .sidebar
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transform: translateX(-100%);
+            }
 
-        {
-            position: fixed;
-            left: -280px;
-            top: 0;
-            bottom: 0;
-            transform: translateX(-100%);
-            box-shadow: none;
-        }
+            body.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
 
-        body.sidebar-open .sidebar {
-            transform: translateX(0);
-            box-shadow: 2px 0 15px rgba(0,0,0,0.2);
-        }
+            .menu-toggle {
+                display: block;
+            }
 
-        .menu-toggle {
-            display: block;
-        }
+            .form-actions {
+                flex-direction: column;
+            }
 
-        .main-content {
-            width: 100%;
-        }
-
-        .top-bar {
-            padding: 12px 16px;
-        }
-
-        .page-title {
-            font-size: 1.25rem;
-        }
-
-        .user-info span {
-            display: none;
-        }
-
-        .content {
-            padding: 16px;
-        }
-
-        .dashboard {
-            padding: 16px;
-        }
-
-        .form-actions {
-            flex-direction: column;
-        }
-
-        .btn-primary, .btn-secondary {
-            width: 100%;
-            justify-content: center;
-        }
-
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         @@media (max-width: 480px) {
-            .btn-logout span
-
-        {
-            display: none;
-        }
-
-        .btn-logout {
-            padding: 8px 12px;
-        }
-
+            .btn-logout span {
+                display: none;
+            }
         }
     </style>
 </head>
-<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
+<body class="@(Model.Input.Theme == "dark" ? "dark-theme" : "") @(Model.Input.CompactMode ? "compact-mode" : "") @(Model.Input.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -666,14 +557,14 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a asp-page="/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Products") == true ? "active" : "")"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Orders") == true ? "active" : "")"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index" class="active"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Warehouse") == true ? "active" : "")"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Suppliers") == true ? "active" : "")"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Reports") == true ? "active" : "")"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index" class="@(ViewContext.RouteData.Values["page"]?.ToString().StartsWith("/Settings") == true ? "active" : "")"><i class="fas fa-cog"></i> Настройки</a></li>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
+                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
+                    <li><a asp-page="/Settings/Index" class="active"><i class="fas fa-cog"></i> Настройки</a></li>
                 </ul>
             </nav>
         </aside>
@@ -685,36 +576,17 @@
                 </button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
+                    <span><i class="fas fa-user-circle"></i> @userName</span>
+                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
                         <i class="fas fa-sun"></i>
                     </div>
-                    <div class="user-profile" onclick="toggleUserMenu()">
-                        <div class="user-avatar">
-                            @if (!string.IsNullOrEmpty(avatarUrl))
-                            {
-                                <img src="@avatarUrl" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
-                            }
-                            else
-                            {
-                                <i class="fas fa-user-circle"></i>
-                            }
-                        </div>
-                        <div class="user-details">
-                            <span class="user-name">@User.Identity?.Name</span>
-                            <span class="user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</span>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="user-menu" id="userMenu">
-                        <a asp-page="/Settings/Profile" class="menu-item"><i class="fas fa-user"></i> Профиль</a>
-                        <a asp-page="/Settings/Security" class="menu-item"><i class="fas fa-shield-alt"></i> Безопасность</a>
-                        <a asp-page="/Settings/Appearance" class="menu-item"><i class="fas fa-palette"></i> Внешний вид</a>
-                        <div class="menu-divider"></div>
-                        <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="menu-item logout"><i class="fas fa-sign-out-alt"></i> Выйти</button>
-                        </form>
-                    </div>
+                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Выйти</span>
+                        </button>
+                    </form>
                 </div>
             </header>
 
@@ -722,47 +594,85 @@
                 <div class="dashboard">
                     @if (TempData["Success"] != null)
                     {
-                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
-                    }
-                    @if (TempData["Error"] != null)
-                    {
-                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                        </div>
                     }
 
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">@(Model.Language == "ru" ? "Заполните форму" : Model.Language == "en" ? "Fill the form" : "Пішінді толтырыңыз")</p>
+                    <p class="subtitle">Настройка внешнего вида интерфейса</p>
 
                     <div class="form-container">
                         <form method="post">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                             <div class="form-group">
-                                <label asp-for="Customer.FullName">@(Model.Language == "ru" ? "ФИО / Название" : Model.Language == "en" ? "Full name" : "Аты-жөні / Атауы")</label>
-                                <input asp-for="Customer.FullName" class="form-control" />
-                                <span asp-validation-for="Customer.FullName" class="text-danger"></span>
+                                <label asp-for="Input.Theme">Тема оформления</label>
+                                <div class="theme-preview">
+                                    <div class="theme-option light @(Model.Input.Theme == "light" ? "selected" : "")" onclick="document.getElementById('theme_light').click();">
+                                        <i class="fas fa-sun"></i>
+                                        <div>Светлая</div>
+                                    </div>
+                                    <div class="theme-option dark @(Model.Input.Theme == "dark" ? "selected" : "")" onclick="document.getElementById('theme_dark').click();">
+                                        <i class="fas fa-moon"></i>
+                                        <div>Тёмная</div>
+                                    </div>
+                                </div>
+                                <div style="display: none;">
+                                    <input type="radio" asp-for="Input.Theme" id="theme_light" value="light" />
+                                    <input type="radio" asp-for="Input.Theme" id="theme_dark" value="dark" />
+                                </div>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Customer.Phone">@(Model.Language == "ru" ? "Телефон" : Model.Language == "en" ? "Phone" : "Телефон")</label>
-                                <input asp-for="Customer.Phone" class="form-control" />
-                                <span asp-validation-for="Customer.Phone" class="text-danger"></span>
+                                <label asp-for="Input.CustomColor">Основной цвет</label>
+                                <input asp-for="Input.CustomColor" type="color" class="color-picker" />
+                                <span asp-validation-for="Input.CustomColor" class="text-danger"></span>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Customer.Email">Email</label>
-                                <input asp-for="Customer.Email" class="form-control" />
-                                <span asp-validation-for="Customer.Email" class="text-danger"></span>
+                                <label asp-for="Input.Language">Язык интерфейса</label>
+                                <select asp-for="Input.Language" class="form-control">
+                                    <option value="ru">Русский</option>
+                                    <option value="en">English</option>
+                                    <option value="kk">Қазақша</option>
+                                </select>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Customer.Discount">@(Model.Language == "ru" ? "Скидка (%)" : Model.Language == "en" ? "Discount (%)" : "Жеңілдік (%)")</label>
-                                <input asp-for="Customer.Discount" class="form-control" />
-                                <span asp-validation-for="Customer.Discount" class="text-danger"></span>
+                                <div class="checkbox-group">
+                                    <input asp-for="Input.CompactMode" />
+                                    <label asp-for="Input.CompactMode">Компактный режим (уменьшенные отступы)</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input asp-for="Input.Animations" />
+                                    <label asp-for="Input.Animations">Анимации интерфейса</label>
+                                </div>
+                            </div>
+
+                            <div class="preview-card">
+                                <h3><i class="fas fa-eye"></i> Предпросмотр</h3>
+                                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                    <span class="status-badge" style="background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px;">Кнопка</span>
+                                    <span class="status-badge" style="background: var(--success-bg); color: var(--success); padding: 4px 12px; border-radius: 20px;">Успех</span>
+                                    <span class="status-badge" style="background: var(--danger-bg); color: var(--danger); padding: 4px 12px; border-radius: 20px;">Ошибка</span>
+                                    <span class="status-badge" style="background: var(--warning-bg); color: var(--warning); padding: 4px 12px; border-radius: 20px;">Внимание</span>
+                                </div>
+                                <p style="margin-top: 15px; color: var(--text-secondary);">
+                                    Пример текста для демонстрации выбранной темы и цветовой схемы.
+                                </p>
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> @(Model.Language == "ru" ? "Сохранить" : Model.Language == "en" ? "Save" : "Сақтау")</button>
-                                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Отмена" : Model.Language == "en" ? "Cancel" : "Бас тарту")</a>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-save"></i> Сохранить настройки
+                                </button>
+                                <a asp-page="Index" class="btn-secondary">
+                                    <i class="fas fa-times"></i> Отмена
+                                </a>
                             </div>
                         </form>
                     </div>
@@ -771,21 +681,17 @@
         </main>
     </div>
 
-    <partial name="_ValidationScriptsPartial" />
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
 
             if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    body.classList.toggle('sidebar-open');
-                });
-
-                document.addEventListener('click', function(event) {
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+                document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
                             body.classList.remove('sidebar-open');
                         }
                     }
@@ -794,25 +700,62 @@
 
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = themeToggle.querySelector('i');
-            const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+
+            const savedTheme = localStorage.getItem('theme') || '@Model.Input.Theme';
             if (savedTheme === 'dark') {
                 body.classList.add('dark-theme');
                 themeIcon.classList.remove('fa-sun');
                 themeIcon.classList.add('fa-moon');
             }
 
-            themeToggle.addEventListener('click', function() {
+            themeToggle.addEventListener('click', () => {
                 body.classList.toggle('dark-theme');
                 if (body.classList.contains('dark-theme')) {
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
                     localStorage.setItem('theme', 'dark');
+                    document.getElementById('theme_dark').checked = true;
+                    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+                    document.querySelector('.theme-option.dark').classList.add('selected');
                 } else {
                     themeIcon.classList.remove('fa-moon');
                     themeIcon.classList.add('fa-sun');
                     localStorage.setItem('theme', 'light');
+                    document.getElementById('theme_light').checked = true;
+                    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+                    document.querySelector('.theme-option.light').classList.add('selected');
                 }
             });
+
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    const radioId = this.classList.contains('light') ? 'theme_light' : 'theme_dark';
+                    document.getElementById(radioId).checked = true;
+
+                    const newTheme = this.classList.contains('light') ? 'light' : 'dark';
+                    if (newTheme === 'dark') {
+                        body.classList.add('dark-theme');
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        body.classList.remove('dark-theme');
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            });
+
+            const colorPicker = document.getElementById('@Html.IdFor(m => m.Input.CustomColor)');
+            if (colorPicker) {
+                colorPicker.addEventListener('input', function() {
+                    document.documentElement.style.setProperty('--primary', this.value);
+                });
+            }
 
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
@@ -822,18 +765,6 @@
                     setTimeout(() => alert.style.display = 'none', 500);
                 }, 5000);
             });
-        });
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('show');
-        }
-
-        window.addEventListener('click', function(event) {
-            const userInfo = document.querySelector('.user-info');
-            const userMenu = document.getElementById('userMenu');
-            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
         });
     </script>
 </body>

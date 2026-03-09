@@ -1,3 +1,4 @@
+п»ї// Pages/Orders/Create.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Orders;
 
@@ -28,8 +30,16 @@ public class CreateModel : PageModel
     public List<SelectListItem> Statuses { get; set; } = new();
     public List<SelectListItem> PaymentMethods { get; set; } = new();
 
+    // РЎРІРѕР№СЃС‚РІР° РґР»СЏ РїРµСЂСЃРѕРЅР°Р»РёР·Р°С†РёРё
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task OnGetAsync()
     {
+        await LoadUserSettings();
         await PopulateDropdownsAsync();
     }
 
@@ -37,6 +47,7 @@ public class CreateModel : PageModel
     {
         if (!ModelState.IsValid)
         {
+            await LoadUserSettings();
             await PopulateDropdownsAsync();
             return Page();
         }
@@ -58,13 +69,14 @@ public class CreateModel : PageModel
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Заказ {orderNumber} успешно создан.";
+            TempData["Success"] = GetLocalizedMessage($"Р—Р°РєР°Р· {orderNumber} СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ.", $"Order {orderNumber} created successfully.", $"{orderNumber} С‚Р°РїСЃС‹СЂС‹СЃС‹ СЃУ™С‚С‚С– Т›Т±СЂС‹Р»РґС‹.");
             return RedirectToPage("./Index");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при создании заказа");
-            ModelState.AddModelError(string.Empty, "Произошла ошибка при сохранении. Попробуйте снова.");
+            _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё Р·Р°РєР°Р·Р°");
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage("РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.", "An error occurred while saving. Please try again.", "РЎР°Т›С‚Р°Сѓ РєРµР·С–РЅРґРµ Т›Р°С‚Рµ РѕСЂС‹РЅ Р°Р»РґС‹. ТљР°Р№С‚Р°Р»Р°Рї РєУ©СЂС–ТЈС–Р·."));
+            await LoadUserSettings();
             await PopulateDropdownsAsync();
             return Page();
         }
@@ -72,7 +84,6 @@ public class CreateModel : PageModel
 
     private async Task PopulateDropdownsAsync()
     {
-        // Клиенты
         var customers = await _context.Customers
             .OrderBy(c => c.FullName)
             .Select(c => new SelectListItem
@@ -83,21 +94,19 @@ public class CreateModel : PageModel
             .ToListAsync();
         Customers = new SelectList(customers, "Value", "Text");
 
-        // Статусы
         Statuses = new List<SelectListItem>
         {
-            new() { Value = "Pending", Text = "Ожидание" },
-            new() { Value = "Processing", Text = "В обработке" },
-            new() { Value = "Completed", Text = "Завершён" },
-            new() { Value = "Cancelled", Text = "Отменён" }
+            new() { Value = "Pending", Text = Language == "ru" ? "РћР¶РёРґР°РЅРёРµ" : Language == "en" ? "Pending" : "РљТЇС‚С–Р»СѓРґРµ" },
+            new() { Value = "Processing", Text = Language == "ru" ? "Р’ РѕР±СЂР°Р±РѕС‚РєРµ" : Language == "en" ? "Processing" : "УЁТЈРґРµР»СѓРґРµ" },
+            new() { Value = "Completed", Text = Language == "ru" ? "Р—Р°РІРµСЂС€С‘РЅ" : Language == "en" ? "Completed" : "РђСЏТ›С‚Р°Р»РґС‹" },
+            new() { Value = "Cancelled", Text = Language == "ru" ? "РћС‚РјРµРЅС‘РЅ" : Language == "en" ? "Cancelled" : "Р‘Р°СЃ С‚Р°СЂС‚С‹Р»РґС‹" }
         };
 
-        // Методы оплаты
         PaymentMethods = new List<SelectListItem>
         {
-            new() { Value = "Cash", Text = "Наличные" },
-            new() { Value = "Card", Text = "Карта" },
-            new() { Value = "Credit", Text = "Кредит/Рассрочка" }
+            new() { Value = "Cash", Text = Language == "ru" ? "РќР°Р»РёС‡РЅС‹Рµ" : Language == "en" ? "Cash" : "ТљРѕР»РјР°-Т›РѕР»" },
+            new() { Value = "Card", Text = Language == "ru" ? "РљР°СЂС‚Р°" : Language == "en" ? "Card" : "РљР°СЂС‚Р°" },
+            new() { Value = "Credit", Text = Language == "ru" ? "РљСЂРµРґРёС‚/Р Р°СЃСЃСЂРѕС‡РєР°" : Language == "en" ? "Credit" : "РќРµСЃРёРµ" }
         };
     }
 
@@ -121,5 +130,29 @@ public class CreateModel : PageModel
         }
 
         return $"{prefix}{nextNumber:D3}";
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

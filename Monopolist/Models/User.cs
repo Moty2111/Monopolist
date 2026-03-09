@@ -17,6 +17,13 @@ public class User
     [Required, StringLength(20)]
     public string Role { get; set; } = "Seller";
 
+    // Настройки внешнего вида
+    public string? Theme { get; set; } = "light";
+    public string? Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string? CustomColor { get; set; } = "#FF6B00";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 }

@@ -1,8 +1,10 @@
+Ôªø// Pages/Customers/Create.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Monoplist.Data;
 using Monoplist.Models;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Customers;
 
@@ -21,15 +23,26 @@ public class CreateModel : PageModel
     [BindProperty]
     public Customer Customer { get; set; } = new();
 
-    public IActionResult OnGet()
+    // –°–≤–æ–π—Å—Ç–≤–∞ –¥–ª—è –ø–µ—Ä—Å–æ–Ω–∞–ª–∏–∑–∞—Ü–∏–∏
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
+    public async Task<IActionResult> OnGetAsync()
     {
+        await LoadUserSettings();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
+        {
+            await LoadUserSettings();
             return Page();
+        }
 
         try
         {
@@ -37,14 +50,39 @@ public class CreateModel : PageModel
             _context.Customers.Add(Customer);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = " ÎËÂÌÚ ÛÒÔÂ¯ÌÓ ‰Ó·‡‚ÎÂÌ.";
+            TempData["Success"] = GetLocalizedMessage("–ö–ª–∏–µ–Ω—Ç —É—Å–ø–µ—à–Ω–æ –¥–æ–±–∞–≤–ª–µ–Ω.", "Customer added successfully.", "–ö–ª–∏–µ–Ω—Ç —Å”ô—Ç—Ç—ñ “õ–æ—Å—ã–ª–¥—ã.");
             return RedirectToPage("./Index");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Œ¯Ë·Í‡ ÔË ÒÓÁ‰‡ÌËË ÍÎËÂÌÚ‡");
-            ModelState.AddModelError(string.Empty, "œÓËÁÓ¯Î‡ Ó¯Ë·Í‡ ÔË ÒÓı‡ÌÂÌËË. œÓÔÓ·ÛÈÚÂ ÒÌÓ‚‡.");
+            _logger.LogError(ex, "–û—à–∏–±–∫–∞ –ø—Ä–∏ —Å–æ–∑–¥–∞–Ω–∏–∏ –∫–ª–∏–µ–Ω—Ç–∞");
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage("–ü—Ä–æ–∏–∑–æ—à–ª–∞ –æ—à–∏–±–∫–∞ –ø—Ä–∏ —Å–æ—Ö—Ä–∞–Ω–µ–Ω–∏–∏. –ü–æ–ø—Ä–æ–±—É–π—Ç–µ —Å–Ω–æ–≤–∞.", "An error occurred while saving. Please try again.", "–°–∞“õ—Ç–∞—É –∫–µ–∑—ñ–Ω–¥–µ “õ–∞—Ç–µ –æ—Ä—ã–Ω –∞–ª–¥—ã. “ö–∞–π—Ç–∞–ª–∞–ø –∫”©—Ä—ñ“£—ñ–∑."));
+            await LoadUserSettings();
             return Page();
         }
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }
