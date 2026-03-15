@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
-using Monoplist.Models; // добавлено для доступа к моделям
+using Monoplist.Models;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Text;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Reports;
 
@@ -25,13 +26,23 @@ public class ExportModel : PageModel
         _logger = logger;
     }
 
+    // Свойства для персонализации
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(string type, string format, DateTime? start, DateTime? end)
     {
+        // Загружаем настройки пользователя для локализации сообщений об ошибках
+        await LoadUserSettings();
+
         try
         {
             if (string.IsNullOrEmpty(format))
             {
-                return BadRequest("Не указан формат экспорта. Используйте параметр format (excel, pdf, csv, word).");
+                return BadRequest(GetLocalizedMessage("Не указан формат экспорта.", "Export format not specified.", "Экспорт форматы көрсетілмеген."));
             }
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -48,13 +59,13 @@ public class ExportModel : PageModel
                 case "word":
                     return await ExportToWord(type, start, end);
                 default:
-                    return BadRequest("Неподдерживаемый формат");
+                    return BadRequest(GetLocalizedMessage("Неподдерживаемый формат.", "Unsupported format.", "Қолдау көрсетілмеген формат."));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при экспорте отчета {Type} в формат {Format}", type, format);
-            TempData["Error"] = "Не удалось экспортировать отчет.";
+            TempData["Error"] = GetLocalizedMessage("Не удалось экспортировать отчет.", "Failed to export report.", "Есепті экспорттау мүмкін болмады.");
             return RedirectToPage("./Index");
         }
     }
@@ -481,7 +492,7 @@ public class ExportModel : PageModel
 
     private class WarehouseData
     {
-        public List<Monoplist.Models.Warehouse> Warehouses { get; set; } = new(); // используем полное имя
+        public List<Monoplist.Models.Warehouse> Warehouses { get; set; } = new();
     }
 
     private async Task<SalesData> LoadSalesData(DateTime? start, DateTime? end)
@@ -1126,4 +1137,28 @@ public class ExportModel : PageModel
     };
 
     #endregion
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
+    }
 }

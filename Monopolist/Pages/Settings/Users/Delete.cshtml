@@ -2,12 +2,13 @@
 @model Monoplist.Pages.Settings.Users.DeleteModel
 @{
     Layout = null;
-    ViewData["Title"] = "Удаление пользователя";
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Удаление пользователя" : (Model.Language == "en" ? "Delete user" : "Пайдаланушыны жою");
+    var userId = User.FindFirst("UserId")?.Value;
+    var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -58,6 +59,48 @@
             --warning-bg: #92400e;
             --danger-bg: #7f1d1d;
             --info-bg: #1e3a5f;
+        }
+
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
         }
 
         * {
@@ -212,12 +255,119 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            position: relative;
         }
 
-            .user-info span {
-                font-weight: 500;
-                color: var(--text-secondary);
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface-hover);
+            border-radius: 40px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+            .user-profile:hover {
+                background: var(--surface);
+                box-shadow: var(--shadow-sm);
             }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .user-avatar i {
+                font-size: 40px;
+            }
+
+            .user-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 220px;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+            .user-menu.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+            .menu-item:hover {
+                background: var(--surface-hover);
+                color: var(--primary);
+            }
+
+            .menu-item.logout {
+                color: var(--danger);
+            }
+
+                .menu-item.logout:hover {
+                    background: var(--danger-bg);
+                }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0;
+        }
 
         .theme-toggle {
             background: none;
@@ -239,32 +389,6 @@
                 color: white;
                 border-color: var(--primary);
             }
-
-        .btn-logout {
-            background: none;
-            border: 2px solid var(--accent);
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-            .btn-logout:hover {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                border-color: transparent;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
-            }
-
-                .btn-logout:hover i {
-                    color: white;
-                }
 
         .content {
             padding: 24px;
@@ -304,18 +428,15 @@
         }
 
         @@keyframes slideDown {
-            from
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
 
-        {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .alert-success {
@@ -432,11 +553,15 @@
                 font-size: 1.25rem;
             }
 
-            .user-info span {
+            .user-profile .user-details {
                 display: none;
             }
 
             .content {
+                padding: 16px;
+            }
+
+            .dashboard {
                 padding: 16px;
             }
 
@@ -461,47 +586,12 @@
         }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-helmet-safety"></i>
-                <h2>Моноплист</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index" class="active"><i class="fas fa-cog"></i> Настройки</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_Sidebar")
 
         <main class="main-content">
-            <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1 class="page-title">@ViewData["Title"]</h1>
-                <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Выйти</span>
-                        </button>
-                    </form>
-                </div>
-            </header>
+            @await Html.PartialAsync("_Header")
 
             <div class="content">
                 <div class="dashboard">
@@ -519,25 +609,25 @@
                     }
 
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">Вы уверены, что хотите удалить этого пользователя?</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Вы уверены, что хотите удалить этого пользователя?" : Model.Language == "en" ? "Are you sure you want to delete this user?" : "Осы пайдаланушыны жойғыңыз келетініне сенімдісіз бе?")</p>
 
                     <div class="delete-confirmation">
                         <dl>
-                            <dt>Имя пользователя</dt>
+                            <dt>@(Model.Language == "ru" ? "Имя пользователя" : Model.Language == "en" ? "Username" : "Пайдаланушы аты")</dt>
                             <dd>@Model.UserInfo.Username</dd>
-                            <dt>Роль</dt>
+                            <dt>@(Model.Language == "ru" ? "Роль" : Model.Language == "en" ? "Role" : "Рөл")</dt>
                             <dd>@Model.UserInfo.Role</dd>
-                            <dt>Дата регистрации</dt>
+                            <dt>@(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</dt>
                             <dd>@Model.UserInfo.CreatedAt.ToString("dd.MM.yyyy")</dd>
                         </dl>
 
                         <form method="post">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn-danger">
-                                <i class="fas fa-trash"></i> Удалить
+                                <i class="fas fa-trash"></i> @(Model.Language == "ru" ? "Удалить" : Model.Language == "en" ? "Delete" : "Жою")
                             </button>
                             <a asp-page="Index" class="btn-secondary">
-                                <i class="fas fa-times"></i> Отмена
+                                <i class="fas fa-times"></i> @(Model.Language == "ru" ? "Отмена" : Model.Language == "en" ? "Cancel" : "Бас тарту")
                             </a>
                         </form>
                     </div>
@@ -552,14 +642,11 @@
             const body = document.body;
 
             if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    body.classList.toggle('sidebar-open');
-                });
-
-                document.addEventListener('click', function(event) {
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+                document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
                             body.classList.remove('sidebar-open');
                         }
                     }
@@ -567,29 +654,29 @@
             }
 
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
-
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-
-            themeToggle.addEventListener('click', function() {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
-            });
 
-            // Автоматическое скрытие алертов через 5 секунд
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -598,6 +685,18 @@
                     setTimeout(() => alert.style.display = 'none', 500);
                 }, 5000);
             });
+        });
+
+        function toggleUserMenu() {
+            document.getElementById('userMenu').classList.toggle('show');
+        }
+
+        window.addEventListener('click', function(event) {
+            const userInfo = document.querySelector('.user-info');
+            const userMenu = document.getElementById('userMenu');
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
+                userMenu.classList.remove('show');
+            }
         });
     </script>
 </body>

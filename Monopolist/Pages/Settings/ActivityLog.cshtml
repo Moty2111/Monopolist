@@ -2,12 +2,13 @@
 @model Monoplist.Pages.Settings.ActivityLogModel
 @{
     Layout = null;
-    ViewData["Title"] = "Журнал активности";
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Журнал активности" : (Model.Language == "en" ? "Activity log" : "Әрекеттер журналы");
+    var userId = User.FindFirst("UserId")?.Value;
+    var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -58,6 +59,57 @@
             --warning-bg: #92400e;
             --danger-bg: #7f1d1d;
             --info-bg: #1e3a5f;
+        }
+
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.compact-mode .filter-group input,
+        body.compact-mode .filter-group select {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .btn-filter {
+            padding: 8px 18px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
         }
 
         * {
@@ -212,12 +264,119 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            position: relative;
         }
 
-            .user-info span {
-                font-weight: 500;
-                color: var(--text-secondary);
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface-hover);
+            border-radius: 40px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+            .user-profile:hover {
+                background: var(--surface);
+                box-shadow: var(--shadow-sm);
             }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .user-avatar i {
+                font-size: 40px;
+            }
+
+            .user-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 220px;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+            .user-menu.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+            .menu-item:hover {
+                background: var(--surface-hover);
+                color: var(--primary);
+            }
+
+            .menu-item.logout {
+                color: var(--danger);
+            }
+
+                .menu-item.logout:hover {
+                    background: var(--danger-bg);
+                }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0;
+        }
 
         .theme-toggle {
             background: none;
@@ -239,32 +398,6 @@
                 color: white;
                 border-color: var(--primary);
             }
-
-        .btn-logout {
-            background: none;
-            border: 2px solid var(--accent);
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-            .btn-logout:hover {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                border-color: transparent;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
-            }
-
-                .btn-logout:hover i {
-                    color: white;
-                }
 
         .content {
             padding: 24px;
@@ -291,6 +424,40 @@
             margin-bottom: 24px;
             border-bottom: 2px solid var(--accent);
             padding-bottom: 12px;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
         }
 
         .filter-panel {
@@ -488,77 +655,51 @@
         }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-helmet-safety"></i>
-                <h2>Моноплист</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index" class="active"><i class="fas fa-cog"></i> Настройки</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_Sidebar")
 
         <main class="main-content">
-            <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1 class="page-title">@ViewData["Title"]</h1>
-                <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Выйти</span>
-                        </button>
-                    </form>
-                </div>
-            </header>
+            @await Html.PartialAsync("_Header")
 
             <div class="content">
                 <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">История действий пользователей в системе</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "История действий пользователей в системе" : Model.Language == "en" ? "User action history" : "Пайдаланушылардың әрекеттер тарихы")</p>
 
                     <form method="get" class="filter-panel">
                         <div class="filter-group">
-                            <label>Пользователь</label>
-                            <input type="text" name="UserFilter" value="@Model.UserFilter" placeholder="Все пользователи" />
+                            <label>@(Model.Language == "ru" ? "Пользователь" : Model.Language == "en" ? "User" : "Пайдаланушы")</label>
+                            <input type="text" name="UserFilter" value="@Model.UserFilter" placeholder="@(Model.Language == "ru" ? "Все пользователи" : Model.Language == "en" ? "All users" : "Барлық пайдаланушылар")" />
                         </div>
                         <div class="filter-group">
-                            <label>Тип действия</label>
+                            <label>@(Model.Language == "ru" ? "Тип действия" : Model.Language == "en" ? "Action type" : "Әрекет түрі")</label>
                             <select name="ActionFilter">
-                                <option value="">Все действия</option>
-                                <option value="Вход" selected="@(Model.ActionFilter == "Вход")">Вход</option>
-                                <option value="Создание" selected="@(Model.ActionFilter == "Создание")">Создание</option>
-                                <option value="Редактирование" selected="@(Model.ActionFilter == "Редактирование")">Редактирование</option>
-                                <option value="Удаление" selected="@(Model.ActionFilter == "Удаление")">Удаление</option>
+                                <option value="">@(Model.Language == "ru" ? "Все действия" : Model.Language == "en" ? "All actions" : "Барлық әрекеттер")</option>
+                                <option value="Вход" selected="@(Model.ActionFilter == "Вход")">@(Model.Language == "ru" ? "Вход" : Model.Language == "en" ? "Login" : "Кіру")</option>
+                                <option value="Создание" selected="@(Model.ActionFilter == "Создание")">@(Model.Language == "ru" ? "Создание" : Model.Language == "en" ? "Create" : "Құру")</option>
+                                <option value="Редактирование" selected="@(Model.ActionFilter == "Редактирование")">@(Model.Language == "ru" ? "Редактирование" : Model.Language == "en" ? "Edit" : "Өңдеу")</option>
+                                <option value="Удаление" selected="@(Model.ActionFilter == "Удаление")">@(Model.Language == "ru" ? "Удаление" : Model.Language == "en" ? "Delete" : "Жою")</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label>Дата с</label>
+                            <label>@(Model.Language == "ru" ? "Дата с" : Model.Language == "en" ? "Date from" : "Басталу күні")</label>
                             <input type="date" name="DateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
                         </div>
                         <div class="filter-group">
-                            <label>Дата по</label>
+                            <label>@(Model.Language == "ru" ? "Дата по" : Model.Language == "en" ? "Date to" : "Аяқталу күні")</label>
                             <input type="date" name="DateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
                         </div>
-                        <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Применить</button>
+                        <button type="submit" class="btn-filter"><i class="fas fa-search"></i> @(Model.Language == "ru" ? "Применить" : Model.Language == "en" ? "Apply" : "Қолдану")</button>
                     </form>
 
                     <div class="table-responsive">
@@ -567,11 +708,11 @@
                             <table class="log-table">
                                 <thead>
                                     <tr>
-                                        <th>Время</th>
-                                        <th>Пользователь</th>
-                                        <th>Действие</th>
-                                        <th>Детали</th>
-                                        <th>IP адрес</th>
+                                        <th>@(Model.Language == "ru" ? "Время" : Model.Language == "en" ? "Time" : "Уақыт")</th>
+                                        <th>@(Model.Language == "ru" ? "Пользователь" : Model.Language == "en" ? "User" : "Пайдаланушы")</th>
+                                        <th>@(Model.Language == "ru" ? "Действие" : Model.Language == "en" ? "Action" : "Әрекет")</th>
+                                        <th>@(Model.Language == "ru" ? "Детали" : Model.Language == "en" ? "Details" : "Мәліметтер")</th>
+                                        <th>IP @(Model.Language == "ru" ? "адрес" : Model.Language == "en" ? "address" : "мекенжайы")</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -600,14 +741,14 @@
                         {
                             <div class="empty-message">
                                 <i class="fas fa-history" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
-                                <p>Нет записей в журнале активности.</p>
+                                <p>@(Model.Language == "ru" ? "Нет записей в журнале активности." : Model.Language == "en" ? "No activity log entries." : "Әрекеттер журналында жазбалар жоқ.")</p>
                             </div>
                         }
                     </div>
 
                     <div style="margin-top: 20px;">
                         <a asp-page="Index" class="btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Назад к настройкам
+                            <i class="fas fa-arrow-left"></i> @(Model.Language == "ru" ? "Назад к настройкам" : Model.Language == "en" ? "Back to settings" : "Баптауларға оралу")
                         </a>
                     </div>
                 </div>
@@ -633,29 +774,29 @@
             }
 
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
-
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
-            });
 
-            // Автоматическое скрытие алертов (если они есть)
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -664,6 +805,18 @@
                     setTimeout(() => alert.style.display = 'none', 500);
                 }, 5000);
             });
+        });
+
+        function toggleUserMenu() {
+            document.getElementById('userMenu').classList.toggle('show');
+        }
+
+        window.addEventListener('click', function(event) {
+            const userInfo = document.querySelector('.user-info');
+            const userMenu = document.getElementById('userMenu');
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
+                userMenu.classList.remove('show');
+            }
         });
     </script>
 </body>

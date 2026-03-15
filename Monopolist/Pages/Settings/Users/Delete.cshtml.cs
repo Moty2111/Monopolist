@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
+п»їusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Settings.Users;
 
@@ -18,9 +19,6 @@ public class DeleteModel : PageModel
         _logger = logger;
     }
 
-    /// <summary>
-    /// Модель для отображения информации о пользователе перед удалением.
-    /// </summary>
     public class UserInfoModel
     {
         public int Id { get; set; }
@@ -31,25 +29,35 @@ public class DeleteModel : PageModel
 
     public UserInfoModel UserInfo { get; set; } = new();
 
-    /// <summary>
-    /// Загрузка данных пользователя для подтверждения удаления.
-    /// </summary>
-    /// <param name="id">Идентификатор пользователя.</param>
-    /// <returns>Страница с подтверждением или редирект при ошибке.</returns>
+    // РЎРІРѕР№СЃС‚РІР° РґР»СЏ РїРµСЂСЃРѕРЅР°Р»РёР·Р°С†РёРё
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(int id)
     {
+        await LoadUserSettings();
+
         var user = await _context.Users.FindAsync(id);
         if (user == null)
         {
-            TempData["Error"] = "Пользователь не найден.";
+            TempData["Error"] = GetLocalizedMessage(
+                "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ.",
+                "User not found.",
+                "РџР°Р№РґР°Р»Р°РЅСѓС€С‹ С‚Р°Р±С‹Р»РјР°РґС‹.");
             return RedirectToPage("./Index");
         }
 
-        // Запрет на удаление самого себя
+        // Р—Р°РїСЂРµС‚ РЅР° СѓРґР°Р»РµРЅРёРµ СЃР°РјРѕРіРѕ СЃРµР±СЏ
         var currentUserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
         if (user.Id == currentUserId)
         {
-            TempData["Error"] = "Вы не можете удалить собственную учётную запись.";
+            TempData["Error"] = GetLocalizedMessage(
+                "Р’С‹ РЅРµ РјРѕР¶РµС‚Рµ СѓРґР°Р»РёС‚СЊ СЃРѕР±СЃС‚РІРµРЅРЅСѓСЋ СѓС‡С‘С‚РЅСѓСЋ Р·Р°РїРёСЃСЊ.",
+                "You cannot delete your own account.",
+                "РЎС–Р· У©Р· Р°РєРєР°СѓРЅС‚С‹ТЈС‹Р·РґС‹ Р¶РѕСЏ Р°Р»РјР°Р№СЃС‹Р·.");
             return RedirectToPage("./Index");
         }
 
@@ -61,35 +69,37 @@ public class DeleteModel : PageModel
         return Page();
     }
 
-    /// <summary>
-    /// Обработка подтверждения удаления.
-    /// </summary>
-    /// <param name="id">Идентификатор пользователя.</param>
-    /// <returns>Редирект на список пользователей с сообщением.</returns>
     public async Task<IActionResult> OnPostAsync(int id)
     {
         var user = await _context.Users.FindAsync(id);
         if (user == null)
         {
-            TempData["Error"] = "Пользователь не найден.";
+            TempData["Error"] = GetLocalizedMessage(
+                "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ.",
+                "User not found.",
+                "РџР°Р№РґР°Р»Р°РЅСѓС€С‹ С‚Р°Р±С‹Р»РјР°РґС‹.");
             return RedirectToPage("./Index");
         }
 
-        // Повторная проверка на удаление самого себя (на случай, если запрос подделан)
         var currentUserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
         if (user.Id == currentUserId)
         {
-            TempData["Error"] = "Вы не можете удалить собственную учётную запись.";
+            TempData["Error"] = GetLocalizedMessage(
+                "Р’С‹ РЅРµ РјРѕР¶РµС‚Рµ СѓРґР°Р»РёС‚СЊ СЃРѕР±СЃС‚РІРµРЅРЅСѓСЋ СѓС‡С‘С‚РЅСѓСЋ Р·Р°РїРёСЃСЊ.",
+                "You cannot delete your own account.",
+                "РЎС–Р· У©Р· Р°РєРєР°СѓРЅС‚С‹ТЈС‹Р·РґС‹ Р¶РѕСЏ Р°Р»РјР°Р№СЃС‹Р·.");
             return RedirectToPage("./Index");
         }
 
-        // Проверка на последнего администратора
         if (user.Role == "Admin")
         {
             var adminCount = await _context.Users.CountAsync(u => u.Role == "Admin");
             if (adminCount <= 1)
             {
-                TempData["Error"] = "Нельзя удалить последнего администратора.";
+                TempData["Error"] = GetLocalizedMessage(
+                    "РќРµР»СЊР·СЏ СѓРґР°Р»РёС‚СЊ РїРѕСЃР»РµРґРЅРµРіРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°.",
+                    "Cannot delete the last administrator.",
+                    "РЎРѕТЈТ“С‹ У™РєС–РјС€С–РЅС– Р¶РѕСЋ РјТЇРјРєС–РЅ РµРјРµСЃ.");
                 return RedirectToPage("./Index");
             }
         }
@@ -99,14 +109,44 @@ public class DeleteModel : PageModel
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Пользователь «{user.Username}» удалён.";
+            TempData["Success"] = GetLocalizedMessage(
+                $"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ В«{user.Username}В» СѓРґР°Р»С‘РЅ.",
+                $"User В«{user.Username}В» deleted.",
+                $"В«{user.Username}В» РїР°Р№РґР°Р»Р°РЅСѓС€С‹СЃС‹ Р¶РѕР№С‹Р»РґС‹.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при удалении пользователя {UserId}", id);
-            TempData["Error"] = "Не удалось удалить пользователя.";
+            _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ {UserId}", id);
+            TempData["Error"] = GetLocalizedMessage(
+                "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.",
+                "Failed to delete user.",
+                "РџР°Р№РґР°Р»Р°РЅСѓС€С‹РЅС‹ Р¶РѕСЋ РјТЇРјРєС–РЅ Р±РѕР»РјР°РґС‹.");
         }
 
         return RedirectToPage("./Index");
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

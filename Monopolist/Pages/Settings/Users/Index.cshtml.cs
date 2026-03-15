@@ -1,5 +1,4 @@
-// Pages/Settings/Users/Index.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+ï»¿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
@@ -22,7 +21,7 @@ public class IndexModel : PageModel
 
     public IList<UserSettingsViewModel> Users { get; set; } = new List<UserSettingsViewModel>();
 
-    // Ñâîéñòâà äëÿ ïåðñîíàëèçàöèè
+    // Ð¡Ð²Ð¾Ð¹ÑÑ‚Ð²Ð° Ð´Ð»Ñ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ð¸
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -34,14 +33,14 @@ public class IndexModel : PageModel
         try
         {
             var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
-            var user = await _context.Users.FindAsync(userId);
-            if (user != null)
+            var currentUser = await _context.Users.FindAsync(userId);
+            if (currentUser != null)
             {
-                Language = user.Language ?? "ru";
-                CompactMode = user.CompactMode;
-                Animations = user.Animations;
-                Theme = user.Theme ?? "light";
-                CustomColor = user.CustomColor ?? "#FF6B00";
+                Language = currentUser.Language ?? "ru";
+                CompactMode = currentUser.CompactMode;
+                Animations = currentUser.Animations;
+                Theme = currentUser.Theme ?? "light";
+                CustomColor = currentUser.CustomColor ?? "#FF6B00";
             }
 
             Users = await _context.Users
@@ -51,7 +50,7 @@ public class IndexModel : PageModel
                     Id = u.Id,
                     Username = u.Username,
                     Role = u.Role,
-                    IsActive = true, // Â ðåàëüíîì ïðîåêòå ìîæíî äîáàâèòü ïîëå IsActive â ìîäåëü User
+                    IsActive = true, // Ð’ Ñ€ÐµÐ°Ð»ÑŒÐ½Ð¾Ð¼ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ðµ Ð¼Ð¾Ð¶Ð½Ð¾ Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ Ð¿Ð¾Ð»Ðµ IsActive Ð² Ð¼Ð¾Ð´ÐµÐ»ÑŒ User
                     CreatedAt = u.CreatedAt,
                     LastLoginAt = u.UpdatedAt
                 })
@@ -59,8 +58,21 @@ public class IndexModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Îøèáêà ïðè çàãðóçêå ñïèñêà ïîëüçîâàòåëåé");
-            TempData["Error"] = "Íå óäàëîñü çàãðóçèòü ñïèñîê ïîëüçîâàòåëåé.";
+            _logger.LogError(ex, "ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐµ ÑÐ¿Ð¸ÑÐºÐ° Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹");
+            TempData["Error"] = GetLocalizedMessage(
+                "ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ ÑÐ¿Ð¸ÑÐ¾Ðº Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹.",
+                "Failed to load users list.",
+                "ÐŸÐ°Ð¹Ð´Ð°Ð»Ð°Ð½ÑƒÑˆÑ‹Ð»Ð°Ñ€ Ñ‚Ñ–Ð·Ñ–Ð¼Ñ–Ð½ Ð¶Ò¯ÐºÑ‚ÐµÑƒ Ð¼Ò¯Ð¼ÐºÑ–Ð½ Ð±Ð¾Ð»Ð¼Ð°Ð´Ñ‹.");
         }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

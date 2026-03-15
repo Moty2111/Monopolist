@@ -86,7 +86,10 @@ public class ProfileModel : PageModel
         {
             if (user.Password != Input.CurrentPassword)
             {
-                ModelState.AddModelError("Input.CurrentPassword", GetLocalizedMessage("Неверный текущий пароль", "Invalid current password", "Құпиясөз қате"));
+                ModelState.AddModelError("Input.CurrentPassword", GetLocalizedMessage(
+                    "Неверный текущий пароль",
+                    "Invalid current password",
+                    "Құпиясөз қате"));
                 await LoadUserSettings();
                 return Page();
             }
@@ -112,7 +115,10 @@ public class ProfileModel : PageModel
             Response.Cookies.Append($"user_phone_{userId}", Input.PhoneNumber ?? "", cookieOptions);
             Response.Cookies.Append($"user_avatar_{userId}", Input.AvatarUrl ?? "", cookieOptions);
 
-            TempData["Success"] = GetLocalizedMessage("Профиль успешно обновлен", "Profile updated successfully", "Профиль жаңартылды");
+            TempData["Success"] = GetLocalizedMessage(
+                "Профиль успешно обновлен",
+                "Profile updated successfully",
+                "Профиль жаңартылды");
 
             // Обновляем имя пользователя в куки аутентификации при необходимости
             if (user.Username != User.Identity?.Name)
@@ -123,7 +129,10 @@ public class ProfileModel : PageModel
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при обновлении профиля");
-            ModelState.AddModelError(string.Empty, GetLocalizedMessage("Произошла ошибка при сохранении.", "An error occurred while saving.", "Сақтау кезінде қате орын алды."));
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при сохранении.",
+                "An error occurred while saving.",
+                "Сақтау кезінде қате орын алды."));
             await LoadUserSettings();
             return Page();
         }
@@ -144,7 +153,10 @@ public class ProfileModel : PageModel
             var adminCount = await _context.Users.CountAsync(u => u.Role == "Admin");
             if (adminCount <= 1)
             {
-                TempData["Error"] = GetLocalizedMessage("Нельзя удалить последнего администратора", "Cannot delete the last administrator", "Соңғы әкімшіні жою мүмкін емес");
+                TempData["Error"] = GetLocalizedMessage(
+                    "Нельзя удалить последнего администратора",
+                    "Cannot delete the last administrator",
+                    "Соңғы әкімшіні жою мүмкін емес");
                 return RedirectToPage();
             }
         }
@@ -170,7 +182,10 @@ public class ProfileModel : PageModel
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при удалении аккаунта");
-            TempData["Error"] = GetLocalizedMessage("Не удалось удалить аккаунт", "Failed to delete account", "Аккаунтты жою мүмкін болмады");
+            TempData["Error"] = GetLocalizedMessage(
+                "Не удалось удалить аккаунт",
+                "Failed to delete account",
+                "Аккаунтты жою мүмкін болмады");
             return RedirectToPage();
         }
     }

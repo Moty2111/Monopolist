@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+ï»¿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Reports;
 
@@ -21,8 +22,16 @@ public class ProductsReportModel : PageModel
 
     public ProductsReportViewModel Report { get; set; } = new();
 
+    // Ð¡Ð²Ð¾Ð¹ÑÑ‚Ð²Ð° Ð´Ð»Ñ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ð¸
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task OnGetAsync()
     {
+        await LoadUserSettings();
         await LoadReportData();
     }
 
@@ -40,7 +49,7 @@ public class ProductsReportModel : PageModel
             Report.OutOfStockCount = products.Count(p => p.CurrentStock == 0);
             Report.TotalInventoryValue = products.Sum(p => p.CurrentStock * p.PurchasePrice);
 
-            // Òîï òîâàðîâ ïî ñòîèìîñòè çàïàñîâ
+            // Ð¢Ð¾Ð¿ Ñ‚Ð¾Ð²Ð°Ñ€Ð¾Ð² Ð¿Ð¾ ÑÑ‚Ð¾Ð¸Ð¼Ð¾ÑÑ‚Ð¸ Ð·Ð°Ð¿Ð°ÑÐ¾Ð²
             Report.TopProducts = products
                 .OrderByDescending(p => p.CurrentStock * p.PurchasePrice)
                 .Take(10)
@@ -49,15 +58,16 @@ public class ProductsReportModel : PageModel
                     Id = p.Id,
                     Name = p.Name,
                     Article = p.Article ?? "-",
-                    Category = p.Category?.Name ?? "Áåç êàòåãîðèè",
+                    Category = p.Category?.Name ?? "Ð‘ÐµÐ· ÐºÐ°Ñ‚ÐµÐ³Ð¾Ñ€Ð¸Ð¸",
                     CurrentStock = p.CurrentStock,
                     MinimumStock = p.MinimumStock,
                     PurchasePrice = p.PurchasePrice,
                     SalePrice = p.SalePrice
+                    // StockValue Ð½Ðµ Ð¿Ñ€Ð¸ÑÐ²Ð°Ð¸Ð²Ð°ÐµÐ¼ â€” Ð¿ÑƒÑÑ‚ÑŒ Ð²Ñ‹Ñ‡Ð¸ÑÐ»ÑÐµÑ‚ÑÑ Ð² Ð¼Ð¾Ð´ÐµÐ»Ð¸
                 })
                 .ToList();
 
-            // Òîâàðû ñ íèçêèì îñòàòêîì
+            // Ð¢Ð¾Ð²Ð°Ñ€Ñ‹ Ñ Ð½Ð¸Ð·ÐºÐ¸Ð¼ Ð¾ÑÑ‚Ð°Ñ‚ÐºÐ¾Ð¼
             Report.LowStockProducts = products
                 .Where(p => p.CurrentStock > 0 && p.CurrentStock < p.MinimumStock)
                 .OrderBy(p => (double)p.CurrentStock / p.MinimumStock)
@@ -67,7 +77,7 @@ public class ProductsReportModel : PageModel
                     Id = p.Id,
                     Name = p.Name,
                     Article = p.Article ?? "-",
-                    Category = p.Category?.Name ?? "Áåç êàòåãîðèè",
+                    Category = p.Category?.Name ?? "Ð‘ÐµÐ· ÐºÐ°Ñ‚ÐµÐ³Ð¾Ñ€Ð¸Ð¸",
                     CurrentStock = p.CurrentStock,
                     MinimumStock = p.MinimumStock,
                     PurchasePrice = p.PurchasePrice,
@@ -75,9 +85,9 @@ public class ProductsReportModel : PageModel
                 })
                 .ToList();
 
-            // Ñòàòèñòèêà ïî êàòåãîðèÿì
+            // Ð¡Ñ‚Ð°Ñ‚Ð¸ÑÑ‚Ð¸ÐºÐ° Ð¿Ð¾ ÐºÐ°Ñ‚ÐµÐ³Ð¾Ñ€Ð¸ÑÐ¼
             Report.CategoryStock = products
-                .GroupBy(p => p.Category?.Name ?? "Áåç êàòåãîðèè")
+                .GroupBy(p => p.Category?.Name ?? "Ð‘ÐµÐ· ÐºÐ°Ñ‚ÐµÐ³Ð¾Ñ€Ð¸Ð¸")
                 .Select(g => new CategoryStockViewModel
                 {
                     CategoryName = g.Key,
@@ -90,8 +100,32 @@ public class ProductsReportModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Îøèáêà ïðè çàãðóçêå îò÷åòà ïî òîâàðàì");
-            TempData["Error"] = "Íå óäàëîñü çàãðóçèòü äàííûå îò÷åòà.";
+            _logger.LogError(ex, "ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐµ Ð¾Ñ‚Ñ‡ÐµÑ‚Ð° Ð¿Ð¾ Ñ‚Ð¾Ð²Ð°Ñ€Ð°Ð¼");
+            TempData["Error"] = GetLocalizedMessage("ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ð´Ð°Ð½Ð½Ñ‹Ðµ Ð¾Ñ‚Ñ‡ÐµÑ‚Ð°.", "Failed to load report data.", "Ð•ÑÐµÐ¿ Ð´ÐµÑ€ÐµÐºÑ‚ÐµÑ€Ñ–Ð½ Ð¶Ò¯ÐºÑ‚ÐµÑƒ Ð¼Ò¯Ð¼ÐºÑ–Ð½ Ð±Ð¾Ð»Ð¼Ð°Ð´Ñ‹.");
         }
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

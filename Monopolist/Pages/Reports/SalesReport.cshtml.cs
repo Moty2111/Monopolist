@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+Ôªøusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Reports;
 
@@ -28,8 +29,17 @@ public class SalesReportModel : PageModel
     [BindProperty(SupportsGet = true)]
     public DateTime? EndDate { get; set; }
 
+    // –°–≤–æ–π—Å—Ç–≤–∞ –¥–ª—è –ø–µ—Ä—Å–æ–Ω–∞–ª–∏–∑–∞—Ü–∏–∏
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync()
     {
+        await LoadUserSettings();
+
         Report.StartDate = StartDate ?? DateTime.Now.AddMonths(-1).Date;
         Report.EndDate = EndDate ?? DateTime.Now.Date;
 
@@ -39,6 +49,7 @@ public class SalesReportModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
+        await LoadUserSettings();
         await LoadReportData();
         return Page();
     }
@@ -68,6 +79,7 @@ public class SalesReportModel : PageModel
                 .Select(g => new DailySalesViewModel
                 {
                     Date = g.Key,
+                    DayName = g.Key.ToString("dd.MM"),
                     Revenue = g.Sum(o => o.TotalAmount),
                     OrdersCount = g.Count()
                 })
@@ -80,7 +92,7 @@ public class SalesReportModel : PageModel
             {
                 foreach (var item in order.OrderItems)
                 {
-                    var categoryName = item.Product?.Category?.Name ?? "¡ÂÁ Í‡ÚÂ„ÓËË";
+                    var categoryName = item.Product?.Category?.Name ?? "–ë–µ–∑ –∫–∞—Ç–µ–≥–æ—Ä–∏–∏";
                     var total = item.Quantity * item.PriceAtSale;
 
                     if (categorySales.ContainsKey(categoryName))
@@ -108,15 +120,15 @@ public class SalesReportModel : PageModel
                 .ToList();
 
             Report.PaymentMethods = orders
-                .GroupBy(o => o.PaymentMethod ?? "ÕÂ ÛÍ‡Á‡Ì")
+                .GroupBy(o => o.PaymentMethod ?? "–ù–µ —É–∫–∞–∑–∞–Ω")
                 .Select(g => new PaymentMethodViewModel
                 {
                     Method = g.Key,
                     MethodDisplay = g.Key switch
                     {
-                        "Card" => " ‡Ú‡",
-                        "Cash" => "Õ‡ÎË˜Ì˚Â",
-                        "Credit" => " Â‰ËÚ",
+                        "Card" => Language == "ru" ? "–ö–∞—Ä—Ç–∞" : Language == "en" ? "Card" : "–ö–∞—Ä—Ç–∞",
+                        "Cash" => Language == "ru" ? "–ù–∞–ª–∏—á–Ω—ã–µ" : Language == "en" ? "Cash" : "“ö–æ–ª–º–∞-“õ–æ–ª",
+                        "Credit" => Language == "ru" ? "–ö—Ä–µ–¥–∏—Ç" : Language == "en" ? "Credit" : "–ù–µ—Å–∏–µ",
                         _ => g.Key
                     },
                     Count = g.Count(),
@@ -125,7 +137,6 @@ public class SalesReportModel : PageModel
                 .OrderByDescending(p => p.Total)
                 .ToList();
 
-            // œÓÒÎÂ‰ÌËÂ 50 Á‡Í‡ÁÓ‚ ‰Îˇ Ú‡·ÎËˆ˚
             Report.RecentOrders = await _context.Orders
                 .Include(o => o.Customer)
                 .Where(o => o.OrderDate >= Report.StartDate && o.OrderDate <= endDate)
@@ -135,16 +146,40 @@ public class SalesReportModel : PageModel
                 {
                     OrderDate = o.OrderDate,
                     OrderNumber = o.OrderNumber,
-                    CustomerName = o.Customer != null ? o.Customer.FullName : "ÕÂËÁ‚ÂÒÚÌÓ",
-                    PaymentMethod = o.PaymentMethod ?? "ÕÂ ÛÍ‡Á‡Ì",
+                    CustomerName = o.Customer != null ? o.Customer.FullName : "–ù–µ–∏–∑–≤–µ—Å—Ç–Ω–æ",
+                    PaymentMethod = o.PaymentMethod ?? "–ù–µ —É–∫–∞–∑–∞–Ω",
                     TotalAmount = o.TotalAmount
                 })
                 .ToListAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Œ¯Ë·Í‡ ÔË Á‡„ÛÁÍÂ ÓÚ˜ÂÚ‡ ÔÓ ÔÓ‰‡Ê‡Ï");
-            TempData["Error"] = "ÕÂ Û‰‡ÎÓÒ¸ Á‡„ÛÁËÚ¸ ‰‡ÌÌ˚Â ÓÚ˜ÂÚ‡.";
+            _logger.LogError(ex, "–û—à–∏–±–∫–∞ –ø—Ä–∏ –∑–∞–≥—Ä—É–∑–∫–µ –æ—Ç—á–µ—Ç–∞ –ø–æ –ø—Ä–æ–¥–∞–∂–∞–º");
+            TempData["Error"] = GetLocalizedMessage("–ù–µ —É–¥–∞–ª–æ—Å—å –∑–∞–≥—Ä—É–∑–∏—Ç—å –¥–∞–Ω–Ω—ã–µ –æ—Ç—á–µ—Ç–∞.", "Failed to load report data.", "–ï—Å–µ–ø –¥–µ—Ä–µ–∫—Ç–µ—Ä—ñ–Ω –∂“Ø–∫—Ç–µ—É –º“Ø–º–∫—ñ–Ω –±–æ–ª–º–∞–¥—ã.");
         }
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

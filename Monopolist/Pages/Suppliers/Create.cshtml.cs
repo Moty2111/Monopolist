@@ -1,11 +1,11 @@
-// Pages/Suppliers/Create.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+Ôªøusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Suppliers;
 
@@ -24,8 +24,16 @@ public class CreateModel : PageModel
     [BindProperty]
     public SupplierCreateViewModel SupplierInput { get; set; } = new();
 
+    // –°–≤–æ–π—Å—Ç–≤–∞ –¥–ª—è –ø–µ—Ä—Å–æ–Ω–∞–ª–∏–∑–∞—Ü–∏–∏
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync()
     {
+        await LoadUserSettings();
         await LoadAvailableProducts();
         return Page();
     }
@@ -34,6 +42,7 @@ public class CreateModel : PageModel
     {
         if (!ModelState.IsValid)
         {
+            await LoadUserSettings();
             await LoadAvailableProducts();
             return Page();
         }
@@ -57,7 +66,11 @@ public class CreateModel : PageModel
                 {
                     if (product.SupplierId != null)
                     {
-                        ModelState.AddModelError(string.Empty, $"“Ó‚‡ '{product.Name}' ÛÊÂ ÔËÌ‡‰ÎÂÊËÚ ‰Û„ÓÏÛ ÔÓÒÚ‡‚˘ËÍÛ.");
+                        ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                            $"–¢–æ–≤–∞—Ä '{product.Name}' —É–∂–µ –ø—Ä–∏–Ω–∞–¥–ª–µ–∂–∏—Ç –¥—Ä—É–≥–æ–º—É –ø–æ—Å—Ç–∞–≤—â–∏–∫—É.",
+                            $"Product '{product.Name}' already belongs to another supplier.",
+                            $"'{product.Name}' —Ç–∞—É–∞—Ä—ã –±–∞—Å“õ–∞ –∂–µ—Ç–∫—ñ–∑—É—à—ñ–≥–µ —Ç–∏–µ—Å—ñ–ª—ñ."));
+                        await LoadUserSettings();
                         await LoadAvailableProducts();
                         return Page();
                     }
@@ -69,13 +82,21 @@ public class CreateModel : PageModel
             _context.Suppliers.Add(supplier);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"œÓÒÚ‡‚˘ËÍ ´{supplier.Name}ª ÛÒÔÂ¯ÌÓ ‰Ó·‡‚ÎÂÌ.";
+            TempData["Success"] = GetLocalizedMessage(
+                $"–ü–æ—Å—Ç–∞–≤—â–∏–∫ ¬´{supplier.Name}¬ª —É—Å–ø–µ—à–Ω–æ –¥–æ–±–∞–≤–ª–µ–Ω.",
+                $"Supplier ¬´{supplier.Name}¬ª added successfully.",
+                $"¬´{supplier.Name}¬ª –∂–µ—Ç–∫—ñ–∑—É—à—ñ—Å—ñ —Å”ô—Ç—Ç—ñ “õ–æ—Å—ã–ª–¥—ã.");
+
             return RedirectToPage("./Index");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Œ¯Ë·Í‡ ÔË ÒÓÁ‰‡ÌËË ÔÓÒÚ‡‚˘ËÍ‡");
-            ModelState.AddModelError(string.Empty, "œÓËÁÓ¯Î‡ Ó¯Ë·Í‡ ÔË ÒÓı‡ÌÂÌËË. œÓÔÓ·ÛÈÚÂ ÒÌÓ‚‡.");
+            _logger.LogError(ex, "–û—à–∏–±–∫–∞ –ø—Ä–∏ —Å–æ–∑–¥–∞–Ω–∏–∏ –ø–æ—Å—Ç–∞–≤—â–∏–∫–∞");
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "–ü—Ä–æ–∏–∑–æ—à–ª–∞ –æ—à–∏–±–∫–∞ –ø—Ä–∏ —Å–æ—Ö—Ä–∞–Ω–µ–Ω–∏–∏. –ü–æ–ø—Ä–æ–±—É–π—Ç–µ —Å–Ω–æ–≤–∞.",
+                "An error occurred while saving. Please try again.",
+                "–°–∞“õ—Ç–∞—É –∫–µ–∑—ñ–Ω–¥–µ “õ–∞—Ç–µ –æ—Ä—ã–Ω –∞–ª–¥—ã. “ö–∞–π—Ç–∞–ª–∞–ø –∫”©—Ä—ñ“£—ñ–∑."));
+            await LoadUserSettings();
             await LoadAvailableProducts();
             return Page();
         }
@@ -102,5 +123,29 @@ public class CreateModel : PageModel
         }
 
         SupplierInput.AvailableProducts = products;
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

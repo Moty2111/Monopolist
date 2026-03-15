@@ -1,17 +1,22 @@
-using Microsoft.AspNetCore.Authorization;
+п»їusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Settings;
 
 [Authorize(Roles = "Admin")]
 public class ActivityLogModel : PageModel
 {
+    private readonly AppDbContext _context;
     private readonly ILogger<ActivityLogModel> _logger;
 
-    public ActivityLogModel(ILogger<ActivityLogModel> logger)
+    public ActivityLogModel(AppDbContext context, ILogger<ActivityLogModel> logger)
     {
+        _context = context;
         _logger = logger;
     }
 
@@ -29,15 +34,24 @@ public class ActivityLogModel : PageModel
 
     public List<ActivityLogViewModel> Logs { get; set; } = new();
 
-    public void OnGet()
+    // РЎРІРѕР№СЃС‚РІР° РґР»СЏ РїРµСЂСЃРѕРЅР°Р»РёР·Р°С†РёРё
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
+    public async Task OnGetAsync()
     {
+        await LoadUserSettings();
+
         try
         {
-            // В реальном проекте здесь должен быть запрос к базе данных
-            // Например: _context.ActivityLogs.Where(...).ToListAsync()
+            // Р’ СЂРµР°Р»СЊРЅРѕРј РїСЂРѕРµРєС‚Рµ Р·РґРµСЃСЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ Р·Р°РїСЂРѕСЃ Рє Р±Р°Р·Рµ РґР°РЅРЅС‹С…
+            // РќР°РїСЂРёРјРµСЂ: _context.ActivityLogs.Where(...).ToListAsync()
             var allLogs = GetDemoLogs();
 
-            // Применяем фильтры
+            // РџСЂРёРјРµРЅСЏРµРј С„РёР»СЊС‚СЂС‹
             var filteredLogs = allLogs.AsEnumerable();
 
             if (!string.IsNullOrEmpty(UserFilter))
@@ -64,22 +78,25 @@ public class ActivityLogModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при загрузке журнала активности");
-            TempData["Error"] = "Не удалось загрузить журнал активности.";
+            _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё Р·Р°РіСЂСѓР·РєРµ Р¶СѓСЂРЅР°Р»Р° Р°РєС‚РёРІРЅРѕСЃС‚Рё");
+            TempData["Error"] = GetLocalizedMessage(
+                "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р¶СѓСЂРЅР°Р» Р°РєС‚РёРІРЅРѕСЃС‚Рё.",
+                "Failed to load activity log.",
+                "УСЂРµРєРµС‚С‚РµСЂ Р¶СѓСЂРЅР°Р»С‹РЅ Р¶ТЇРєС‚РµСѓ РјТЇРјРєС–РЅ Р±РѕР»РјР°РґС‹.");
         }
     }
 
     private List<ActivityLogViewModel> GetDemoLogs()
     {
-        // Демо-данные для разработки
+        // Р”РµРјРѕ-РґР°РЅРЅС‹Рµ РґР»СЏ СЂР°Р·СЂР°Р±РѕС‚РєРё
         return new List<ActivityLogViewModel>
         {
             new ActivityLogViewModel
             {
                 Id = 1,
                 Username = "admin",
-                Action = "Вход в систему",
-                Details = "Успешный вход с IP 192.168.1.100",
+                Action = "Р’С…РѕРґ РІ СЃРёСЃС‚РµРјСѓ",
+                Details = "РЈСЃРїРµС€РЅС‹Р№ РІС…РѕРґ СЃ IP 192.168.1.100",
                 IpAddress = "192.168.1.100",
                 Timestamp = DateTime.Now.AddMinutes(-5)
             },
@@ -87,8 +104,8 @@ public class ActivityLogModel : PageModel
             {
                 Id = 2,
                 Username = "manager",
-                Action = "Создание заказа",
-                Details = "Создан заказ ORD-2025-001",
+                Action = "РЎРѕР·РґР°РЅРёРµ Р·Р°РєР°Р·Р°",
+                Details = "РЎРѕР·РґР°РЅ Р·Р°РєР°Р· ORD-2025-001",
                 IpAddress = "192.168.1.101",
                 Timestamp = DateTime.Now.AddHours(-1)
             },
@@ -96,8 +113,8 @@ public class ActivityLogModel : PageModel
             {
                 Id = 3,
                 Username = "seller",
-                Action = "Добавление товара",
-                Details = "Добавлен товар 'Цемент М500'",
+                Action = "Р”РѕР±Р°РІР»РµРЅРёРµ С‚РѕРІР°СЂР°",
+                Details = "Р”РѕР±Р°РІР»РµРЅ С‚РѕРІР°СЂ 'Р¦РµРјРµРЅС‚ Рњ500'",
                 IpAddress = "192.168.1.102",
                 Timestamp = DateTime.Now.AddHours(-3)
             },
@@ -105,8 +122,8 @@ public class ActivityLogModel : PageModel
             {
                 Id = 4,
                 Username = "admin",
-                Action = "Удаление пользователя",
-                Details = "Удален пользователь 'test_user'",
+                Action = "РЈРґР°Р»РµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ",
+                Details = "РЈРґР°Р»РµРЅ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ 'test_user'",
                 IpAddress = "192.168.1.100",
                 Timestamp = DateTime.Now.AddDays(-1)
             },
@@ -114,8 +131,8 @@ public class ActivityLogModel : PageModel
             {
                 Id = 5,
                 Username = "admin",
-                Action = "Редактирование товара",
-                Details = "Изменена цена товара 'Цемент М500'",
+                Action = "Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ С‚РѕРІР°СЂР°",
+                Details = "РР·РјРµРЅРµРЅР° С†РµРЅР° С‚РѕРІР°СЂР° 'Р¦РµРјРµРЅС‚ Рњ500'",
                 IpAddress = "192.168.1.100",
                 Timestamp = DateTime.Now.AddDays(-2)
             },
@@ -123,11 +140,35 @@ public class ActivityLogModel : PageModel
             {
                 Id = 6,
                 Username = "manager",
-                Action = "Вход в систему",
-                Details = "Успешный вход с IP 192.168.1.101",
+                Action = "Р’С…РѕРґ РІ СЃРёСЃС‚РµРјСѓ",
+                Details = "РЈСЃРїРµС€РЅС‹Р№ РІС…РѕРґ СЃ IP 192.168.1.101",
                 IpAddress = "192.168.1.101",
                 Timestamp = DateTime.Now.AddDays(-3)
             }
+        };
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
         };
     }
 }

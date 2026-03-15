@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+ï»¿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Reports;
 
@@ -19,11 +20,18 @@ public class CustomersReportModel : PageModel
         _logger = logger;
     }
 
-    [BindProperty]
     public CustomersReportViewModel Report { get; set; } = new();
+
+    // Ğ¡Ğ²Ğ¾Ğ¹ÑÑ‚Ğ²Ğ° Ğ´Ğ»Ñ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ¸Ğ·Ğ°Ñ†Ğ¸Ğ¸
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
 
     public async Task OnGetAsync()
     {
+        await LoadUserSettings();
         await LoadReportData();
     }
 
@@ -39,7 +47,7 @@ public class CustomersReportModel : PageModel
             Report.NewCustomersThisMonth = customers.Count(c => c.RegistrationDate >= DateTime.Now.AddMonths(-1));
             Report.ActiveCustomers = customers.Count(c => c.Orders != null && c.Orders.Any(o => o.OrderDate >= DateTime.Now.AddMonths(-3)));
 
-            // Òîï êëèåíòîâ ïî ñóììå çàêàçîâ
+            // Ğ¢Ğ¾Ğ¿ ĞºĞ»Ğ¸ĞµĞ½Ñ‚Ğ¾Ğ² Ğ¿Ğ¾ ÑÑƒĞ¼Ğ¼Ğµ Ğ·Ğ°ĞºĞ°Ğ·Ğ¾Ğ²
             Report.TopCustomers = customers
                 .Where(c => c.Orders != null && c.Orders.Any())
                 .Select(c => new TopCustomerViewModel
@@ -56,7 +64,7 @@ public class CustomersReportModel : PageModel
                 .Take(10)
                 .ToList();
 
-            // Ğåãèñòğàöèè ïî ìåñÿöàì (ïîñëåäíèå 6 ìåñÿöåâ)
+            // Ğ ĞµĞ³Ğ¸ÑÑ‚Ñ€Ğ°Ñ†Ğ¸Ğ¸ Ğ¿Ğ¾ Ğ¼ĞµÑÑÑ†Ğ°Ğ¼ (Ğ¿Ğ¾ÑĞ»ĞµĞ´Ğ½Ğ¸Ğµ 6 Ğ¼ĞµÑÑÑ†ĞµĞ²)
             var sixMonthsAgo = DateTime.Now.AddMonths(-6);
             var registrations = customers
                 .Where(c => c.RegistrationDate >= sixMonthsAgo)
@@ -73,8 +81,32 @@ public class CustomersReportModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Îøèáêà ïğè çàãğóçêå îò÷åòà ïî êëèåíòàì");
-            TempData["Error"] = "Íå óäàëîñü çàãğóçèòü äàííûå îò÷åòà.";
+            _logger.LogError(ex, "ĞÑˆĞ¸Ğ±ĞºĞ° Ğ¿Ñ€Ğ¸ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·ĞºĞµ Ğ¾Ñ‚Ñ‡ĞµÑ‚Ğ° Ğ¿Ğ¾ ĞºĞ»Ğ¸ĞµĞ½Ñ‚Ğ°Ğ¼");
+            TempData["Error"] = GetLocalizedMessage("ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ğ´Ğ°Ğ½Ğ½Ñ‹Ğµ Ğ¾Ñ‚Ñ‡ĞµÑ‚Ğ°.", "Failed to load report data.", "Ğ•ÑĞµĞ¿ Ğ´ĞµÑ€ĞµĞºÑ‚ĞµÑ€Ñ–Ğ½ Ğ¶Ò¯ĞºÑ‚ĞµÑƒ Ğ¼Ò¯Ğ¼ĞºÑ–Ğ½ Ğ±Ğ¾Ğ»Ğ¼Ğ°Ğ´Ñ‹.");
         }
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

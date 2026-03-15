@@ -1,5 +1,4 @@
-﻿// Pages/Settings/Security.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -280,6 +279,7 @@ public class SecurityModel : PageModel
             IsCurrent = true
         });
 
+        // Добавляем несколько демо-сессий для примера
         for (int i = 1; i <= 3; i++)
         {
             var sessionId = $"session_{i}";
@@ -289,8 +289,8 @@ public class SecurityModel : PageModel
                 sessions.Add(new SessionInfo
                 {
                     Id = sessionId,
-                    Device = $"Устройство {i}",
-                    Browser = "Chrome/Mobile",
+                    Device = i % 2 == 0 ? "iPhone 12" : "Windows PC",
+                    Browser = i % 2 == 0 ? "Safari" : "Chrome",
                     IpAddress = "192.168.1.10" + i,
                     LoginTime = DateTime.Now.AddDays(-i),
                     IsCurrent = false
@@ -314,10 +314,10 @@ public class SecurityModel : PageModel
     private string GetBrowserInfo()
     {
         var userAgent = Request.Headers["User-Agent"].ToString();
-        if (userAgent.Contains("Chrome")) return "Chrome";
+        if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg")) return "Chrome";
         if (userAgent.Contains("Firefox")) return "Firefox";
         if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome")) return "Safari";
-        if (userAgent.Contains("Edge")) return "Edge";
+        if (userAgent.Contains("Edg")) return "Edge";
         return "Неизвестный браузер";
     }
 

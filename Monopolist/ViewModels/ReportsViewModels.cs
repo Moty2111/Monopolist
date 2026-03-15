@@ -34,7 +34,7 @@ public class DailySalesViewModel
     public DateTime Date { get; set; }
     public decimal Revenue { get; set; }
     public int OrdersCount { get; set; }
-    public string DayName => Date.ToString("dd.MM");
+    public string DayName { get; set; } = string.Empty; // был только get, теперь get; set;
 }
 
 public class CategorySalesViewModel

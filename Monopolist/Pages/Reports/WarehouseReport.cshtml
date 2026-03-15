@@ -1,13 +1,14 @@
 ﻿@page
-@model Monoplist.Pages.Reports.WarehouseReportModel
+@model Monoplist.Pages.Reports.CustomersReportModel
 @{
     Layout = null;
-    ViewData["Title"] = "Отчет по складам";
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Отчет по клиентам" : (Model.Language == "en" ? "Customers report" : "Клиенттер есебі");
+    var userId = User.FindFirst("UserId")?.Value;
+    var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,7 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -35,8 +36,13 @@
             --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
             --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
             --success: #10b981;
+            --success-bg: #d1fae5;
             --danger: #ef4444;
+            --danger-bg: #fee2e2;
             --warning: #f59e0b;
+            --warning-bg: #fed7aa;
+            --info: #3b82f6;
+            --info-bg: #dbeafe;
             --transition: all 0.2s ease;
         }
 
@@ -50,6 +56,69 @@
             --border: #444;
             --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
             --shadow-hover: 0 12px 28px rgba(255,107,0,0.5);
+            --success-bg: #064e3b;
+            --warning-bg: #92400e;
+            --danger-bg: #7f1d1d;
+            --info-bg: #1e3a5f;
+        }
+
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.compact-mode .kpi-card {
+            padding: 16px;
+        }
+
+        body.compact-mode .kpi-value {
+            font-size: 1.8rem;
+        }
+
+        body.compact-mode .chart-card {
+            padding: 16px;
+        }
+
+        body.compact-mode .btn-export {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
         }
 
         * {
@@ -71,6 +140,7 @@
             min-height: 100vh;
         }
 
+        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -157,6 +227,7 @@
                             color: var(--primary);
                         }
 
+        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -204,12 +275,119 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            position: relative;
         }
 
-            .user-info span {
-                font-weight: 500;
-                color: var(--text-secondary);
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface-hover);
+            border-radius: 40px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+            .user-profile:hover {
+                background: var(--surface);
+                box-shadow: var(--shadow-sm);
             }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .user-avatar i {
+                font-size: 40px;
+            }
+
+            .user-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 220px;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+            .user-menu.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+            .menu-item:hover {
+                background: var(--surface-hover);
+                color: var(--primary);
+            }
+
+            .menu-item.logout {
+                color: var(--danger);
+            }
+
+                .menu-item.logout:hover {
+                    background: var(--danger-bg);
+                }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0;
+        }
 
         .theme-toggle {
             background: none;
@@ -231,32 +409,6 @@
                 color: white;
                 border-color: var(--primary);
             }
-
-        .btn-logout {
-            background: none;
-            border: 2px solid var(--accent);
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-            .btn-logout:hover {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                border-color: transparent;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
-            }
-
-                .btn-logout:hover i {
-                    color: white;
-                }
 
         .content {
             padding: 24px;
@@ -285,6 +437,41 @@
             padding-bottom: 12px;
         }
 
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        /* ===== KPI ===== */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -315,6 +502,7 @@
             letter-spacing: 0.5px;
         }
 
+        /* ===== ГРАФИКИ ===== */
         .charts-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -341,6 +529,7 @@
             position: relative;
         }
 
+        /* ===== ТАБЛИЦЫ ===== */
         .table-responsive {
             overflow-x: auto;
             border-radius: 12px;
@@ -376,6 +565,7 @@
             text-align: right;
         }
 
+        /* ===== КНОПКИ ЭКСПОРТА ===== */
         .export-buttons {
             display: flex;
             gap: 10px;
@@ -437,19 +627,67 @@
                 transform: translateY(-2px);
             }
 
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            background: var(--surface);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+            .btn-secondary:hover {
+                background: var(--surface-hover);
+                border-color: var(--text-muted);
+                transform: translateY(-2px);
+            }
+
+        /* ===== АДАПТИВНОСТЬ ===== */
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
                 left: -280px;
+                top: 0;
+                bottom: 0;
                 transform: translateX(-100%);
+                box-shadow: none;
             }
 
             body.sidebar-open .sidebar {
                 transform: translateX(0);
+                box-shadow: 2px 0 15px rgba(0,0,0,0.2);
             }
 
             .menu-toggle {
                 display: block;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .top-bar {
+                padding: 12px 16px;
+            }
+
+            .page-title {
+                font-size: 1.25rem;
+            }
+
+            .user-profile .user-details {
+                display: none;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            .dashboard {
+                padding: 16px;
             }
 
             .charts-row {
@@ -477,8 +715,9 @@
         }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
+        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -486,18 +725,19 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index" class="active"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> @(Model.Language == "ru" ? "Главная панель" : Model.Language == "en" ? "Dashboard" : "Бас панель")</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> @(Model.Language == "ru" ? "Каталог товаров" : Model.Language == "en" ? "Products" : "Тауарлар каталогы")</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> @(Model.Language == "ru" ? "Продажи" : Model.Language == "en" ? "Orders" : "Сатулар")</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> @(Model.Language == "ru" ? "Клиенты" : Model.Language == "en" ? "Customers" : "Клиенттер")</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> @(Model.Language == "ru" ? "Склад" : Model.Language == "en" ? "Warehouse" : "Қойма")</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> @(Model.Language == "ru" ? "Поставщики" : Model.Language == "en" ? "Suppliers" : "Жеткізушілер")</a></li>
+                    <li><a asp-page="/Reports/Index" class="active"><i class="fas fa-chart-line"></i> @(Model.Language == "ru" ? "Отчеты" : Model.Language == "en" ? "Reports" : "Есептер")</a></li>
+                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> @(Model.Language == "ru" ? "Настройки" : Model.Language == "en" ? "Settings" : "Баптаулар")</a></li>
                 </ul>
             </nav>
         </aside>
 
+        <!-- Основной контент -->
         <main class="main-content">
             <header class="top-bar">
                 <button class="menu-toggle" id="menuToggle">
@@ -505,131 +745,157 @@
                 </button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
                         <i class="fas fa-sun"></i>
                     </div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Выйти</span>
-                        </button>
-                    </form>
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <div class="user-avatar">
+                            @if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <img src="@avatarUrl" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">@User.Identity?.Name</span>
+                            <span class="user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="user-menu" id="userMenu">
+                        <a asp-page="/Settings/Profile" class="menu-item"><i class="fas fa-user"></i> @(Model.Language == "ru" ? "Профиль" : Model.Language == "en" ? "Profile" : "Профиль")</a>
+                        <a asp-page="/Settings/Security" class="menu-item"><i class="fas fa-shield-alt"></i> @(Model.Language == "ru" ? "Безопасность" : Model.Language == "en" ? "Security" : "Қауіпсіздік")</a>
+                        <a asp-page="/Settings/Appearance" class="menu-item"><i class="fas fa-palette"></i> @(Model.Language == "ru" ? "Внешний вид" : Model.Language == "en" ? "Appearance" : "Сыртқы түр")</a>
+                        <div class="menu-divider"></div>
+                        <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="menu-item logout"><i class="fas fa-sign-out-alt"></i> @(Model.Language == "ru" ? "Выйти" : Model.Language == "en" ? "Logout" : "Шығу")</button>
+                        </form>
+                    </div>
                 </div>
             </header>
 
             <div class="content">
                 <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">Анализ загрузки складов</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Анализ клиентской базы" : Model.Language == "en" ? "Customer base analysis" : "Клиенттер базасын талдау")</p>
 
                     <div class="export-buttons">
-                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="excel" class="btn-export btn-excel" target="_blank">
+                        <a asp-page="Export" asp-route-type="customers" asp-route-format="excel" class="btn-export btn-excel" target="_blank">
                             <i class="fas fa-file-excel"></i> Excel
                         </a>
-                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="pdf" class="btn-export btn-pdf" target="_blank">
+                        <a asp-page="Export" asp-route-type="customers" asp-route-format="pdf" class="btn-export btn-pdf" target="_blank">
                             <i class="fas fa-file-pdf"></i> PDF
                         </a>
-                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="csv" class="btn-export btn-csv" target="_blank">
+                        <a asp-page="Export" asp-route-type="customers" asp-route-format="csv" class="btn-export btn-csv" target="_blank">
                             <i class="fas fa-file-csv"></i> CSV
                         </a>
-                        <a asp-page="Export" asp-route-type="warehouse" asp-route-format="word" class="btn-export btn-word" target="_blank">
+                        <a asp-page="Export" asp-route-type="customers" asp-route-format="word" class="btn-export btn-word" target="_blank">
                             <i class="fas fa-file-word"></i> Word
                         </a>
                     </div>
 
                     <div class="kpi-grid">
                         <div class="kpi-card">
-                            <div class="kpi-value">@Model.Report.TotalWarehouses</div>
-                            <div class="kpi-label">Всего складов</div>
+                            <div class="kpi-value">@Model.Report.TotalCustomers</div>
+                            <div class="kpi-label">@(Model.Language == "ru" ? "Всего клиентов" : Model.Language == "en" ? "Total customers" : "Барлық клиенттер")</div>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-value">@Model.Report.TotalCapacity</div>
-                            <div class="kpi-label">Общая вместимость</div>
+                            <div class="kpi-value">@Model.Report.NewCustomersThisMonth</div>
+                            <div class="kpi-label">@(Model.Language == "ru" ? "Новых за месяц" : Model.Language == "en" ? "New this month" : "Ай ішінде жаңа")</div>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-value">@Model.Report.CurrentOccupancy</div>
-                            <div class="kpi-label">Текущая загрузка</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-value">@Model.Report.OccupancyPercent.ToString("F1")%</div>
-                            <div class="kpi-label">Общая загрузка</div>
+                            <div class="kpi-value">@Model.Report.ActiveCustomers</div>
+                            <div class="kpi-label">@(Model.Language == "ru" ? "Активных (3 мес.)" : Model.Language == "en" ? "Active (3 months)" : "Белсенді (3 ай)")</div>
                         </div>
                     </div>
 
                     <div class="charts-row">
                         <div class="chart-card">
-                            <h3><i class="fas fa-chart-bar"></i> Загрузка складов</h3>
+                            <h3><i class="fas fa-chart-bar"></i> @(Model.Language == "ru" ? "Регистрации по месяцам" : Model.Language == "en" ? "Registrations by month" : "Айлар бойынша тіркелулер")</h3>
                             <div class="chart-container">
-                                <canvas id="warehouseChart"></canvas>
+                                <canvas id="registrationsChart"></canvas>
                             </div>
                         </div>
                         <div class="chart-card">
-                            <h3><i class="fas fa-chart-pie"></i> Распределение товаров</h3>
+                            <h3><i class="fas fa-chart-pie"></i> @(Model.Language == "ru" ? "Топ-10 клиентов" : Model.Language == "en" ? "Top 10 customers" : "Үздік 10 клиент")</h3>
                             <div class="chart-container">
-                                <canvas id="distributionChart"></canvas>
+                                <canvas id="topCustomersChart"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <h3 style="margin: 30px 0 15px; color: var(--primary);">Детализация по складам</h3>
+                    <h3 style="margin: 30px 0 15px; color: var(--primary);">@(Model.Language == "ru" ? "Топ-10 клиентов по сумме покупок" : Model.Language == "en" ? "Top 10 customers by purchase amount" : "Сатып алу сомасы бойынша үздік 10 клиент")</h3>
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Склад</th>
-                                    <th>Местоположение</th>
-                                    <th class="text-right">Вместимость</th>
-                                    <th class="text-right">Загрузка</th>
-                                    <th class="text-right">%</th>
-                                    <th class="text-right">Кол-во товаров</th>
+                                    <th>@(Model.Language == "ru" ? "Клиент" : Model.Language == "en" ? "Customer" : "Клиент")</th>
+                                    <th>@(Model.Language == "ru" ? "Телефон" : Model.Language == "en" ? "Phone" : "Телефон")</th>
+                                    <th>Email</th>
+                                    <th class="text-right">@(Model.Language == "ru" ? "Заказы" : Model.Language == "en" ? "Orders" : "Тапсырыстар")</th>
+                                    <th class="text-right">@(Model.Language == "ru" ? "Сумма" : Model.Language == "en" ? "Amount" : "Сома")</th>
+                                    <th>@(Model.Language == "ru" ? "Последний заказ" : Model.Language == "en" ? "Last order" : "Соңғы тапсырыс")</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var w in Model.Report.Warehouses)
+                                @foreach (var c in Model.Report.TopCustomers)
                                 {
                                     <tr>
-                                        <td>@w.Name</td>
-                                        <td>@w.Location</td>
-                                        <td class="text-right">@w.Capacity</td>
-                                        <td class="text-right">@w.CurrentOccupancy</td>
-                                        <td class="text-right">@w.OccupancyPercent.ToString("F1")%</td>
-                                        <td class="text-right">@w.ProductsCount</td>
+                                        <td>@c.FullName</td>
+                                        <td>@c.Phone</td>
+                                        <td>@c.Email</td>
+                                        <td class="text-right">@c.OrdersCount</td>
+                                        <td class="text-right">@c.TotalSpent.ToString("N0") ₽</td>
+                                        <td>@c.LastOrderDate.ToString("dd.MM.yyyy")</td>
+                                    </tr>
+                                }
+                                @if (!Model.Report.TopCustomers.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center" style="padding: 20px; color: var(--text-muted);">
+                                            @(Model.Language == "ru" ? "Нет данных" : Model.Language == "en" ? "No data" : "Деректер жоқ")
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
 
-                    <h3 style="margin: 30px 0 15px; color: var(--primary);">Распределение товаров (первые 100)</h3>
+                    <h3 style="margin: 30px 0 15px; color: var(--primary);">@(Model.Language == "ru" ? "Недавние регистрации" : Model.Language == "en" ? "Recent registrations" : "Соңғы тіркелулер")</h3>
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Товар</th>
-                                    <th>Артикул</th>
-                                    <th>Склад</th>
-                                    <th class="text-right">Остаток</th>
-                                    <th>Ед.</th>
+                                    <th>@(Model.Language == "ru" ? "Период" : Model.Language == "en" ? "Period" : "Кезең")</th>
+                                    <th class="text-right">@(Model.Language == "ru" ? "Новых клиентов" : Model.Language == "en" ? "New customers" : "Жаңа клиенттер")</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var p in Model.Report.ProductLocations)
+                                @foreach (var r in Model.Report.Registrations)
                                 {
                                     <tr>
-                                        <td>@p.ProductName</td>
-                                        <td>@p.Article</td>
-                                        <td>@p.WarehouseName</td>
-                                        <td class="text-right">@p.Stock</td>
-                                        <td>@p.Unit</td>
+                                        <td>@r.Period</td>
+                                        <td class="text-right">@r.Count</td>
                                     </tr>
                                 }
-                                @if (!Model.Report.ProductLocations.Any())
+                                @if (!Model.Report.Registrations.Any())
                                 {
                                     <tr>
-                                        <td colspan="5" class="text-center" style="padding: 20px; color: var(--text-muted);">
-                                            Нет товаров, распределенных по складам
+                                        <td colspan="2" class="text-center" style="padding: 20px; color: var(--text-muted);">
+                                            @(Model.Language == "ru" ? "Нет данных" : Model.Language == "en" ? "No data" : "Деректер жоқ")
                                         </td>
                                     </tr>
                                 }
@@ -638,8 +904,8 @@
                     </div>
 
                     <div style="margin-top: 30px;">
-                        <a asp-page="Index" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border: 2px solid var(--border); border-radius: 30px; background: var(--surface); color: var(--text-secondary); text-decoration: none;">
-                            <i class="fas fa-arrow-left"></i> Назад к отчетам
+                        <a asp-page="Index" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> @(Model.Language == "ru" ? "Назад к отчетам" : Model.Language == "en" ? "Back to reports" : "Есептерге оралу")
                         </a>
                     </div>
                 </div>
@@ -653,14 +919,11 @@
             const body = document.body;
 
             if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    body.classList.toggle('sidebar-open');
-                });
-
-                document.addEventListener('click', function(event) {
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+                document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
                             body.classList.remove('sidebar-open');
                         }
                     }
@@ -668,66 +931,74 @@
             }
 
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
-
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-
-            themeToggle.addEventListener('click', function() {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
+
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
             });
 
-            @if (Model.Report.Warehouses.Any())
+            @if (Model.Report.Registrations.Any())
             {
                     <text>
-                    const ctx1 = document.getElementById('warehouseChart').getContext('2d');
-                    new Chart(ctx1, {
+                    const regCtx = document.getElementById('registrationsChart').getContext('2d');
+                    new Chart(regCtx, {
                         type: 'bar',
                         data: {
-                            labels: [@Html.Raw(string.Join(",", Model.Report.Warehouses.Select(w => $"'{w.Name}'")))],
-                            datasets: [
-                                {
-                                    label: 'Загрузка',
-                                    data: [@string.Join(",", Model.Report.Warehouses.Select(w => w.CurrentOccupancy))],
-                                    backgroundColor: '#FF6B00'
-                                },
-                                {
-                                    label: 'Вместимость',
-                                    data: [@string.Join(",", Model.Report.Warehouses.Select(w => w.Capacity))],
-                                    backgroundColor: '#3b82f6'
-                                }
-                            ]
+                            labels: [@Html.Raw(string.Join(",", Model.Report.Registrations.Select(r => $"'{r.Period}'")))],
+                            datasets: [{
+                                label: '@(Model.Language == "ru" ? "Новые клиенты" : Model.Language == "en" ? "New customers" : "Жаңа клиенттер")',
+                                data: [@string.Join(",", Model.Report.Registrations.Select(r => r.Count))],
+                                backgroundColor: '#10b981'
+                            }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                legend: { position: 'bottom' }
+                                legend: { display: false }
                             }
                         }
                     });
+                    </text>
+            }
 
-                    const ctx2 = document.getElementById('distributionChart').getContext('2d');
-                    new Chart(ctx2, {
+            @if (Model.Report.TopCustomers.Any())
+            {
+                    <text>
+                    const topCtx = document.getElementById('topCustomersChart').getContext('2d');
+                    new Chart(topCtx, {
                         type: 'doughnut',
                         data: {
-                            labels: [@Html.Raw(string.Join(",", Model.Report.Warehouses.Select(w => $"'{w.Name}'")))],
+                            labels: [@Html.Raw(string.Join(",", Model.Report.TopCustomers.Select(c => $"'{c.FullName}'")))],
                             datasets: [{
-                                data: [@string.Join(",", Model.Report.Warehouses.Select(w => w.CurrentOccupancy))],
-                                backgroundColor: ['#FF6B00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444'],
+                                data: [@string.Join(",", Model.Report.TopCustomers.Select(c => c.TotalSpent))],
+                                backgroundColor: ['#FF6B00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f59e0b', '#ec4899', '#14b8a6', '#f97316', '#6366f1'],
                                 borderWidth: 0
                             }]
                         },
@@ -740,6 +1011,18 @@
                         }
                     });
                     </text>
+            }
+        });
+
+        function toggleUserMenu() {
+            document.getElementById('userMenu').classList.toggle('show');
+        }
+
+        window.addEventListener('click', function(event) {
+            const userInfo = document.querySelector('.user-info');
+            const userMenu = document.getElementById('userMenu');
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
+                userMenu.classList.remove('show');
             }
         });
     </script>

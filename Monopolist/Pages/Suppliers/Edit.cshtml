@@ -2,12 +2,11 @@
 @model Monoplist.Pages.Suppliers.EditModel
 @{
     Layout = null;
-    ViewData["Title"] = "Редактирование поставщика";
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Редактирование поставщика" : (Model.Language == "en" ? "Edit supplier" : "Жеткізушіні өңдеу");
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,8 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
+        /* === КОПИЯ СТИЛЕЙ ИЗ CREATE.CSHTML (с сохранением специфики) === */
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -64,6 +64,61 @@
             --card-color-2: #60a5fa;
             --card-color-3: #c084fc;
             --card-color-4: #fbbf24;
+        }
+
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.compact-mode .form-group {
+            margin-bottom: 1rem;
+        }
+
+        body.compact-mode .form-control {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .btn-primary,
+        body.compact-mode .btn-secondary {
+            padding: 8px 18px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
         }
 
         * {
@@ -391,7 +446,6 @@
             display: block;
         }
 
-        /* Стили для выбора продуктов */
         .products-section {
             margin-top: 30px;
             border-top: 2px solid var(--accent);
@@ -484,6 +538,27 @@
             color: var(--success);
         }
 
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -556,50 +631,24 @@
         }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-helmet-safety"></i>
-                <h2>Моноплист</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index" class="active"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_Sidebar")
 
         <main class="main-content">
-            <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1 class="page-title">@ViewData["Title"]</h1>
-                <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Выйти</span>
-                        </button>
-                    </form>
-                </div>
-            </header>
+            @await Html.PartialAsync("_Header")
 
             <div class="content">
                 <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
                     <h1>@ViewData["Title"]</h1>
                     <p class="subtitle">@Model.SupplierInput.Name</p>
 
@@ -609,39 +658,39 @@
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                             <div class="form-group">
-                                <label asp-for="SupplierInput.Name">Название</label>
+                                <label asp-for="SupplierInput.Name">@(Model.Language == "ru" ? "Название" : Model.Language == "en" ? "Name" : "Атауы")</label>
                                 <input asp-for="SupplierInput.Name" class="form-control" />
                                 <span asp-validation-for="SupplierInput.Name" class="text-danger"></span>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="SupplierInput.ContactInfo">Контактная информация</label>
+                                <label asp-for="SupplierInput.ContactInfo">@(Model.Language == "ru" ? "Контактная информация" : Model.Language == "en" ? "Contact info" : "Байланыс ақпараты")</label>
                                 <textarea asp-for="SupplierInput.ContactInfo" class="form-control" rows="3"></textarea>
                                 <span asp-validation-for="SupplierInput.ContactInfo" class="text-danger"></span>
                             </div>
 
                             <div class="products-section">
-                                <h3><i class="fas fa-boxes"></i> Товары поставщика</h3>
-                                <p class="text-muted">Выберите товары, которые поставляет этот поставщик</p>
+                                <h3><i class="fas fa-boxes"></i> @(Model.Language == "ru" ? "Товары поставщика" : Model.Language == "en" ? "Supplier's products" : "Жеткізушінің тауарлары")</h3>
+                                <p class="text-muted">@(Model.Language == "ru" ? "Выберите товары, которые поставляет этот поставщик (каждый товар может принадлежать только одному поставщику)" : Model.Language == "en" ? "Select products supplied by this supplier (each product can belong to only one supplier)" : "Осы жеткізуші жеткізетін тауарларды таңдаңыз (әрбір тауар тек бір жеткізушіге тиесілі бола алады)")</p>
 
                                 <div class="search-box">
-                                    <input type="text" id="productSearch" class="form-control" placeholder="Поиск товаров..." />
+                                    <input type="text" id="productSearch" class="form-control" placeholder="@(Model.Language == "ru" ? "Поиск товаров..." : Model.Language == "en" ? "Search products..." : "Тауарларды іздеу...")" />
                                 </div>
 
                                 <div class="select-all">
                                     <input type="checkbox" id="selectAll" />
-                                    <label for="selectAll">Выбрать все товары</label>
+                                    <label for="selectAll">@(Model.Language == "ru" ? "Выбрать все товары" : Model.Language == "en" ? "Select all products" : "Барлық тауарларды таңдау")</label>
                                 </div>
 
                                 <div class="table-responsive">
                                     <table class="products-table" id="productsTable">
                                         <thead>
                                             <tr>
-                                                <th style="width: 50px;">Выбрать</th>
-                                                <th>Товар</th>
-                                                <th>Артикул</th>
-                                                <th>Остаток</th>
-                                                <th>Ед.</th>
+                                                <th style="width: 50px;">@(Model.Language == "ru" ? "Выбрать" : Model.Language == "en" ? "Select" : "Таңдау")</th>
+                                                <th>@(Model.Language == "ru" ? "Товар" : Model.Language == "en" ? "Product" : "Тауар")</th>
+                                                <th>@(Model.Language == "ru" ? "Артикул" : Model.Language == "en" ? "SKU" : "Артикул")</th>
+                                                <th>@(Model.Language == "ru" ? "Остаток" : Model.Language == "en" ? "Stock" : "Қалдық")</th>
+                                                <th>@(Model.Language == "ru" ? "Ед." : Model.Language == "en" ? "Unit" : "Өлш.")</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -672,8 +721,8 @@
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Сохранить</button>
-                                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+                                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> @(Model.Language == "ru" ? "Сохранить" : Model.Language == "en" ? "Save" : "Сақтау")</button>
+                                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Отмена" : Model.Language == "en" ? "Cancel" : "Бас тарту")</a>
                             </div>
                         </form>
                     </div>
@@ -686,10 +735,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Мобильное меню
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
+
             if (menuToggle) {
                 menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+
                 document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
@@ -700,25 +752,40 @@
                 });
             }
 
+            // Переключение темы
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
+
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+            // Автоматическое скрытие алертов
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
             });
 
             // Поиск по товарам

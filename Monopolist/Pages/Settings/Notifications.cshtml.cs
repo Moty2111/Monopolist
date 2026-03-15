@@ -1,5 +1,4 @@
-﻿// Pages/Settings/Notifications.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -45,7 +44,7 @@ public class NotificationsModel : PageModel
         Theme = user.Theme ?? "light";
         CustomColor = user.CustomColor ?? "#FF6B00";
 
-        // Загружаем настройки уведомлений (из куки или отдельной таблицы)
+        // Загружаем настройки уведомлений из куки
         Input.EmailNotifications = Request.Cookies[$"notify_email_{userId}"] == "true";
         Input.OrderNotifications = Request.Cookies[$"notify_order_{userId}"] == "true";
         Input.StockNotifications = Request.Cookies[$"notify_stock_{userId}"] == "true";
@@ -59,7 +58,6 @@ public class NotificationsModel : PageModel
     {
         if (!ModelState.IsValid)
         {
-            // Перезагружаем настройки пользователя перед возвратом страницы
             await LoadUserSettings();
             return Page();
         }
@@ -81,12 +79,18 @@ public class NotificationsModel : PageModel
             Response.Cookies.Append($"notify_customer_{userId}", Input.CustomerNotifications.ToString(), cookieOptions);
             Response.Cookies.Append($"notify_daily_{userId}", Input.DailyReport.ToString(), cookieOptions);
 
-            TempData["Success"] = GetLocalizedMessage("Настройки уведомлений сохранены", "Notification settings saved", "Хабарландыру параметрлері сақталды");
+            TempData["Success"] = GetLocalizedMessage(
+                "Настройки уведомлений сохранены",
+                "Notification settings saved",
+                "Хабарландыру параметрлері сақталды");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при сохранении настроек уведомлений");
-            ModelState.AddModelError(string.Empty, GetLocalizedMessage("Произошла ошибка при сохранении.", "An error occurred while saving.", "Сақтау кезінде қате орын алды."));
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при сохранении.",
+                "An error occurred while saving.",
+                "Сақтау кезінде қате орын алды."));
             await LoadUserSettings();
             return Page();
         }

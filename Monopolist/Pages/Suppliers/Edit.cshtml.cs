@@ -1,10 +1,10 @@
-// Pages/Suppliers/Edit.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Suppliers;
 
@@ -23,10 +23,19 @@ public class EditModel : PageModel
     [BindProperty]
     public SupplierEditViewModel SupplierInput { get; set; } = new();
 
+    // Свойства для персонализации
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(int? id)
     {
         if (id == null)
             return NotFound();
+
+        await LoadUserSettings();
 
         var supplier = await _context.Suppliers
             .Include(s => s.Products)
@@ -48,6 +57,7 @@ public class EditModel : PageModel
     {
         if (!ModelState.IsValid)
         {
+            await LoadUserSettings();
             await LoadAvailableProducts();
             return Page();
         }
@@ -81,7 +91,11 @@ public class EditModel : PageModel
                 {
                     if (product.SupplierId != null && product.SupplierId != supplier.Id)
                     {
-                        ModelState.AddModelError(string.Empty, $"����� '{product.Name}' ��� ����������� ������� ����������.");
+                        ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                            $"Товар '{product.Name}' уже принадлежит другому поставщику.",
+                            $"Product '{product.Name}' already belongs to another supplier.",
+                            $"'{product.Name}' тауары басқа жеткізушіге тиесілі."));
+                        await LoadUserSettings();
                         await LoadAvailableProducts();
                         return Page();
                     }
@@ -105,7 +119,11 @@ public class EditModel : PageModel
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"��������� �{supplier.Name}� �������.";
+            TempData["Success"] = GetLocalizedMessage(
+                $"Поставщик «{supplier.Name}» обновлён.",
+                $"Supplier «{supplier.Name}» updated.",
+                $"«{supplier.Name}» жеткізушісі жаңартылды.");
+
             return RedirectToPage("./Index");
         }
         catch (DbUpdateConcurrencyException)
@@ -117,8 +135,12 @@ public class EditModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "������ ��� ���������� ���������� {SupplierId}", SupplierInput.Id);
-            ModelState.AddModelError(string.Empty, "��������� ������ ��� ����������.");
+            _logger.LogError(ex, "Ошибка при обновлении поставщика {SupplierId}", SupplierInput.Id);
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при обновлении. Попробуйте снова.",
+                "An error occurred while updating. Please try again.",
+                "Жаңарту кезінде қате орын алды. Қайталап көріңіз."));
+            await LoadUserSettings();
             await LoadAvailableProducts();
             return Page();
         }
@@ -145,5 +167,29 @@ public class EditModel : PageModel
         }
 
         SupplierInput.AvailableProducts = products;
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }
