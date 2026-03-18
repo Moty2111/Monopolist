@@ -34,28 +34,46 @@ public static class SeedData
 
         var users = new[]
         {
-            new User
-            {
-                Username = "admin",
-                Password = "admin123",
-                Role = "Admin",
-                AvatarUrl = "https://i.pinimg.com/736x/6f/f5/35/6ff53530bda3f6119c58e31b8ae9952c.jpg"
-            },
-            new User
-            {
-                Username = "manager",
-                Password = "manager123",
-                Role = "Manager",
-                AvatarUrl = "https://i.pinimg.com/736x/6f/f5/35/6ff53530bda3f6119c58e31b8ae9952c.jpg"
-            },
-            new User
-            {
-                Username = "seller",
-                Password = "seller123",
-                Role = "Seller",
-                AvatarUrl = "https://i.pinimg.com/736x/6f/f5/35/6ff53530bda3f6119c58e31b8ae9952c.jpg"
-            }
-        };
+        new User
+        {
+            Username = "admin",
+            Password = "admin123",
+            Role = "Admin",
+            FullName = "Иванов Иван Админович",
+            Email = "admin@monoplist.ru",
+            PhoneNumber = "+7 (999) 111-22-33",
+            Position = "Главный администратор",
+            AvatarUrl = "https://i.pinimg.com/736x/a7/1b/26/a71b266a0de157838aaea23fc4aaab7e.jpg",
+            CreatedAt = DateTime.UtcNow.AddMonths(-6),
+            LastLoginAt = DateTime.UtcNow.AddDays(-1)
+        },
+        new User
+        {
+            Username = "manager",
+            Password = "manager123",
+            Role = "Manager",
+            FullName = "Петров Пётр Менеджерович",
+            Email = "manager@monoplist.ru",
+            PhoneNumber = "+7 (999) 222-33-44",
+            Position = "Менеджер по продажам",
+            AvatarUrl = "https://i.pinimg.com/736x/3d/57/49/3d574920481fffef4db99c16e90463c9.jpg",
+            CreatedAt = DateTime.UtcNow.AddMonths(-4),
+            LastLoginAt = DateTime.UtcNow.AddDays(-2)
+        },
+        new User
+        {
+            Username = "seller",
+            Password = "seller123",
+            Role = "Seller",
+            FullName = "Сидорова Анна Продавцовна",
+            Email = "seller@monoplist.ru",
+            PhoneNumber = "+7 (999) 333-44-55",
+            Position = "Продавец-консультант",
+            AvatarUrl = "https://i.pinimg.com/736x/9e/50/fb/9e50fb03df1fed141c67f3e31e6f3c82.jpg",
+            CreatedAt = DateTime.UtcNow.AddMonths(-2),
+            LastLoginAt = DateTime.UtcNow.AddDays(-3)
+        }
+    };
 
         context.Users.AddRange(users);
         context.SaveChanges();

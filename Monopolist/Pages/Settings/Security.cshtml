@@ -659,7 +659,7 @@
             background: var(--surface);
             border-radius: 24px;
             padding: 30px;
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
@@ -696,6 +696,8 @@
 
             .qr-code img {
                 max-width: 200px;
+                height: auto;
+                display: inline-block;
             }
 
         .secret-key {
@@ -707,6 +709,7 @@
             text-align: center;
             margin: 15px 0;
             border: 1px solid var(--border);
+            word-break: break-all;
         }
 
         .form-group {
@@ -791,7 +794,7 @@
                             <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
                         </div>
                     }
-                    @if (TempData["SecretKey"] != null)
+                    @if (TempData["QrCodeBase64"] != null)
                     {
                         <div class="modal active" id="qrModal">
                             <div class="modal-content">
@@ -799,19 +802,28 @@
                                     <h3><i class="fas fa-qrcode"></i> @(Model.Language == "ru" ? "Настройка 2FA" : Model.Language == "en" ? "2FA Setup" : "2FA баптау")</h3>
                                     <button class="modal-close" onclick="document.getElementById('qrModal').classList.remove('active')">&times;</button>
                                 </div>
-                                <p>@(Model.Language == "ru" ? "Отсканируйте QR-код в приложении Google Authenticator или Authy:" : Model.Language == "en" ? "Scan the QR code with Google Authenticator or Authy:" : "QR кодын Google Authenticator немесе Authy қолданбасында сканерлеңіз:")</p>
+                                <p>@(Model.Language == "ru" ? "1. Установите Google Authenticator, Microsoft Authenticator или Authy на телефон." : 
+                                      Model.Language == "en" ? "1. Install Google Authenticator, Microsoft Authenticator or Authy on your phone." : 
+                                      "1. Телефоныңызға Google Authenticator, Microsoft Authenticator немесе Authy орнатыңыз.")</p>
+                                <p>@(Model.Language == "ru" ? "2. Отсканируйте QR-код:" : 
+                                      Model.Language == "en" ? "2. Scan the QR code:" : 
+                                      "2. QR кодын сканерлеңіз:")</p>
                                 <div class="qr-code">
-                                    <img src="@TempData["QrCodeUrl"]" alt="QR Code" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNmMGYwZjAiLz48dGV4dCB4PSI1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iTW9ub3RleHQiIGZpbGw9IiM2NjYiPjx0c3BhbiB4PSI1MCIgeT0iMTAwIj5RUiBDb2RlPC90c3Bhbj48dGV4dD4nLz4=" />
+                                    <img src="data:image/png;base64,@TempData["QrCodeBase64"]" alt="QR Code" />
                                 </div>
-                                <p>@(Model.Language == "ru" ? "Или введите секретный ключ вручную:" : Model.Language == "en" ? "Or enter the secret key manually:" : "Немесе құпия кілтті қолмен енгізіңіз:")</p>
+                                <p>@(Model.Language == "ru" ? "Или введите секретный ключ вручную:" : 
+                                      Model.Language == "en" ? "Or enter the secret key manually:" : 
+                                      "Немесе құпия кілтті қолмен енгізіңіз:")</p>
                                 <div class="secret-key">@TempData["SecretKey"]</div>
+                                <p>@(Model.Language == "ru" ? "3. Введите 6-значный код из приложения:" : 
+                                      Model.Language == "en" ? "3. Enter the 6-digit code from the app:" : 
+                                      "3. Қолданбадан 6 таңбалы кодты енгізіңіз:")</p>
                                 <form method="post" asp-page-handler="Verify2fa">
                                     @Html.AntiForgeryToken()
                                     <div class="form-group">
-                                        <label>@(Model.Language == "ru" ? "Код подтверждения:" : Model.Language == "en" ? "Verification code:" : "Растау коды:")</label>
-                                        <input type="text" name="code" class="form-control" placeholder="000000" maxlength="6" style="margin-bottom: 15px;" />
+                                        <input type="text" name="code" class="form-control" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" autocomplete="off" required />
                                     </div>
-                                    <button type="submit" class="btn-primary" style="width: 100%;">@(Model.Language == "ru" ? "Подтвердить" : Model.Language == "en" ? "Verify" : "Растау")</button>
+                                    <button type="submit" class="btn-primary" style="width: 100%;">@(Model.Language == "ru" ? "Подтвердить и включить" : Model.Language == "en" ? "Verify & Enable" : "Растау және қосу")</button>
                                 </form>
                             </div>
                         </div>
@@ -820,6 +832,7 @@
                     <h1>@ViewData["Title"]</h1>
                     <p class="subtitle">@(Model.Language == "ru" ? "Управление безопасностью аккаунта" : Model.Language == "en" ? "Account security management" : "Аккаунт қауіпсіздігін басқару")</p>
 
+                    <!-- Блок двухфакторной аутентификации -->
                     <div class="security-card">
                         <div class="security-header">
                             <h3><i class="fas fa-shield-alt"></i> @(Model.Language == "ru" ? "Двухфакторная аутентификация" : Model.Language == "en" ? "Two-factor authentication" : "Екі факторлы аутентификация")</h3>
@@ -852,6 +865,7 @@
                         </p>
                     </div>
 
+                    <!-- Блок подтверждения email -->
                     <div class="security-card">
                         <div class="security-header">
                             <h3><i class="fas fa-envelope"></i> @(Model.Language == "ru" ? "Подтверждение email" : Model.Language == "en" ? "Email confirmation" : "Email растау")</h3>
@@ -877,6 +891,7 @@
                         </p>
                     </div>
 
+                    <!-- Блок подтверждения телефона -->
                     <div class="security-card">
                         <div class="security-header">
                             <h3><i class="fas fa-phone-alt"></i> @(Model.Language == "ru" ? "Подтверждение телефона" : Model.Language == "en" ? "Phone confirmation" : "Телефонды растау")</h3>
@@ -899,6 +914,7 @@
                         </p>
                     </div>
 
+                    <!-- Блок активных сессий -->
                     <div class="security-card">
                         <div class="security-header">
                             <h3><i class="fas fa-history"></i> @(Model.Language == "ru" ? "Активные сессии" : Model.Language == "en" ? "Active sessions" : "Белсенді сессиялар")</h3>
@@ -968,6 +984,7 @@
                         </table>
                     </div>
 
+                    <!-- Кнопки навигации -->
                     <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 20px;">
                         <a asp-page="Index" class="btn-secondary">
                             <i class="fas fa-arrow-left"></i> @(Model.Language == "ru" ? "Назад к настройкам" : Model.Language == "en" ? "Back to settings" : "Баптауларға оралу")
@@ -992,7 +1009,7 @@
             <form method="post" asp-page-handler="VerifyPhone">
                 @Html.AntiForgeryToken()
                 <div class="form-group">
-                    <input type="text" name="code" class="form-control" placeholder="000000" maxlength="6" style="margin-bottom: 15px;" />
+                    <input type="text" name="code" class="form-control" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required />
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%;">@(Model.Language == "ru" ? "Подтвердить" : Model.Language == "en" ? "Confirm" : "Растау")</button>
             </form>
@@ -1043,6 +1060,7 @@
                 });
             }
 
+            // Авто-скрытие уведомлений
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -1052,6 +1070,7 @@
                 }, 5000);
             });
 
+            // Закрытие модальных окон по клику на фон
             window.addEventListener('click', (e) => {
                 const modals = document.querySelectorAll('.modal.active');
                 modals.forEach(modal => {
@@ -1060,6 +1079,29 @@
                     }
                 });
             });
+
+            // Функции для телефона
+            window.showPhoneModal = function() {
+                document.getElementById('phoneModal').classList.add('active');
+                // Автоматически отправляем код (можно убрать, если нужно вручную)
+                fetch('?handler=SendPhoneConfirmation', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+            };
+
+            window.sendPhoneCode = function() {
+                fetch('?handler=SendPhoneConfirmation', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                }).then(() => {
+                    alert('@(Model.Language == "ru" ? "Код отправлен повторно" : Model.Language == "en" ? "Code resent" : "Код қайта жіберілді")');
+                });
+            };
         });
 
         function toggleUserMenu() {
@@ -1073,27 +1115,6 @@
                 userMenu.classList.remove('show');
             }
         });
-
-        function showPhoneModal() {
-            document.getElementById('phoneModal').classList.add('active');
-            fetch('?handler=SendPhoneConfirmation', {
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                }
-            });
-        }
-
-        function sendPhoneCode() {
-            fetch('?handler=SendPhoneConfirmation', {
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                }
-            }).then(() => {
-                alert('@(Model.Language == "ru" ? "Код отправлен повторно" : Model.Language == "en" ? "Code resent" : "Код қайта жіберілді")');
-            });
-        }
     </script>
 </body>
 </html>

@@ -47,25 +47,32 @@ public class ProfileModel : PageModel
         Theme = user.Theme ?? "light";
         CustomColor = user.CustomColor ?? "#FF6B00";
 
-        // Заполняем данные профиля
+        // Заполняем данные профиля из БД
         Input.Id = user.Id;
         Input.Username = user.Username;
         Input.Role = user.Role;
+        Input.FullName = user.FullName;
+        Input.Email = user.Email;
+        Input.PhoneNumber = user.PhoneNumber;
+        Input.Position = user.Position;
+        Input.AvatarUrl = user.AvatarUrl;
         Input.CreatedAt = user.CreatedAt;
-
-        // Загружаем дополнительные данные из куки (они не хранятся в БД)
-        Input.Email = Request.Cookies[$"user_email_{userId}"] ?? "user@example.com";
-        Input.FullName = Request.Cookies[$"user_fullname_{userId}"] ?? "Иванов Иван";
-        Input.Position = user.Role == "Admin" ? "Администратор" : "Менеджер";
-        Input.PhoneNumber = Request.Cookies[$"user_phone_{userId}"] ?? "+7 (999) 123-45-67";
-        Input.AvatarUrl = Request.Cookies[$"user_avatar_{userId}"] ?? "";
-        Input.LastLoginAt = DateTime.Now.AddDays(-1); // В реальности из журнала
+        Input.LastLoginAt = user.LastLoginAt;
 
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
+        // Дополнительная проверка: если новый пароль указан, то текущий пароль обязателен
+        if (!string.IsNullOrEmpty(Input.NewPassword) && string.IsNullOrEmpty(Input.CurrentPassword))
+        {
+            ModelState.AddModelError("Input.CurrentPassword", GetLocalizedMessage(
+                "Для смены пароля введите текущий пароль.",
+                "Enter current password to change password.",
+                "Құпиясөзді өзгерту үшін ағымдағы құпиясөзді енгізіңіз."));
+        }
+
         if (!ModelState.IsValid)
         {
             await LoadUserSettings();
@@ -78,12 +85,18 @@ public class ProfileModel : PageModel
         if (user == null)
             return NotFound();
 
-        // Обновляем имя пользователя
+        // Обновляем данные из формы
         user.Username = Input.Username;
+        user.FullName = Input.FullName;
+        user.Email = Input.Email;
+        user.PhoneNumber = Input.PhoneNumber;
+        user.Position = Input.Position;
+        user.AvatarUrl = Input.AvatarUrl;
 
-        // Смена пароля, если указан
+        // Смена пароля, если указан новый
         if (!string.IsNullOrEmpty(Input.NewPassword))
         {
+            // Проверяем текущий пароль (сравнение в открытом виде – для демо; в реальном проекте используйте хеши)
             if (user.Password != Input.CurrentPassword)
             {
                 ModelState.AddModelError("Input.CurrentPassword", GetLocalizedMessage(
@@ -103,24 +116,24 @@ public class ProfileModel : PageModel
         {
             await _context.SaveChangesAsync();
 
-            // Сохраняем дополнительные данные в куки
-            var cookieOptions = new CookieOptions
+            // Сохраняем аватарку в куку для быстрого доступа в шапке
+            if (!string.IsNullOrEmpty(user.AvatarUrl))
             {
-                Expires = DateTime.Now.AddYears(1),
-                HttpOnly = true,
-                SameSite = SameSiteMode.Lax
-            };
-            Response.Cookies.Append($"user_email_{userId}", Input.Email ?? "", cookieOptions);
-            Response.Cookies.Append($"user_fullname_{userId}", Input.FullName ?? "", cookieOptions);
-            Response.Cookies.Append($"user_phone_{userId}", Input.PhoneNumber ?? "", cookieOptions);
-            Response.Cookies.Append($"user_avatar_{userId}", Input.AvatarUrl ?? "", cookieOptions);
+                var cookieOptions = new CookieOptions
+                {
+                    Expires = DateTime.Now.AddYears(1),
+                    HttpOnly = false,
+                    SameSite = SameSiteMode.Lax
+                };
+                Response.Cookies.Append($"user_avatar_{userId}", user.AvatarUrl, cookieOptions);
+            }
 
             TempData["Success"] = GetLocalizedMessage(
                 "Профиль успешно обновлен",
                 "Profile updated successfully",
                 "Профиль жаңартылды");
 
-            // Обновляем имя пользователя в куки аутентификации при необходимости
+            // Если изменилось имя пользователя, обновляем claims
             if (user.Username != User.Identity?.Name)
             {
                 await RefreshUserClaims(user);
@@ -137,6 +150,7 @@ public class ProfileModel : PageModel
             return Page();
         }
 
+        // Перенаправляем на эту же страницу, чтобы загрузить обновлённые данные
         return RedirectToPage();
     }
 
@@ -169,7 +183,7 @@ public class ProfileModel : PageModel
             // Очищаем куки пользователя
             foreach (var cookie in Request.Cookies.Keys)
             {
-                if (cookie.StartsWith($"user_{userId}"))
+                if (cookie.StartsWith($"user_avatar_{userId}"))
                 {
                     Response.Cookies.Delete(cookie);
                 }

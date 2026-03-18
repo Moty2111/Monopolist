@@ -3,8 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
+using Monoplist.Models;
 using Monoplist.ViewModels;
+using OtpNet;          // NuGet: Otp.NET
+using QRCoder;         // NuGet: QRCoder
 using System.Security.Claims;
+using System.Text;
 
 namespace Monoplist.Pages.Settings;
 
@@ -45,10 +49,10 @@ public class SecurityModel : PageModel
         Theme = user.Theme ?? "light";
         CustomColor = user.CustomColor ?? "#FF6B00";
 
-        // Загружаем настройки безопасности из куки/сессии
-        Input.TwoFactorEnabled = Request.Cookies[$"2fa_{userId}"] == "enabled";
-        Input.EmailConfirmed = Request.Cookies[$"email_confirmed_{userId}"] == "true";
-        Input.PhoneConfirmed = Request.Cookies[$"phone_confirmed_{userId}"] == "true";
+        // Загружаем настройки безопасности из БД
+        Input.TwoFactorEnabled = user.TwoFactorEnabled;
+        Input.EmailConfirmed = !string.IsNullOrEmpty(user.Email); // В реальном проекте добавьте поле EmailConfirmed
+        Input.PhoneConfirmed = !string.IsNullOrEmpty(user.PhoneNumber); // Добавьте поле PhoneConfirmed
 
         // Генерируем или получаем существующие сессии
         Input.ActiveSessions = GetActiveSessions(userId);
@@ -56,63 +60,78 @@ public class SecurityModel : PageModel
         return Page();
     }
 
+    // Включение 2FA – генерируем секретный ключ и показываем QR-код
     public async Task<IActionResult> OnPostEnable2faAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
         await LoadUserSettings(userId);
 
-        // Включаем 2FA
-        Response.Cookies.Append($"2fa_{userId}", "enabled", new CookieOptions
+        // Генерируем секретный ключ (20 байт = 160 бит)
+        byte[] secretKeyBytes = KeyGeneration.GenerateRandomKey(20);
+        string secretKey = Base32Encoding.ToString(secretKeyBytes);
+        user.TwoFactorSecret = secretKey;
+        user.TwoFactorEnabled = false; // Ещё не подтверждён
+        await _context.SaveChangesAsync();
+
+        // Создаём URI для TOTP (otpauth://totp/{issuer}:{account}?secret={secret}&issuer={issuer})
+        string issuer = "Моноплист";
+        string account = user.Email ?? user.Username;
+        string totpUri = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(account)}?secret={secretKey}&issuer={Uri.EscapeDataString(issuer)}";
+
+        // Генерируем QR-код (Base64)
+        using (var qrGenerator = new QRCodeGenerator())
+        using (var qrCodeData = qrGenerator.CreateQrCode(totpUri, QRCodeGenerator.ECCLevel.Q))
+        using (var qrCode = new Base64QRCode(qrCodeData))
         {
-            Expires = DateTime.Now.AddYears(1),
-            HttpOnly = true,
-            SameSite = SameSiteMode.Lax
-        });
+            string qrCodeImageBase64 = qrCode.GetGraphic(20);
+            TempData["QrCodeBase64"] = qrCodeImageBase64;
+        }
 
-        // Генерируем секретный ключ для 2FA (в реальном проекте сохранять в БД)
-        var secretKey = GenerateRandomKey();
         TempData["SecretKey"] = secretKey;
-        TempData["QrCodeUrl"] = GenerateQrCodeUrl(userId.ToString(), secretKey);
+        TempData["ManualSetupKey"] = secretKey; // Для ручного ввода
 
         TempData["Success"] = GetLocalizedMessage(
-            "Двухфакторная аутентификация включена. Сохраните секретный ключ.",
-            "Two-factor authentication enabled. Save the secret key.",
-            "Екі факторлы аутентификация қосылды. Құпия кілтті сақтаңыз.");
+            "Отсканируйте QR-код в приложении Google Authenticator и введите код для подтверждения.",
+            "Scan the QR code with Google Authenticator and enter the code to confirm.",
+            "QR кодын Google Authenticator қолданбасында сканерлеп, кодты енгізіңіз.");
 
         return RedirectToPage();
     }
 
-    public async Task<IActionResult> OnPostDisable2faAsync()
-    {
-        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
-        await LoadUserSettings(userId);
-
-        Response.Cookies.Delete($"2fa_{userId}");
-        TempData["Success"] = GetLocalizedMessage(
-            "Двухфакторная аутентификация отключена.",
-            "Two-factor authentication disabled.",
-            "Екі факторлы аутентификация өшірілді.");
-
-        return RedirectToPage();
-    }
-
+    // Подтверждение 2FA после сканирования QR-кода
     public async Task<IActionResult> OnPostVerify2faAsync(string code)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
         await LoadUserSettings(userId);
 
-        // Здесь проверка кода 2FA
-        if (code == "123456") // Demo validation
+        if (string.IsNullOrEmpty(user.TwoFactorSecret))
         {
-            Response.Cookies.Append($"2fa_verified_{userId}", "true", new CookieOptions
-            {
-                Expires = DateTime.Now.AddYears(1),
-                HttpOnly = true
-            });
+            TempData["Error"] = GetLocalizedMessage(
+                "Сначала включите двухфакторную аутентификацию.",
+                "Enable two-factor authentication first.",
+                "Алдымен екі факторлы аутентификацияны қосыңыз.");
+            return RedirectToPage();
+        }
+
+        // Проверяем код с помощью Otp.NET
+        var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
+        bool isValid = totp.VerifyTotp(code, out long timeStepMatched, VerificationWindow.RfcSpecifiedNetworkDelay);
+
+        if (isValid)
+        {
+            user.TwoFactorEnabled = true;
+            await _context.SaveChangesAsync();
+
             TempData["Success"] = GetLocalizedMessage(
-                "Код подтвержден успешно.",
-                "Code verified successfully.",
-                "Код сәтті расталды.");
+                "Двухфакторная аутентификация успешно включена.",
+                "Two-factor authentication enabled successfully.",
+                "Екі факторлы аутентификация сәтті қосылды.");
         }
         else
         {
@@ -125,58 +144,83 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
+    // Отключение 2FA
+    public async Task<IActionResult> OnPostDisable2faAsync()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        await LoadUserSettings(userId);
+
+        user.TwoFactorEnabled = false;
+        user.TwoFactorSecret = null; // Очищаем секрет
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = GetLocalizedMessage(
+            "Двухфакторная аутентификация отключена.",
+            "Two-factor authentication disabled.",
+            "Екі факторлы аутентификация өшірілді.");
+
+        return RedirectToPage();
+    }
+
+    // Отправка подтверждения Email (пример)
     public async Task<IActionResult> OnPostSendEmailConfirmationAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
         await LoadUserSettings(userId);
 
-        var userEmail = Request.Cookies[$"user_email_{userId}"] ?? "user@example.com";
-
-        // Отправка письма с подтверждением
-        _logger.LogInformation("Отправлено письмо подтверждения на {Email}", userEmail);
+        // Здесь должна быть реальная отправка письма
+        _logger.LogInformation("Отправлено письмо подтверждения на {Email}", user.Email);
 
         TempData["Success"] = GetLocalizedMessage(
-            $"Письмо с подтверждением отправлено на {userEmail}",
-            $"Confirmation email sent to {userEmail}",
-            $"Растау хаты {userEmail} мекенжайына жіберілді");
+            $"Письмо с подтверждением отправлено на {user.Email}",
+            $"Confirmation email sent to {user.Email}",
+            $"Растау хаты {user.Email} мекенжайына жіберілді");
 
         return RedirectToPage();
     }
 
+    // Отправка SMS для подтверждения телефона
     public async Task<IActionResult> OnPostSendPhoneConfirmationAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
         await LoadUserSettings(userId);
 
-        var userPhone = Request.Cookies[$"user_phone_{userId}"] ?? "+7 (999) 123-45-67";
-
-        // Генерация и отправка SMS с кодом
+        // Генерация кода и отправка SMS
         var code = new Random().Next(100000, 999999).ToString();
         TempData["PhoneCode"] = code;
-        _logger.LogInformation("Отправлен SMS код {Code} на номер {Phone}", code, userPhone);
+        _logger.LogInformation("Отправлен SMS код {Code} на номер {Phone}", code, user.PhoneNumber);
 
         TempData["Success"] = GetLocalizedMessage(
-            $"Код подтверждения отправлен на {userPhone}",
-            $"Verification code sent to {userPhone}",
-            $"Растау коды {userPhone} нөміріне жіберілді");
+            $"Код подтверждения отправлен на {user.PhoneNumber}",
+            $"Verification code sent to {user.PhoneNumber}",
+            $"Растау коды {user.PhoneNumber} нөміріне жіберілді");
 
         return RedirectToPage();
     }
 
+    // Подтверждение телефона
     public async Task<IActionResult> OnPostVerifyPhoneAsync(string code)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
         await LoadUserSettings(userId);
 
         var savedCode = TempData["PhoneCode"]?.ToString();
 
         if (savedCode == code)
         {
-            Response.Cookies.Append($"phone_confirmed_{userId}", "true", new CookieOptions
-            {
-                Expires = DateTime.Now.AddYears(1),
-                HttpOnly = true
-            });
+            // В реальном проекте установите флаг PhoneConfirmed в БД
             TempData["Success"] = GetLocalizedMessage(
                 "Номер телефона подтвержден.",
                 "Phone number confirmed.",
@@ -193,6 +237,7 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
+    // Завершение сессии
     public async Task<IActionResult> OnPostRevokeSessionAsync(string sessionId)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -209,6 +254,7 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
+    // Завершение всех сессий, кроме текущей
     public async Task<IActionResult> OnPostRevokeAllSessionsAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -279,23 +325,18 @@ public class SecurityModel : PageModel
             IsCurrent = true
         });
 
-        // Добавляем несколько демо-сессий для примера
+        // Демо-сессии для примера (в реальном проекте – из БД)
         for (int i = 1; i <= 3; i++)
         {
-            var sessionId = $"session_{i}";
-            var sessionCookie = Request.Cookies[$"session_{userId}_{sessionId}"];
-            if (!string.IsNullOrEmpty(sessionCookie))
+            sessions.Add(new SessionInfo
             {
-                sessions.Add(new SessionInfo
-                {
-                    Id = sessionId,
-                    Device = i % 2 == 0 ? "iPhone 12" : "Windows PC",
-                    Browser = i % 2 == 0 ? "Safari" : "Chrome",
-                    IpAddress = "192.168.1.10" + i,
-                    LoginTime = DateTime.Now.AddDays(-i),
-                    IsCurrent = false
-                });
-            }
+                Id = $"demo_{i}",
+                Device = i % 2 == 0 ? "iPhone 12" : "Windows PC",
+                Browser = i % 2 == 0 ? "Safari" : "Chrome",
+                IpAddress = "192.168.1.10" + i,
+                LoginTime = DateTime.Now.AddDays(-i),
+                IsCurrent = false
+            });
         }
 
         return sessions;
@@ -319,23 +360,5 @@ public class SecurityModel : PageModel
         if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome")) return "Safari";
         if (userAgent.Contains("Edg")) return "Edge";
         return "Неизвестный браузер";
-    }
-
-    private string GenerateRandomKey()
-    {
-        var bytes = new byte[20];
-        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(bytes);
-            return Convert.ToBase64String(bytes);
-        }
-    }
-
-    private string GenerateQrCodeUrl(string userId, string secretKey)
-    {
-        var appName = "Моноплист";
-        var encodedSecret = Uri.EscapeDataString(secretKey);
-        var encodedUser = Uri.EscapeDataString(User.Identity?.Name ?? userId);
-        return $"otpauth://totp/{appName}:{encodedUser}?secret={encodedSecret}&issuer={appName}";
     }
 }
