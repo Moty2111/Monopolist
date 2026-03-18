@@ -21,6 +21,13 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? SearchString { get; set; }
 
+    // Параметры сортировки
+    [BindProperty(SupportsGet = true)]
+    public string? SortField { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SortOrder { get; set; }
+
     public IList<SupplierIndexViewModel> Suppliers { get; set; } = new List<SupplierIndexViewModel>();
 
     // Свойства для персонализации
@@ -34,6 +41,10 @@ public class IndexModel : PageModel
     {
         await LoadUserSettings();
 
+        // Устанавливаем значения по умолчанию для сортировки
+        SortField = string.IsNullOrEmpty(SortField) ? "Name" : SortField;
+        SortOrder = string.IsNullOrEmpty(SortOrder) ? "asc" : SortOrder;
+
         var query = _context.Suppliers
             .Include(s => s.Products)
             .AsQueryable();
@@ -45,8 +56,21 @@ public class IndexModel : PageModel
                 EF.Functions.Like(s.ContactInfo, $"%{SearchString}%"));
         }
 
+        // Сортировка
+        query = SortField switch
+        {
+            "ContactInfo" => SortOrder == "asc"
+                ? query.OrderBy(s => s.ContactInfo)
+                : query.OrderByDescending(s => s.ContactInfo),
+            "ProductsCount" => SortOrder == "asc"
+                ? query.OrderBy(s => s.Products.Count)
+                : query.OrderByDescending(s => s.Products.Count),
+            _ => SortOrder == "asc"
+                ? query.OrderBy(s => s.Name)
+                : query.OrderByDescending(s => s.Name)
+        };
+
         Suppliers = await query
-            .OrderBy(s => s.Name)
             .Select(s => new SupplierIndexViewModel
             {
                 Id = s.Id,

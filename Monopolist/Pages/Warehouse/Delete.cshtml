@@ -2,12 +2,11 @@
 @model Monoplist.Pages.Warehouse.DeleteModel
 @{
     Layout = null;
-    ViewData["Title"] = "Удаление склада";
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Удаление склада" : (Model.Language == "en" ? "Delete warehouse" : "Қойманы жою");
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -66,6 +65,62 @@
             --card-color-4: #fbbf24;
         }
 
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.compact-mode .form-group {
+            margin-bottom: 1rem;
+        }
+
+        body.compact-mode .form-control {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .btn-primary,
+        body.compact-mode .btn-secondary,
+        body.compact-mode .btn-danger {
+            padding: 8px 18px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -85,7 +140,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР (полностью из Index) ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -172,7 +226,6 @@
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -279,7 +332,6 @@
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
@@ -302,56 +354,40 @@
             padding-bottom: 10px;
         }
 
-        /* ===== СТИЛИ ФОРМ ===== */
-        .form-container {
-            max-width: 800px;
+        .delete-confirmation dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px 20px;
+            max-width: 600px;
+            margin-bottom: 2rem;
         }
 
-        .form-group {
-            margin-bottom: 1.2rem;
+        .delete-confirmation dt {
+            font-weight: 700;
+            color: var(--primary);
         }
 
-            .form-group label {
-                display: block;
-                font-weight: 600;
-                font-size: 0.9rem;
-                color: var(--primary);
-                margin-bottom: 5px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
+        .delete-confirmation dd {
+            margin: 0;
+            color: var(--text-secondary);
+        }
 
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            font-size: 1rem;
-            border: 2px solid var(--border);
+        .alert-warning {
+            padding: 12px 16px;
             border-radius: 12px;
-            background: var(--surface);
-            color: var(--text-primary);
-            transition: var(--transition);
-            font-family: 'Poppins', sans-serif;
-        }
-
-            .form-control:focus {
-                outline: none;
-                border-color: var(--primary);
-                box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
-            }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .form-actions {
+            margin-bottom: 18px;
+            border-left: 4px solid var(--warning);
+            background: var(--warning-bg);
+            color: var(--warning);
             display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
         }
 
-        .btn-primary, .btn-secondary {
+        /* ===== СТИЛИ ДЛЯ КНОПОК ===== */
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -388,14 +424,44 @@
                 transform: translateY(-2px);
             }
 
-        .text-danger {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 4px;
-            display: block;
+        .btn-danger {
+            background: var(--danger);
+            color: white;
         }
 
-        /* ===== АДАПТИВНОСТЬ ===== */
+            .btn-danger:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+                box-shadow: 0 6px 15px rgba(239,68,68,0.4);
+            }
+
+        .delete-confirmation form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -439,11 +505,13 @@
                 padding: 12px;
             }
 
-            .form-actions {
+            .delete-confirmation form {
                 flex-direction: column;
             }
 
-            .btn-primary, .btn-secondary {
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger {
                 width: 100%;
                 justify-content: center;
             }
@@ -458,122 +526,57 @@
                 padding: 8px 12px;
             }
         }
-        .delete-confirmation dl {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 12px 20px;
-            max-width: 600px;
-            margin-bottom: 2rem;
-        }
-
-        .delete-confirmation dt {
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .delete-confirmation dd {
-            margin: 0;
-            color: var(--text-secondary);
-        }
-
-        .btn-danger {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 22px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background: var(--danger);
-            color: white;
-        }
-
-            .btn-danger:hover {
-                transform: translateY(-2px);
-                filter: brightness(1.1);
-                box-shadow: 0 6px 15px rgba(239,68,68,0.4);
-            }
-
-        .delete-confirmation form {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        @@media (max-width: 480px) {
-            .delete-confirmation form {
-                flex-direction: column;
-            }
-
-            .btn-danger, .btn-secondary {
-                width: 100%;
-                justify-content: center;
-            }
-        }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-helmet-safety"></i>
-                <h2>Моноплист</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index" class="active"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_Sidebar")
 
         <main class="main-content">
-            <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-                <h1 class="page-title">@ViewData["Title"]</h1>
-                <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему"><i class="fas fa-sun"></i></div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> <span>Выйти</span></button>
-                    </form>
-                </div>
-            </header>
+            @await Html.PartialAsync("_Header")
 
             <div class="content">
                 <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">Вы уверены, что хотите удалить этот склад?</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Вы уверены, что хотите удалить этот склад?" : Model.Language == "en" ? "Are you sure you want to delete this warehouse?" : "Осы қойманы жойғыңыз келетініне сенімдісіз бе?")</p>
 
                     <div class="delete-confirmation">
                         <dl>
-                            <dt>Название</dt>
+                            <dt>@(Model.Language == "ru" ? "Название" : Model.Language == "en" ? "Name" : "Атауы")</dt>
                             <dd>@Model.Warehouse.Name</dd>
-                            <dt>Местоположение</dt>
-                            <dd>@(Model.Warehouse.Location ?? "Не указано")</dd>
-                            <dt>Вместимость</dt>
+                            <dt>@(Model.Language == "ru" ? "Местоположение" : Model.Language == "en" ? "Location" : "Орналасқан жері")</dt>
+                            <dd>@(Model.Warehouse.Location ?? (Model.Language == "ru" ? "Не указано" : Model.Language == "en" ? "Not specified" : "Көрсетілмеген"))</dd>
+                            <dt>@(Model.Language == "ru" ? "Вместимость" : Model.Language == "en" ? "Capacity" : "Сыйымдылығы")</dt>
                             <dd>@Model.Warehouse.Capacity</dd>
-                            <dt>Текущая загруженность</dt>
+                            <dt>@(Model.Language == "ru" ? "Текущая загруженность" : Model.Language == "en" ? "Current occupancy" : "Ағымдағы жүктеме")</dt>
                             <dd>@Model.Warehouse.CurrentOccupancy</dd>
+                            <dt>@(Model.Language == "ru" ? "Количество товаров" : Model.Language == "en" ? "Products count" : "Тауарлар саны")</dt>
+                            <dd>@(Model.Warehouse.Products?.Count ?? 0)</dd>
                         </dl>
+
+                        @if (Model.Warehouse.Products != null && Model.Warehouse.Products.Any())
+                        {
+                            <div class="alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> @(Model.Language == "ru" ? "На этом складе есть товары. Удаление невозможно." : Model.Language == "en" ? "This warehouse has products. Deletion is impossible." : "Бұл қоймада тауарлар бар. Жою мүмкін емес.")
+                            </div>
+                        }
 
                         <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Warehouse.Id">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Удалить</button>
-                            <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+                            @if (Model.Warehouse.Products == null || !Model.Warehouse.Products.Any())
+                            {
+                                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> @(Model.Language == "ru" ? "Удалить" : Model.Language == "en" ? "Delete" : "Жою")</button>
+                            }
+                            <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Отмена" : Model.Language == "en" ? "Cancel" : "Бас тарту")</a>
                         </form>
                     </div>
                 </div>
@@ -582,12 +585,13 @@
     </div>
 
     <script>
-        // Тот же скрипт
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
+
             if (menuToggle) {
                 menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+
                 document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
@@ -597,25 +601,39 @@
                     }
                 });
             }
+
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
+
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
             });
         });
     </script>

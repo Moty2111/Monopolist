@@ -1,12 +1,10 @@
-﻿// Pages/Orders/Edit.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
-using Monopolist.ViewModels.Order;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Orders;
@@ -44,7 +42,11 @@ public class EditModel : PageModel
 
         await LoadUserSettings();
 
-        var order = await _context.Orders.FindAsync(id);
+        var order = await _context.Orders
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
         if (order == null)
             return NotFound();
 
@@ -53,8 +55,17 @@ public class EditModel : PageModel
         Order.TotalAmount = order.TotalAmount;
         Order.Status = order.Status;
         Order.PaymentMethod = order.PaymentMethod;
+        Order.Items = order.OrderItems.Select(oi => new OrderItemViewModel
+        {
+            ProductId = oi.ProductId,
+            ProductName = oi.Product?.Name ?? "Неизвестно",
+            Quantity = oi.Quantity,
+            Price = oi.PriceAtSale,
+            Unit = oi.Product?.Unit ?? "шт"
+        }).ToList();
 
         await PopulateDropdownsAsync();
+        await LoadAvailableProducts();
         return Page();
     }
 
@@ -64,39 +75,120 @@ public class EditModel : PageModel
         {
             await LoadUserSettings();
             await PopulateDropdownsAsync();
+            await LoadAvailableProducts();
+            return Page();
+        }
+
+        Order.Items = Order.Items.Where(i => i.ProductId > 0 && i.Quantity > 0).ToList();
+
+        if (!Order.Items.Any())
+        {
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Добавьте хотя бы один товар в заказ.",
+                "Add at least one product to the order.",
+                "Кемінде бір тауар қосыңыз."));
+            await LoadUserSettings();
+            await PopulateDropdownsAsync();
+            await LoadAvailableProducts();
             return Page();
         }
 
         try
         {
-            var order = await _context.Orders.FindAsync(Order.Id);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == Order.Id);
+
             if (order == null)
                 return NotFound();
 
+            // Обновляем основные поля
             order.CustomerId = Order.CustomerId;
-            order.TotalAmount = Order.TotalAmount;
             order.Status = Order.Status;
             order.PaymentMethod = Order.PaymentMethod;
             order.UpdatedAt = DateTime.Now;
 
+            // Обновляем позиции
+            var existingItems = order.OrderItems.ToList();
+            var newItems = Order.Items.Where(i => !existingItems.Any(e => e.ProductId == i.ProductId)).ToList();
+            var removedItems = existingItems.Where(e => !Order.Items.Any(i => i.ProductId == e.ProductId)).ToList();
+            var updatedItems = existingItems.Where(e => Order.Items.Any(i => i.ProductId == e.ProductId)).ToList();
+
+            // Удаляем отсутствующие
+            foreach (var item in removedItems)
+            {
+                _context.OrderItems.Remove(item);
+                // Возвращаем товар на склад (опционально)
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product != null)
+                {
+                    product.CurrentStock += item.Quantity;
+                }
+            }
+
+            // Добавляем новые
+            foreach (var item in newItems)
+            {
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product == null)
+                {
+                    ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                        $"Товар с ID {item.ProductId} не найден.",
+                        $"Product with ID {item.ProductId} not found.",
+                        $"{item.ProductId} ID тауар табылмады."));
+                    await LoadUserSettings();
+                    await PopulateDropdownsAsync();
+                    await LoadAvailableProducts();
+                    return Page();
+                }
+
+                order.OrderItems.Add(new Models.OrderItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    PriceAtSale = product.SalePrice
+                });
+
+                product.CurrentStock -= item.Quantity;
+            }
+
+            // Обновляем существующие (количество и цена могут измениться)
+            foreach (var item in updatedItems)
+            {
+                var newItem = Order.Items.First(i => i.ProductId == item.ProductId);
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product == null) continue;
+
+                // Корректируем остаток
+                var delta = newItem.Quantity - item.Quantity;
+                product.CurrentStock -= delta;
+
+                item.Quantity = newItem.Quantity;
+                item.PriceAtSale = product.SalePrice; // цена может измениться со временем
+            }
+
+            // Пересчитываем общую сумму
+            order.TotalAmount = Order.Items.Sum(i => i.Quantity * i.Price);
+
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = GetLocalizedMessage("Заказ обновлён.", "Order updated.", "Тапсырыс жаңартылды.");
+            TempData["Success"] = GetLocalizedMessage(
+                $"Заказ {order.OrderNumber} обновлён.",
+                $"Order {order.OrderNumber} updated.",
+                $"{order.OrderNumber} тапсырысы жаңартылды.");
+
             return RedirectToPage("./Index");
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await _context.Orders.AnyAsync(o => o.Id == Order.Id))
-                return NotFound();
-            else
-                throw;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при обновлении заказа {OrderId}", Order.Id);
-            ModelState.AddModelError(string.Empty, GetLocalizedMessage("Произошла ошибка при обновлении.", "An error occurred while updating.", "Жаңарту кезінде қате орын алды."));
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при обновлении.",
+                "An error occurred while updating.",
+                "Жаңарту кезінде қате орын алды."));
             await LoadUserSettings();
             await PopulateDropdownsAsync();
+            await LoadAvailableProducts();
             return Page();
         }
     }
@@ -127,6 +219,21 @@ public class EditModel : PageModel
             new() { Value = "Card", Text = Language == "ru" ? "Карта" : Language == "en" ? "Card" : "Карта" },
             new() { Value = "Credit", Text = Language == "ru" ? "Кредит/Рассрочка" : Language == "en" ? "Credit" : "Несие" }
         };
+    }
+
+    private async Task LoadAvailableProducts()
+    {
+        Order.AvailableProducts = await _context.Products
+            .Where(p => p.CurrentStock > 0)
+            .OrderBy(p => p.Name)
+            .Select(p => new SelectItem
+            {
+                Value = p.Id,
+                Text = $"{p.Name} (в наличии: {p.CurrentStock} {p.Unit})",
+                Price = p.SalePrice,
+                Unit = p.Unit
+            })
+            .ToListAsync();
     }
 
     private async Task LoadUserSettings()

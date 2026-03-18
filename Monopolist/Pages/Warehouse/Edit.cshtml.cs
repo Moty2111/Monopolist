@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Warehouse;
 
@@ -22,8 +23,17 @@ public class EditModel : PageModel
     [BindProperty]
     public WarehouseEditViewModel WarehouseInput { get; set; } = new();
 
+    // Свойства для персонализации
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(int id)
     {
+        await LoadUserSettings();
+
         var warehouse = await _context.Warehouses
             .Include(w => w.Products)
             .FirstOrDefaultAsync(w => w.Id == id);
@@ -39,7 +49,7 @@ public class EditModel : PageModel
         WarehouseInput.ImageUrl = warehouse.ImageUrl;
         WarehouseInput.Description = warehouse.Description;
         WarehouseInput.Capacity = warehouse.Capacity;
-        WarehouseInput.SelectedProductIds = warehouse.Products.Select(p => p.Id).ToList(); // ������ ?.
+        WarehouseInput.SelectedProductIds = warehouse.Products.Select(p => p.Id).ToList();
 
         await LoadAvailableProducts();
         return Page();
@@ -49,6 +59,7 @@ public class EditModel : PageModel
     {
         if (!ModelState.IsValid)
         {
+            await LoadUserSettings();
             await LoadAvailableProducts();
             return Page();
         }
@@ -72,29 +83,42 @@ public class EditModel : PageModel
             warehouse.UpdatedAt = DateTime.UtcNow;
 
             var currentProductIds = warehouse.Products.Select(p => p.Id).ToList();
-            var productsToAdd = WarehouseInput.SelectedProductIds.Except(currentProductIds).ToList();
-            var productsToRemove = currentProductIds.Except(WarehouseInput.SelectedProductIds).ToList();
+            var selectedIds = WarehouseInput.SelectedProductIds ?? new List<int>();
 
-            if (productsToAdd.Any())
+            var toAdd = selectedIds.Except(currentProductIds).ToList();
+            var toRemove = currentProductIds.Except(selectedIds).ToList();
+
+            if (toAdd.Any())
             {
-                var newProducts = await _context.Products
-                    .Where(p => productsToAdd.Contains(p.Id))
+                var productsToAdd = await _context.Products
+                    .Where(p => toAdd.Contains(p.Id))
                     .ToListAsync();
 
-                foreach (var product in newProducts)
+                foreach (var product in productsToAdd)
                 {
+                    // Проверяем, не занят ли товар на другом складе
+                    if (product.WarehouseId != null && product.WarehouseId != warehouse.Id)
+                    {
+                        ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                            $"Товар '{product.Name}' уже находится на другом складе.",
+                            $"Product '{product.Name}' is already in another warehouse.",
+                            $"'{product.Name}' тауары басқа қоймада тұр."));
+                        await LoadUserSettings();
+                        await LoadAvailableProducts();
+                        return Page();
+                    }
                     product.WarehouseId = warehouse.Id;
                     warehouse.Products.Add(product);
                 }
             }
 
-            if (productsToRemove.Any())
+            if (toRemove.Any())
             {
-                var productsToRemoveList = warehouse.Products
-                    .Where(p => productsToRemove.Contains(p.Id))
+                var productsToRemove = warehouse.Products
+                    .Where(p => toRemove.Contains(p.Id))
                     .ToList();
 
-                foreach (var product in productsToRemoveList)
+                foreach (var product in productsToRemove)
                 {
                     product.WarehouseId = null;
                     warehouse.Products.Remove(product);
@@ -105,13 +129,21 @@ public class EditModel : PageModel
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"����� �{warehouse.Name}� ������� ��������.";
+            TempData["Success"] = GetLocalizedMessage(
+                $"Склад «{warehouse.Name}» успешно обновлён.",
+                $"Warehouse «{warehouse.Name}» updated successfully.",
+                $"«{warehouse.Name}» қоймасы сәтті жаңартылды.");
+
             return RedirectToPage("./Index");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "������ ��� ���������� ������ {WarehouseId}", WarehouseInput.Id);
-            ModelState.AddModelError(string.Empty, "��������� ������ ��� ����������.");
+            _logger.LogError(ex, "Ошибка при обновлении склада {WarehouseId}", WarehouseInput.Id);
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при обновлении. Попробуйте снова.",
+                "An error occurred while updating. Please try again.",
+                "Жаңарту кезінде қате орын алды. Қайталап көріңіз."));
+            await LoadUserSettings();
             await LoadAvailableProducts();
             return Page();
         }
@@ -138,5 +170,29 @@ public class EditModel : PageModel
         }
 
         WarehouseInput.AvailableProducts = products;
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

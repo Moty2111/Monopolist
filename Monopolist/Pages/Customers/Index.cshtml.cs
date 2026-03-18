@@ -1,4 +1,4 @@
-// Pages/Customers/Index.cshtml.cs
+Ôªø// Pages/Customers/Index.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -24,9 +24,16 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? SearchString { get; set; }
 
+    // –ü–∞—Ä–∞–º–µ—Ç—Ä—ã —Å–æ—Ä—Ç–∏—Ä–æ–≤–∫–∏
+    [BindProperty(SupportsGet = true)]
+    public string? SortField { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SortOrder { get; set; } // "asc" –∏–ª–∏ "desc"
+
     public IList<Customer> Customers { get; set; } = new List<Customer>();
 
-    // —‚ÓÈÒÚ‚‡ ‰Îˇ ÔÂÒÓÌ‡ÎËÁ‡ˆËË
+    // –°–≤–æ–π—Å—Ç–≤–∞ –¥–ª—è –ø–µ—Ä—Å–æ–Ω–∞–ª–∏–∑–∞—Ü–∏–∏
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -37,7 +44,7 @@ public class IndexModel : PageModel
     {
         try
         {
-            // «‡„ÛÊ‡ÂÏ Ì‡ÒÚÓÈÍË ÚÂÍÛ˘Â„Ó ÔÓÎ¸ÁÓ‚‡ÚÂÎˇ
+            // –ó–∞–≥—Ä—É–∂–∞–µ–º –Ω–∞—Å—Ç—Ä–æ–π–∫–∏ —Ç–µ–∫—É—â–µ–≥–æ –ø–æ–ª—å–∑–æ–≤–∞—Ç–µ–ª—è
             var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
@@ -49,8 +56,13 @@ public class IndexModel : PageModel
                 CustomColor = user.CustomColor ?? "#FF6B00";
             }
 
+            // –£—Å—Ç–∞–Ω–∞–≤–ª–∏–≤–∞–µ–º –∑–Ω–∞—á–µ–Ω–∏—è –ø–æ —É–º–æ–ª—á–∞–Ω–∏—é –¥–ª—è —Å–æ—Ä—Ç–∏—Ä–æ–≤–∫–∏
+            SortField = string.IsNullOrEmpty(SortField) ? "FullName" : SortField;
+            SortOrder = string.IsNullOrEmpty(SortOrder) ? "asc" : SortOrder;
+
             var query = _context.Customers.AsQueryable();
 
+            // –§–∏–ª—å—Ç—Ä–∞—Ü–∏—è
             if (!string.IsNullOrEmpty(SearchString))
             {
                 query = query.Where(c =>
@@ -59,14 +71,32 @@ public class IndexModel : PageModel
                     EF.Functions.Like(c.Email, $"%{SearchString}%"));
             }
 
-            Customers = await query
-                .OrderBy(c => c.FullName)
-                .ToListAsync();
+            // –°–æ—Ä—Ç–∏—Ä–æ–≤–∫–∞
+            query = SortField switch
+            {
+                "Phone" => SortOrder == "asc" ? query.OrderBy(c => c.Phone) : query.OrderByDescending(c => c.Phone),
+                "Email" => SortOrder == "asc" ? query.OrderBy(c => c.Email) : query.OrderByDescending(c => c.Email),
+                "Discount" => SortOrder == "asc" ? query.OrderBy(c => c.Discount) : query.OrderByDescending(c => c.Discount),
+                "RegistrationDate" => SortOrder == "asc" ? query.OrderBy(c => c.RegistrationDate) : query.OrderByDescending(c => c.RegistrationDate),
+                _ => SortOrder == "asc" ? query.OrderBy(c => c.FullName) : query.OrderByDescending(c => c.FullName)
+            };
+
+            Customers = await query.ToListAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Œ¯Ë·Í‡ ÔË Á‡„ÛÁÍÂ ÒÔËÒÍ‡ ÍÎËÂÌÚÓ‚");
-            TempData["Error"] = "ÕÂ Û‰‡ÎÓÒ¸ Á‡„ÛÁËÚ¸ ÒÔËÒÓÍ ÍÎËÂÌÚÓ‚.";
+            _logger.LogError(ex, "–û—à–∏–±–∫–∞ –ø—Ä–∏ –∑–∞–≥—Ä—É–∑–∫–µ —Å–ø–∏—Å–∫–∞ –∫–ª–∏–µ–Ω—Ç–æ–≤");
+            TempData["Error"] = GetLocalizedMessage("–ù–µ —É–¥–∞–ª–æ—Å—å –∑–∞–≥—Ä—É–∑–∏—Ç—å —Å–ø–∏—Å–æ–∫ –∫–ª–∏–µ–Ω—Ç–æ–≤.", "Failed to load customers.", "–ö–ª–∏–µ–Ω—Ç—Ç–µ—Ä —Ç—ñ–∑—ñ–º—ñ–Ω –∂“Ø–∫—Ç–µ—É –º“Ø–º–∫—ñ–Ω –±–æ–ª–º–∞–¥—ã.");
         }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

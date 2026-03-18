@@ -58,7 +58,7 @@ public class DetailsModel : PageModel
                 ProductName = oi.Product?.Name ?? "Неизвестно",
                 Quantity = oi.Quantity,
                 Price = oi.PriceAtSale,
-                Total = oi.Quantity * oi.PriceAtSale
+                // Total не присваивается – оно вычисляется автоматически
             }).ToList()
         };
 

@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.ViewModels;
+using System.Security.Claims;
 
 namespace Monoplist.Pages.Warehouse;
 
@@ -21,8 +22,17 @@ public class DetailsModel : PageModel
 
     public WarehouseDetailViewModel Warehouse { get; set; } = new();
 
+    // Свойства для персонализации
+    public string Language { get; set; } = "ru";
+    public bool CompactMode { get; set; }
+    public bool Animations { get; set; } = true;
+    public string Theme { get; set; } = "light";
+    public string CustomColor { get; set; } = "#FF6B00";
+
     public async Task<IActionResult> OnGetAsync(int id)
     {
+        await LoadUserSettings();
+
         try
         {
             var warehouse = await _context.Warehouses
@@ -53,8 +63,8 @@ public class DetailsModel : PageModel
                     Id = p.Id,
                     Name = p.Name,
                     Article = p.Article,
-                    Category = p.Category != null ? p.Category.Name : "��� ���������",
-                    Supplier = p.Supplier != null ? p.Supplier.Name : "��� ����������",
+                    Category = p.Category != null ? p.Category.Name : GetLocalizedMessage("Без категории", "Uncategorized", "Санатсыз"),
+                    Supplier = p.Supplier != null ? p.Supplier.Name : GetLocalizedMessage("Без поставщика", "No supplier", "Жеткізуші жоқ"),
                     CurrentStock = p.CurrentStock,
                     Unit = p.Unit,
                     PurchasePrice = p.PurchasePrice,
@@ -66,9 +76,36 @@ public class DetailsModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "������ ��� �������� ������ {WarehouseId}", id);
-            TempData["Error"] = "�� ������� ��������� ���������� � ������.";
+            _logger.LogError(ex, "Ошибка при загрузке склада {WarehouseId}", id);
+            TempData["Error"] = GetLocalizedMessage(
+                "Не удалось загрузить информацию о складе.",
+                "Failed to load warehouse information.",
+                "Қойма туралы ақпаратты жүктеу мүмкін болмады.");
             return RedirectToPage("./Index");
         }
+    }
+
+    private async Task LoadUserSettings()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Language = user.Language ?? "ru";
+            CompactMode = user.CompactMode;
+            Animations = user.Animations;
+            Theme = user.Theme ?? "light";
+            CustomColor = user.CustomColor ?? "#FF6B00";
+        }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }

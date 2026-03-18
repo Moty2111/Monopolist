@@ -1,5 +1,4 @@
-﻿// Pages/Orders/Create.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -41,6 +40,7 @@ public class CreateModel : PageModel
     {
         await LoadUserSettings();
         await PopulateDropdownsAsync();
+        await LoadAvailableProducts();
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -49,6 +49,22 @@ public class CreateModel : PageModel
         {
             await LoadUserSettings();
             await PopulateDropdownsAsync();
+            await LoadAvailableProducts();
+            return Page();
+        }
+
+        // Удаляем пустые позиции
+        Order.Items = Order.Items.Where(i => i.ProductId > 0 && i.Quantity > 0).ToList();
+
+        if (!Order.Items.Any())
+        {
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Добавьте хотя бы один товар в заказ.",
+                "Add at least one product to the order.",
+                "Кемінде бір тауар қосыңыз."));
+            await LoadUserSettings();
+            await PopulateDropdownsAsync();
+            await LoadAvailableProducts();
             return Page();
         }
 
@@ -61,23 +77,58 @@ public class CreateModel : PageModel
                 OrderNumber = orderNumber,
                 CustomerId = Order.CustomerId,
                 OrderDate = DateTime.Now,
-                TotalAmount = Order.TotalAmount,
+                TotalAmount = Order.Items.Sum(i => i.Quantity * i.Price),
                 Status = Order.Status ?? "Pending",
-                PaymentMethod = Order.PaymentMethod
+                PaymentMethod = Order.PaymentMethod,
+                OrderItems = new List<OrderItem>()
             };
+
+            foreach (var item in Order.Items)
+            {
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product == null)
+                {
+                    ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                        $"Товар с ID {item.ProductId} не найден.",
+                        $"Product with ID {item.ProductId} not found.",
+                        $"{item.ProductId} ID тауар табылмады."));
+                    await LoadUserSettings();
+                    await PopulateDropdownsAsync();
+                    await LoadAvailableProducts();
+                    return Page();
+                }
+
+                order.OrderItems.Add(new OrderItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    PriceAtSale = product.SalePrice
+                });
+
+                // Уменьшаем остаток товара (опционально)
+                product.CurrentStock -= item.Quantity;
+            }
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = GetLocalizedMessage($"Заказ {orderNumber} успешно создан.", $"Order {orderNumber} created successfully.", $"{orderNumber} тапсырысы сәтті құрылды.");
+            TempData["Success"] = GetLocalizedMessage(
+                $"Заказ {orderNumber} успешно создан.",
+                $"Order {orderNumber} created successfully.",
+                $"{orderNumber} тапсырысы сәтті құрылды.");
+
             return RedirectToPage("./Index");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при создании заказа");
-            ModelState.AddModelError(string.Empty, GetLocalizedMessage("Произошла ошибка при сохранении. Попробуйте снова.", "An error occurred while saving. Please try again.", "Сақтау кезінде қате орын алды. Қайталап көріңіз."));
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при сохранении. Попробуйте снова.",
+                "An error occurred while saving. Please try again.",
+                "Сақтау кезінде қате орын алды. Қайталап көріңіз."));
             await LoadUserSettings();
             await PopulateDropdownsAsync();
+            await LoadAvailableProducts();
             return Page();
         }
     }
@@ -108,6 +159,21 @@ public class CreateModel : PageModel
             new() { Value = "Card", Text = Language == "ru" ? "Карта" : Language == "en" ? "Card" : "Карта" },
             new() { Value = "Credit", Text = Language == "ru" ? "Кредит/Рассрочка" : Language == "en" ? "Credit" : "Несие" }
         };
+    }
+
+    private async Task LoadAvailableProducts()
+    {
+        Order.AvailableProducts = await _context.Products
+            .Where(p => p.CurrentStock > 0)
+            .OrderBy(p => p.Name)
+            .Select(p => new SelectItem
+            {
+                Value = p.Id,
+                Text = $"{p.Name} (в наличии: {p.CurrentStock} {p.Unit})",
+                Price = p.SalePrice,
+                Unit = p.Unit
+            })
+            .ToListAsync();
     }
 
     private async Task<string> GenerateOrderNumberAsync()

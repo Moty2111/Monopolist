@@ -18,6 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
+        /* Стили полностью совпадают с Create.cshtml, можно скопировать оттуда */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -111,6 +112,11 @@
             padding: 8px 18px;
         }
 
+        body.compact-mode .items-table th,
+        body.compact-mode .items-table td {
+            padding: 6px 4px;
+        }
+
         body.no-animations * {
             transition: none !important;
             animation: none !important;
@@ -135,7 +141,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -222,7 +227,6 @@
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -466,12 +470,18 @@
             border-left: 4px solid var(--danger);
         }
 
-        /* ===== СТИЛИ ФОРМ ===== */
         .form-container {
-            max-width: 800px;
+            max-width: 1000px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
         .form-group {
+            flex: 1 1 200px;
             margin-bottom: 1.2rem;
         }
 
@@ -510,6 +520,106 @@
             background-position: right 1rem center;
             background-size: 1em;
         }
+
+        .text-danger {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .items-section {
+            margin-top: 30px;
+            border-top: 2px solid var(--accent);
+            padding-top: 20px;
+        }
+
+            .items-section h3 {
+                color: var(--primary);
+                font-size: 1.3rem;
+                margin-bottom: 15px;
+            }
+
+        .add-item-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .btn-add {
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+            .btn-add:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+                box-shadow: 0 4px 10px rgba(16,185,129,0.4);
+            }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+            .items-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: 600;
+                color: var(--primary);
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .items-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
+
+            .items-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
+            }
+
+        .btn-remove {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+            .btn-remove:hover {
+                transform: scale(1.1);
+                filter: brightness(1.1);
+            }
+
+        .total-row {
+            font-weight: 700;
+            background: var(--surface-hover);
+        }
+
+            .total-row td {
+                color: var(--primary);
+            }
 
         .form-actions {
             display: flex;
@@ -555,14 +665,6 @@
                 transform: translateY(-2px);
             }
 
-        .text-danger {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 4px;
-            display: block;
-        }
-
-        /* ===== АДАПТИВНОСТЬ ===== */
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -614,6 +716,19 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .add-item-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .items-table {
+                font-size: 0.8rem;
+            }
+
+                .items-table th, .items-table td {
+                    padding: 6px 4px;
+                }
         }
 
         @@media (max-width: 480px) {
@@ -629,7 +744,6 @@
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -649,7 +763,6 @@
             </nav>
         </aside>
 
-        <!-- Основной контент -->
         <main class="main-content">
             <header class="top-bar">
                 <button class="menu-toggle" id="menuToggle">
@@ -702,39 +815,94 @@
                     }
 
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">@(Model.Language == "ru" ? "Измените данные заказа" : Model.Language == "en" ? "Edit order details" : "Тапсырыс деректерін өзгертіңіз")</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Измените данные заказа и товары" : Model.Language == "en" ? "Edit order details and products" : "Тапсырыс деректері мен тауарларды өзгертіңіз")</p>
 
                     <div class="form-container">
-                        <form method="post">
+                        <form method="post" id="orderForm">
                             <input type="hidden" asp-for="Order.Id" />
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                            <div class="form-group">
-                                <label asp-for="Order.CustomerId">@(Model.Language == "ru" ? "Клиент" : Model.Language == "en" ? "Customer" : "Клиент")</label>
-                                <select asp-for="Order.CustomerId" asp-items="Model.Customers" class="form-control">
-                                    <option value="">@(Model.Language == "ru" ? "-- Выберите клиента --" : Model.Language == "en" ? "-- Select customer --" : "-- Клиентті таңдаңыз --")</option>
-                                </select>
-                                <span asp-validation-for="Order.CustomerId" class="text-danger"></span>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label asp-for="Order.CustomerId">@(Model.Language == "ru" ? "Клиент" : Model.Language == "en" ? "Customer" : "Клиент")</label>
+                                    <select asp-for="Order.CustomerId" asp-items="Model.Customers" class="form-control">
+                                        <option value="">@(Model.Language == "ru" ? "-- Выберите клиента --" : Model.Language == "en" ? "-- Select customer --" : "-- Клиентті таңдаңыз --")</option>
+                                    </select>
+                                    <span asp-validation-for="Order.CustomerId" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="Order.Status">@(Model.Language == "ru" ? "Статус" : Model.Language == "en" ? "Status" : "Мәртебе")</label>
+                                    <select asp-for="Order.Status" asp-items="Model.Statuses" class="form-control"></select>
+                                    <span asp-validation-for="Order.Status" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="Order.PaymentMethod">@(Model.Language == "ru" ? "Способ оплаты" : Model.Language == "en" ? "Payment method" : "Төлем тәсілі")</label>
+                                    <select asp-for="Order.PaymentMethod" asp-items="Model.PaymentMethods" class="form-control">
+                                        <option value="">@(Model.Language == "ru" ? "-- Не выбрано --" : Model.Language == "en" ? "-- Not selected --" : "-- Таңдалмаған --")</option>
+                                    </select>
+                                    <span asp-validation-for="Order.PaymentMethod" class="text-danger"></span>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label asp-for="Order.TotalAmount">@(Model.Language == "ru" ? "Сумма" : Model.Language == "en" ? "Amount" : "Сома")</label>
-                                <input asp-for="Order.TotalAmount" class="form-control" />
-                                <span asp-validation-for="Order.TotalAmount" class="text-danger"></span>
-                            </div>
+                            <div class="items-section">
+                                <h3><i class="fas fa-boxes"></i> @(Model.Language == "ru" ? "Товары в заказе" : Model.Language == "en" ? "Order items" : "Тапсырыстағы тауарлар")</h3>
 
-                            <div class="form-group">
-                                <label asp-for="Order.Status">@(Model.Language == "ru" ? "Статус" : Model.Language == "en" ? "Status" : "Мәртебе")</label>
-                                <select asp-for="Order.Status" asp-items="Model.Statuses" class="form-control"></select>
-                                <span asp-validation-for="Order.Status" class="text-danger"></span>
-                            </div>
+                                <div class="add-item-row">
+                                    <select id="productSelect" class="form-control" style="flex: 2;">
+                                        <option value="">@(Model.Language == "ru" ? "-- Выберите товар --" : Model.Language == "en" ? "-- Select product --" : "-- Тауарды таңдаңыз --")</option>
+                                        @foreach (var p in Model.Order.AvailableProducts)
+                                        {
+                                            <option value="@p.Value" data-price="@p.Price" data-unit="@p.Unit">@p.Text</option>
+                                        }
+                                    </select>
+                                    <input type="number" id="quantityInput" class="form-control" style="flex: 0.5;" min="1" value="1" placeholder="@(Model.Language == "ru" ? "Кол-во" : Model.Language == "en" ? "Qty" : "Саны")" />
+                                    <button type="button" class="btn-add" onclick="addItem()"><i class="fas fa-plus"></i> @(Model.Language == "ru" ? "Добавить" : Model.Language == "en" ? "Add" : "Қосу")</button>
+                                </div>
 
-                            <div class="form-group">
-                                <label asp-for="Order.PaymentMethod">@(Model.Language == "ru" ? "Способ оплаты" : Model.Language == "en" ? "Payment method" : "Төлем тәсілі")</label>
-                                <select asp-for="Order.PaymentMethod" asp-items="Model.PaymentMethods" class="form-control">
-                                    <option value="">@(Model.Language == "ru" ? "-- Не выбрано --" : Model.Language == "en" ? "-- Not selected --" : "-- Таңдалмаған --")</option>
-                                </select>
-                                <span asp-validation-for="Order.PaymentMethod" class="text-danger"></span>
+                                <table class="items-table" id="itemsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>@(Model.Language == "ru" ? "Товар" : Model.Language == "en" ? "Product" : "Тауар")</th>
+                                            <th>@(Model.Language == "ru" ? "Количество" : Model.Language == "en" ? "Quantity" : "Саны")</th>
+                                            <th>@(Model.Language == "ru" ? "Цена" : Model.Language == "en" ? "Price" : "Бағасы")</th>
+                                            <th>@(Model.Language == "ru" ? "Сумма" : Model.Language == "en" ? "Total" : "Сома")</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsBody">
+                                        @for (int i = 0; i < Model.Order.Items.Count; i++)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <input type="hidden" name="Order.Items[@i].ProductId" value="@Model.Order.Items[i].ProductId" />
+                                                    <input type="hidden" name="Order.Items[@i].ProductName" value="@Model.Order.Items[i].ProductName" />
+                                                    @Model.Order.Items[i].ProductName
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="Order.Items[@i].Quantity" value="@Model.Order.Items[i].Quantity" min="1" class="form-control" style="width: 80px;" onchange="updateTotal()" />
+                                                </td>
+                                                <td>
+                                                    <input type="hidden" name="Order.Items[@i].Price" value="@Model.Order.Items[i].Price" />
+                                                    @Model.Order.Items[i].Price.ToString("N0") ₽
+                                                </td>
+                                                <td class="item-total">@Model.Order.Items[i].Total.ToString("N0") ₽</td>
+                                                <td>
+                                                    <button type="button" class="btn-remove" onclick="removeItem(this)"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="total-row">
+                                            <td colspan="3" style="text-align: right;">@(Model.Language == "ru" ? "Итого:" : Model.Language == "en" ? "Total:" : "Барлығы:")</td>
+                                            <td id="grandTotal">@Model.Order.Items.Sum(i => i.Total).ToString("N0") ₽</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                <input type="hidden" asp-for="Order.TotalAmount" id="totalAmountHidden" />
                             </div>
 
                             <div class="form-actions">
@@ -750,6 +918,107 @@
 
     <partial name="_ValidationScriptsPartial" />
     <script>
+        // Глобальные переменные для хранения данных о товарах
+        const availableProducts = @Html.Raw(Json.Serialize(Model.Order.AvailableProducts));
+        let itemIndex = @Model.Order.Items.Count;
+
+        function addItem() {
+            const select = document.getElementById('productSelect');
+            const quantity = parseInt(document.getElementById('quantityInput').value);
+            const selectedOption = select.options[select.selectedIndex];
+
+            if (!selectedOption.value) {
+                alert('@(Model.Language == "ru" ? "Выберите товар" : Model.Language == "en" ? "Select a product" : "Тауарды таңдаңыз")');
+                return;
+            }
+            if (quantity < 1) {
+                alert('@(Model.Language == "ru" ? "Количество должно быть не менее 1" : Model.Language == "en" ? "Quantity must be at least 1" : "Саны кемінде 1 болуы керек")');
+                return;
+            }
+
+            const productId = selectedOption.value;
+            const productName = selectedOption.text.split(' (')[0];
+            const price = parseFloat(selectedOption.dataset.price);
+
+            // Проверка на дублирование
+            const existingRows = document.querySelectorAll('#itemsBody tr');
+            for (let row of existingRows) {
+                const hiddenProductId = row.querySelector('input[name$=".ProductId"]');
+                if (hiddenProductId && hiddenProductId.value === productId) {
+                    alert('@(Model.Language == "ru" ? "Этот товар уже добавлен. Измените количество в существующей строке." : Model.Language == "en" ? "This product is already added. Change quantity in the existing row." : "Бұл тауар қосылған. Санын бар жолда өзгертіңіз.")');
+                    return;
+                }
+            }
+
+            const tbody = document.getElementById('itemsBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>
+                    <input type="hidden" name="Order.Items[${itemIndex}].ProductId" value="${productId}" />
+                    <input type="hidden" name="Order.Items[${itemIndex}].ProductName" value="${productName}" />
+                    ${productName}
+                </td>
+                <td>
+                    <input type="number" name="Order.Items[${itemIndex}].Quantity" value="${quantity}" min="1" class="form-control" style="width: 80px;" onchange="updateTotal()" />
+                </td>
+                <td>
+                    <input type="hidden" name="Order.Items[${itemIndex}].Price" value="${price}" />
+                    ${price.toLocaleString('ru-RU')} ₽
+                </td>
+                <td class="item-total">${(price * quantity).toLocaleString('ru-RU')} ₽</td>
+                <td>
+                    <button type="button" class="btn-remove" onclick="removeItem(this)"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            itemIndex++;
+            updateTotal();
+        }
+
+        function removeItem(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            reindexItems();
+            updateTotal();
+        }
+
+        function reindexItems() {
+            const rows = document.querySelectorAll('#itemsBody tr');
+            rows.forEach((row, index) => {
+                const productIdInput = row.querySelector('input[name$=".ProductId"]');
+                const productNameInput = row.querySelector('input[name$=".ProductName"]');
+                const quantityInput = row.querySelector('input[name$=".Quantity"]');
+                const priceInput = row.querySelector('input[name$=".Price"]');
+
+                if (productIdInput) productIdInput.name = `Order.Items[${index}].ProductId`;
+                if (productNameInput) productNameInput.name = `Order.Items[${index}].ProductName`;
+                if (quantityInput) quantityInput.name = `Order.Items[${index}].Quantity`;
+                if (priceInput) priceInput.name = `Order.Items[${index}].Price`;
+            });
+            itemIndex = rows.length;
+        }
+
+        function updateTotal() {
+            let grandTotal = 0;
+            const rows = document.querySelectorAll('#itemsBody tr');
+            rows.forEach(row => {
+                const quantityInput = row.querySelector('input[name$=".Quantity"]');
+                const priceInput = row.querySelector('input[name$=".Price"]');
+                if (quantityInput && priceInput) {
+                    const quantity = parseInt(quantityInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                    const total = quantity * price;
+                    const totalCell = row.querySelector('.item-total');
+                    if (totalCell) {
+                        totalCell.textContent = total.toLocaleString('ru-RU') + ' ₽';
+                    }
+                    grandTotal += total;
+                }
+            });
+            document.getElementById('grandTotal').textContent = grandTotal.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('totalAmountHidden').value = grandTotal;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
@@ -775,7 +1044,6 @@
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
                 }
-
                 themeToggle.addEventListener('click', () => {
                     body.classList.toggle('dark-theme');
                     if (body.classList.contains('dark-theme')) {
@@ -797,6 +1065,10 @@
                     alert.style.opacity = '0';
                     setTimeout(() => alert.style.display = 'none', 500);
                 }, 5000);
+            });
+
+            document.querySelectorAll('input[name$=".Quantity"]').forEach(input => {
+                input.addEventListener('change', updateTotal);
             });
         });
 

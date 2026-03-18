@@ -3,11 +3,10 @@
 @{
     Layout = null;
     ViewData["Title"] = Model.Warehouse.Name;
-    var userName = User.Identity?.Name ?? "Пользователь";
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -66,6 +65,61 @@
             --card-color-4: #fbbf24;
         }
 
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.compact-mode .form-group {
+            margin-bottom: 1rem;
+        }
+
+        body.compact-mode .form-control {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .btn-primary,
+        body.compact-mode .btn-secondary {
+            padding: 8px 18px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -85,7 +139,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР (полностью из Index) ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -172,7 +225,6 @@
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -279,7 +331,6 @@
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
@@ -302,46 +353,101 @@
             padding-bottom: 10px;
         }
 
-        /* ===== СТИЛИ ФОРМ ===== */
-        .form-container {
-            max-width: 800px;
+        .details-container dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px 20px;
+            max-width: 700px;
+            margin-bottom: 2rem;
         }
 
-        .form-group {
-            margin-bottom: 1.2rem;
+        .details-container dt {
+            font-weight: 700;
+            color: var(--primary);
         }
 
-            .form-group label {
-                display: block;
-                font-weight: 600;
-                font-size: 0.9rem;
-                color: var(--primary);
-                margin-bottom: 5px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
+        .details-container dd {
+            margin: 0;
+            color: var(--text-secondary);
+        }
 
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            font-size: 1rem;
-            border: 2px solid var(--border);
+        .details-image {
+            max-width: 300px;
+            margin-bottom: 20px;
             border-radius: 12px;
-            background: var(--surface);
-            color: var(--text-primary);
-            transition: var(--transition);
-            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            border: 2px solid var(--accent);
         }
 
-            .form-control:focus {
-                outline: none;
-                border-color: var(--primary);
-                box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
+            .details-image img {
+                width: 100%;
+                height: auto;
+                display: block;
             }
 
-        textarea.form-control {
-            resize: vertical;
-            min-height: 80px;
+        .products-section {
+            margin-top: 30px;
+            border-top: 2px solid var(--accent);
+            padding-top: 20px;
+        }
+
+            .products-section h2 {
+                font-size: 1.3rem;
+                color: var(--primary);
+                margin-bottom: 15px;
+            }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+        }
+
+            .data-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: 600;
+                color: var(--primary);
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .data-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
+
+            .data-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
+            }
+
+        .btn-sm {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .btn-sm.btn-info {
+            background: var(--card-color-2);
+        }
+
+        .btn-sm:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
         .form-actions {
@@ -388,14 +494,27 @@
                 transform: translateY(-2px);
             }
 
-        .text-danger {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 4px;
-            display: block;
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* ===== АДАПТИВНОСТЬ ===== */
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -447,6 +566,14 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .data-table {
+                font-size: 0.8rem;
+            }
+
+                .data-table th, .data-table td {
+                    padding: 6px 4px;
+                }
         }
 
         @@media (max-width: 480px) {
@@ -458,123 +585,28 @@
                 padding: 8px 12px;
             }
         }
-        .details-container dl {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 12px 20px;
-            max-width: 700px;
-            margin-bottom: 2rem;
-        }
-
-        .details-container dt {
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .details-container dd {
-            margin: 0;
-            color: var(--text-secondary);
-        }
-
-        .details-image {
-            max-width: 300px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid var(--accent);
-        }
-
-            .details-image img {
-                width: 100%;
-                height: auto;
-                display: block;
-            }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-primary, .btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 22px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-        }
-
-            .btn-primary:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 15px rgba(255,107,0,0.4);
-            }
-
-        .btn-secondary {
-            background: var(--surface);
-            color: var(--text-secondary);
-            border: 2px solid var(--border);
-        }
-
-            .btn-secondary:hover {
-                background: var(--surface-hover);
-                border-color: var(--text-muted);
-                transform: translateY(-2px);
-            }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-helmet-safety"></i>
-                <h2>Моноплист</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index" class="active"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_Sidebar")
 
         <main class="main-content">
-            <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-                <h1 class="page-title">@ViewData["Title"]</h1>
-                <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему"><i class="fas fa-sun"></i></div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> <span>Выйти</span></button>
-                    </form>
-                </div>
-            </header>
+            @await Html.PartialAsync("_Header")
 
             <div class="content">
                 <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
                     <h1>@Model.Warehouse.Name</h1>
-                    <p class="subtitle">Детальная информация о складе</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Детальная информация о складе" : Model.Language == "en" ? "Warehouse details" : "Қойма туралы егжей-тегжейлі ақпарат")</p>
 
                     <div class="details-container">
                         @if (!string.IsNullOrEmpty(Model.Warehouse.ImageUrl))
@@ -585,32 +617,86 @@
                         }
 
                         <dl>
-                            <dt>Название</dt>
+                            <dt>@(Model.Language == "ru" ? "Название" : Model.Language == "en" ? "Name" : "Атауы")</dt>
                             <dd>@Model.Warehouse.Name</dd>
-                            <dt>Местоположение</dt>
-                            <dd>@(Model.Warehouse.Location ?? "Не указано")</dd>
-                            <dt>Вместимость</dt>
+
+                            <dt>@(Model.Language == "ru" ? "Местоположение" : Model.Language == "en" ? "Location" : "Орналасқан жері")</dt>
+                            <dd>@(Model.Warehouse.Location ?? (Model.Language == "ru" ? "Не указано" : Model.Language == "en" ? "Not specified" : "Көрсетілмеген"))</dd>
+
+                            <dt>@(Model.Language == "ru" ? "Вместимость" : Model.Language == "en" ? "Capacity" : "Сыйымдылығы")</dt>
                             <dd>@Model.Warehouse.Capacity</dd>
-                            <dt>Текущая загруженность</dt>
+
+                            <dt>@(Model.Language == "ru" ? "Текущая загруженность" : Model.Language == "en" ? "Current occupancy" : "Ағымдағы жүктеме")</dt>
                             <dd>@Model.Warehouse.CurrentOccupancy</dd>
-                            <dt>Загрузка</dt>
+
+                            <dt>@(Model.Language == "ru" ? "Загрузка" : Model.Language == "en" ? "Occupancy" : "Жүктеме")</dt>
                             <dd>
                                 @{
                                     var percent = Model.Warehouse.Capacity > 0 ? (Model.Warehouse.CurrentOccupancy * 100 / Model.Warehouse.Capacity) : 0;
                                 }
                                 @percent%
                             </dd>
-                            <dt>Описание</dt>
-                            <dd>@(Model.Warehouse.Description ?? "Нет описания")</dd>
+
+                            <dt>@(Model.Language == "ru" ? "Описание" : Model.Language == "en" ? "Description" : "Сипаттама")</dt>
+                            <dd>@(Model.Warehouse.Description ?? (Model.Language == "ru" ? "Нет описания" : Model.Language == "en" ? "No description" : "Сипаттама жоқ"))</dd>
                         </dl>
+
+                        <div class="products-section">
+                            <h2>@(Model.Language == "ru" ? "Товары на складе" : Model.Language == "en" ? "Products in warehouse" : "Қоймадағы тауарлар")</h2>
+
+                            @if (Model.Warehouse.Products.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>@(Model.Language == "ru" ? "Наименование" : Model.Language == "en" ? "Name" : "Атауы")</th>
+                                                <th>@(Model.Language == "ru" ? "Артикул" : Model.Language == "en" ? "SKU" : "Артикул")</th>
+                                                <th>@(Model.Language == "ru" ? "Категория" : Model.Language == "en" ? "Category" : "Санаты")</th>
+                                                <th>@(Model.Language == "ru" ? "Поставщик" : Model.Language == "en" ? "Supplier" : "Жеткізуші")</th>
+                                                <th>@(Model.Language == "ru" ? "Кол-во" : Model.Language == "en" ? "Stock" : "Саны")</th>
+                                                <th>@(Model.Language == "ru" ? "Цена" : Model.Language == "en" ? "Price" : "Бағасы")</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var product in Model.Warehouse.Products)
+                                            {
+                                                <tr>
+                                                    <td>@product.Name</td>
+                                                    <td>@product.Article</td>
+                                                    <td>@product.Category</td>
+                                                    <td>@product.Supplier</td>
+                                                    <td>@product.CurrentStock @product.Unit</td>
+                                                    <td>@product.SalePrice.ToString("N0") ₽</td>
+                                                    <td>
+                                                        <a asp-page="/Products/Details" asp-route-id="@product.Id" class="btn-sm btn-info" title="@(Model.Language == "ru" ? "Перейти к товару" : Model.Language == "en" ? "Go to product" : "Тауарға өту")">
+                                                            <i class="fas fa-info-circle"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">@(Model.Language == "ru" ? "На складе нет товаров." : Model.Language == "en" ? "There are no products in the warehouse." : "Қоймада тауарлар жоқ.")</p>
+                            }
+                        </div>
                     </div>
 
                     <div class="form-actions">
                         @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                         {
-                            <a asp-page="Edit" asp-route-id="@Model.Warehouse.Id" class="btn-primary">Редактировать</a>
+                            <a asp-page="Edit" asp-route-id="@Model.Warehouse.Id" class="btn-primary">
+                                <i class="fas fa-edit"></i> @(Model.Language == "ru" ? "Редактировать" : Model.Language == "en" ? "Edit" : "Өңдеу")
+                            </a>
                         }
-                        <a asp-page="Index" class="btn-secondary">Назад к списку</a>
+                        <a asp-page="Index" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> @(Model.Language == "ru" ? "Назад к списку" : Model.Language == "en" ? "Back to list" : "Тізімге оралу")
+                        </a>
                     </div>
                 </div>
             </div>
@@ -618,12 +704,13 @@
     </div>
 
     <script>
-        // Тот же скрипт
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
+
             if (menuToggle) {
                 menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+
                 document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
@@ -633,25 +720,39 @@
                     }
                 });
             }
+
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
+
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
             });
         });
     </script>

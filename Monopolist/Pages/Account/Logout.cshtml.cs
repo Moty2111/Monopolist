@@ -21,10 +21,18 @@ namespace Monoplist.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
+            var userId = User.FindFirst("UserId")?.Value;
             var userName = User.Identity?.Name;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                Response.Cookies.Delete($"user_avatar_{userId}");
+            }
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             _logger.LogInformation("Пользователь {UserName} вышел", userName ?? "Неизвестный");
 
+            // Очищаем все остальные куки (опционально)
             foreach (var cookie in Request.Cookies.Keys)
             {
                 Response.Cookies.Delete(cookie);

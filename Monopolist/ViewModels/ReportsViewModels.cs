@@ -34,7 +34,10 @@ public class DailySalesViewModel
     public DateTime Date { get; set; }
     public decimal Revenue { get; set; }
     public int OrdersCount { get; set; }
-    public string DayName { get; set; } = string.Empty; // был только get, теперь get; set;
+    public string DayName { get; set; } = string.Empty;
+
+    // Алиас для совместимости с главной панелью
+    public decimal Total => Revenue;
 }
 
 public class CategorySalesViewModel
@@ -43,6 +46,9 @@ public class CategorySalesViewModel
     public decimal TotalAmount { get; set; }
     public int ItemsSold { get; set; }
     public double Percentage { get; set; }
+
+    // Алиас для совместимости с главной панелью
+    public int TotalSold => ItemsSold;
 }
 
 public class PaymentMethodViewModel

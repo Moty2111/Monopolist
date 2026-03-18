@@ -79,6 +79,19 @@ namespace Monoplist.Pages.Account
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
+                // Сохраняем аватарку в куку
+                if (!string.IsNullOrEmpty(user.AvatarUrl))
+                {
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = Input.RememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null,
+                        HttpOnly = false,
+                        Secure = true,
+                        SameSite = SameSiteMode.Lax
+                    };
+                    Response.Cookies.Append($"user_avatar_{user.Id}", user.AvatarUrl, cookieOptions);
+                }
+
                 _logger.LogInformation("Пользователь {Username} успешно вошёл в систему.", user.Username);
                 return LocalRedirect(returnUrl);
             }

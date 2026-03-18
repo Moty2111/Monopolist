@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ ===== */
+        /* Стили из исходного файла, плюс добавлены для элементов сортировки */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -47,7 +47,6 @@
             --transition: all 0.2s ease;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
         body.dark-theme {
             --bg: #1a1a1a;
             --surface: #2d2d2d;
@@ -67,7 +66,6 @@
             --card-color-4: #fbbf24;
         }
 
-        /* ===== КОМПАКТНЫЙ РЕЖИМ ===== */
         body.compact-mode .sidebar {
             width: 240px;
         }
@@ -105,7 +103,24 @@
             margin-bottom: 16px;
         }
 
-        /* ===== ОТКЛЮЧЕНИЕ АНИМАЦИЙ ===== */
+        body.compact-mode .action-bar {
+            margin-bottom: 12px;
+        }
+
+        body.compact-mode .search-input {
+            padding: 6px 12px;
+        }
+
+        body.compact-mode .sort-select {
+            max-width: 150px;
+        }
+
+        body.compact-mode .btn-primary,
+        body.compact-mode .search-btn,
+        body.compact-mode .reset-btn {
+            padding: 6px 16px;
+        }
+
         body.no-animations * {
             transition: none !important;
             animation: none !important;
@@ -130,7 +145,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -217,7 +231,6 @@
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -324,7 +337,6 @@
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
@@ -332,7 +344,6 @@
             box-shadow: var(--shadow-md);
         }
 
-        /* Заголовок страницы */
         .subtitle {
             color: var(--primary);
             font-size: 1.6rem;
@@ -342,7 +353,6 @@
             padding-bottom: 10px;
         }
 
-        /* ===== ПАНЕЛЬ ПОИСКА И ДЕЙСТВИЙ ===== */
         .action-bar {
             display: flex;
             justify-content: space-between;
@@ -357,11 +367,13 @@
             align-items: center;
             gap: 8px;
             flex: 1;
-            max-width: 420px;
+            max-width: 800px;
+            flex-wrap: wrap;
         }
 
         .search-input {
             flex: 1;
+            min-width: 200px;
             padding: 9px 14px;
             border: 2px solid var(--border);
             border-radius: 30px;
@@ -375,6 +387,22 @@
                 outline: none;
                 border-color: var(--primary);
                 box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
+            }
+
+        .sort-select {
+            padding: 9px 14px;
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            font-size: 0.95rem;
+            background: var(--surface);
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+            .sort-select:focus {
+                outline: none;
+                border-color: var(--primary);
             }
 
         .search-btn, .reset-btn {
@@ -436,7 +464,6 @@
                 color: white;
             }
 
-        /* ===== ТАБЛИЦА КЛИЕНТОВ ===== */
         .table-responsive {
             overflow-x: auto;
             margin-top: 1rem;
@@ -455,27 +482,26 @@
             .data-table th:nth-child(1) {
                 width: 20%;
             }
-            /* ФИО */
+
             .data-table th:nth-child(2) {
                 width: 12%;
             }
-            /* Телефон */
+
             .data-table th:nth-child(3) {
                 width: 18%;
             }
-            /* Email */
+
             .data-table th:nth-child(4) {
                 width: 8%;
             }
-            /* Скидка */
+
             .data-table th:nth-child(5) {
                 width: 12%;
             }
-            /* Дата регистрации */
+
             .data-table th:nth-child(6) {
                 width: 10%;
             }
-            /* Действия */
 
             .data-table thead tr {
                 background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
@@ -517,7 +543,6 @@
                 background-color: rgba(255,107,0,0.05);
             }
 
-        /* Кнопки действий */
         .action-buttons {
             display: flex;
             gap: 4px;
@@ -565,7 +590,27 @@
             font-size: 0.9rem;
         }
 
-        /* ===== АДАПТИВНОСТЬ ===== */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
         @@media (max-width: 1200px) {
             .data-table {
                 font-size: 0.75rem;
@@ -585,7 +630,6 @@
             .data-table td:nth-child(3) {
                 display: none;
             }
-            /* Email */
         }
 
         @@media (max-width: 768px) {
@@ -638,6 +682,12 @@
 
             .search-form {
                 max-width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input, .sort-select, .search-btn, .reset-btn {
+                width: 100%;
             }
 
             .btn-primary {
@@ -649,7 +699,6 @@
             .data-table td:nth-child(5) {
                 display: none;
             }
-            /* Дата регистрации */
         }
 
         @@media (max-width: 480px) {
@@ -665,7 +714,6 @@
             .data-table td:nth-child(2) {
                 display: none;
             }
-            /* Телефон */
         }
     </style>
 </head>
@@ -678,14 +726,38 @@
 
             <div class="content">
                 <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
                     <h1 class="subtitle">@(Model.Language == "ru" ? "Управление клиентами" : Model.Language == "en" ? "Customer management" : "Клиенттерді басқару")</h1>
 
-                    <!-- Панель поиска и действий -->
                     <div class="action-bar">
                         <form method="get" class="search-form">
                             <input type="text" class="search-input" name="searchString" placeholder="@(Model.Language == "ru" ? "Поиск по ФИО, телефону, email..." : Model.Language == "en" ? "Search by name, phone, email..." : "Аты, телефоны, email бойынша іздеу...")" value="@Model.SearchString" />
+
+                            <!-- Поле выбора сортировки -->
+                            <select name="sortField" class="sort-select" onchange="this.form.submit()">
+                                <option value="FullName" selected="@(Model.SortField == "FullName")">@(Model.Language == "ru" ? "ФИО" : "Full name")</option>
+                                <option value="Phone" selected="@(Model.SortField == "Phone")">@(Model.Language == "ru" ? "Телефон" : "Phone")</option>
+                                <option value="Email" selected="@(Model.SortField == "Email")">Email</option>
+                                <option value="Discount" selected="@(Model.SortField == "Discount")">@(Model.Language == "ru" ? "Скидка" : "Discount")</option>
+                                <option value="RegistrationDate" selected="@(Model.SortField == "RegistrationDate")">@(Model.Language == "ru" ? "Дата регистрации" : "Registration date")</option>
+                            </select>
+
+                            <!-- Направление сортировки -->
+                            <select name="sortOrder" class="sort-select" onchange="this.form.submit()">
+                                <option value="asc" selected="@(Model.SortOrder == "asc")">@(Model.Language == "ru" ? "По возрастанию" : "Ascending")</option>
+                                <option value="desc" selected="@(Model.SortOrder == "desc")">@(Model.Language == "ru" ? "По убыванию" : "Descending")</option>
+                            </select>
+
                             <button type="submit" class="search-btn"><i class="fas fa-search"></i> @(Model.Language == "ru" ? "Найти" : Model.Language == "en" ? "Search" : "Іздеу")</button>
-                            @if (!string.IsNullOrEmpty(Model.SearchString))
+                            @if (!string.IsNullOrEmpty(Model.SearchString) || !string.IsNullOrEmpty(Model.SortField) || !string.IsNullOrEmpty(Model.SortOrder))
                             {
                                 <a asp-page="Index" class="reset-btn"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Сброс" : Model.Language == "en" ? "Reset" : "Қалпына келтіру")</a>
                             }

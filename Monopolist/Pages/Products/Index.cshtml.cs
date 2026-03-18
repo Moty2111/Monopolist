@@ -2,8 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Monoplist.ViewModels;
 using Monoplist.Data;
+using Monoplist.Models;
+using Monoplist.ViewModels;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
@@ -25,6 +26,13 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? SearchString { get; set; }
 
+    // Параметры сортировки
+    [BindProperty(SupportsGet = true)]
+    public string? SortField { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SortOrder { get; set; } // "asc" или "desc"
+
     // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
@@ -38,11 +46,16 @@ public class IndexModel : PageModel
         {
             await LoadUserSettings();
 
+            // Устанавливаем значения по умолчанию для сортировки
+            SortField = string.IsNullOrEmpty(SortField) ? "Name" : SortField;
+            SortOrder = string.IsNullOrEmpty(SortOrder) ? "asc" : SortOrder;
+
             var query = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .AsQueryable();
 
+            // Фильтрация по поисковому запросу
             if (!string.IsNullOrEmpty(SearchString))
             {
                 query = query.Where(p =>
@@ -50,18 +63,44 @@ public class IndexModel : PageModel
                     (p.Article != null && EF.Functions.Like(p.Article, $"%{SearchString}%")));
             }
 
-            Products = await query
+            // Сортировка в зависимости от выбранного поля и направления
+            IQueryable<Product> sortedQuery = SortField switch
+            {
+                "Article" => SortOrder == "asc"
+                    ? query.OrderBy(p => p.Article)
+                    : query.OrderByDescending(p => p.Article),
+                "PurchasePrice" => SortOrder == "asc"
+                    ? query.OrderBy(p => p.PurchasePrice)
+                    : query.OrderByDescending(p => p.PurchasePrice),
+                "SalePrice" => SortOrder == "asc"
+                    ? query.OrderBy(p => p.SalePrice)
+                    : query.OrderByDescending(p => p.SalePrice),
+                "CurrentStock" => SortOrder == "asc"
+                    ? query.OrderBy(p => p.CurrentStock)
+                    : query.OrderByDescending(p => p.CurrentStock),
+                "CategoryName" => SortOrder == "asc"
+                    ? query.OrderBy(p => p.Category.Name)
+                    : query.OrderByDescending(p => p.Category.Name),
+                "SupplierName" => SortOrder == "asc"
+                    ? query.OrderBy(p => p.Supplier.Name)
+                    : query.OrderByDescending(p => p.Supplier.Name),
+                _ => SortOrder == "asc"
+                    ? query.OrderBy(p => p.Name)
+                    : query.OrderByDescending(p => p.Name)
+            };
+
+            Products = await sortedQuery
                 .Select(p => new ProductIndexViewModel
                 {
                     Id = p.Id,
                     Name = p.Name,
                     Article = p.Article,
-                    CategoryName = p.Category != null ? p.Category.Name : "Без категории",
+                    CategoryName = p.Category != null ? p.Category.Name : GetLocalizedMessage("Без категории", "Uncategorized", "Санатсыз"),
                     Unit = p.Unit,
                     PurchasePrice = p.PurchasePrice,
                     SalePrice = p.SalePrice,
                     CurrentStock = p.CurrentStock,
-                    SupplierName = p.Supplier != null ? p.Supplier.Name : "Не указан"
+                    SupplierName = p.Supplier != null ? p.Supplier.Name : GetLocalizedMessage("Не указан", "Not specified", "Көрсетілмеген")
                 })
                 .ToListAsync();
         }

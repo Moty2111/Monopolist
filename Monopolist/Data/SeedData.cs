@@ -7,7 +7,6 @@ public static class SeedData
 {
     public static void Initialize(AppDbContext context)
     {
-        // Гарантируем создание базы данных (для разработки)
         context.Database.EnsureCreated();
 
         using var transaction = context.Database.BeginTransaction();
@@ -31,13 +30,31 @@ public static class SeedData
 
     private static void SeedUsers(AppDbContext context)
     {
-        if (context.Users.Any()) return; // пропускаем, если уже есть
+        if (context.Users.Any()) return;
 
         var users = new[]
         {
-            new User { Username = "admin", Password = "admin123", Role = "Admin" },
-            new User { Username = "manager", Password = "manager123", Role = "Manager" },
-            new User { Username = "seller", Password = "seller123", Role = "Seller" }
+            new User
+            {
+                Username = "admin",
+                Password = "admin123",
+                Role = "Admin",
+                AvatarUrl = "https://i.pinimg.com/736x/6f/f5/35/6ff53530bda3f6119c58e31b8ae9952c.jpg"
+            },
+            new User
+            {
+                Username = "manager",
+                Password = "manager123",
+                Role = "Manager",
+                AvatarUrl = "https://i.pinimg.com/736x/6f/f5/35/6ff53530bda3f6119c58e31b8ae9952c.jpg"
+            },
+            new User
+            {
+                Username = "seller",
+                Password = "seller123",
+                Role = "Seller",
+                AvatarUrl = "https://i.pinimg.com/736x/6f/f5/35/6ff53530bda3f6119c58e31b8ae9952c.jpg"
+            }
         };
 
         context.Users.AddRange(users);

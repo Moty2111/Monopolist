@@ -1,4 +1,4 @@
-// Pages/Orders/Index.cshtml.cs
+﻿// Pages/Orders/Index.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -24,9 +24,16 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? SearchString { get; set; }
 
+    // Параметры сортировки
+    [BindProperty(SupportsGet = true)]
+    public string? SortField { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SortOrder { get; set; }
+
     public IList<OrderIndexViewModel> Orders { get; set; } = new List<OrderIndexViewModel>();
 
-    // �������� ��� ��������������
+    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -48,6 +55,10 @@ public class IndexModel : PageModel
                 CustomColor = user.CustomColor ?? "#FF6B00";
             }
 
+            // Устанавливаем значения по умолчанию для сортировки
+            SortField = string.IsNullOrEmpty(SortField) ? "OrderDate" : SortField;
+            SortOrder = string.IsNullOrEmpty(SortOrder) ? "desc" : SortOrder; // по умолчанию по убыванию даты
+
             var query = _context.Orders
                 .Include(o => o.Customer)
                 .AsQueryable();
@@ -59,13 +70,35 @@ public class IndexModel : PageModel
                     (o.Customer != null && EF.Functions.Like(o.Customer.FullName, $"%{SearchString}%")));
             }
 
+            // Сортировка
+            query = SortField switch
+            {
+                "OrderNumber" => SortOrder == "asc"
+                    ? query.OrderBy(o => o.OrderNumber)
+                    : query.OrderByDescending(o => o.OrderNumber),
+                "CustomerName" => SortOrder == "asc"
+                    ? query.OrderBy(o => o.Customer.FullName)
+                    : query.OrderByDescending(o => o.Customer.FullName),
+                "TotalAmount" => SortOrder == "asc"
+                    ? query.OrderBy(o => o.TotalAmount)
+                    : query.OrderByDescending(o => o.TotalAmount),
+                "Status" => SortOrder == "asc"
+                    ? query.OrderBy(o => o.Status)
+                    : query.OrderByDescending(o => o.Status),
+                "PaymentMethod" => SortOrder == "asc"
+                    ? query.OrderBy(o => o.PaymentMethod)
+                    : query.OrderByDescending(o => o.PaymentMethod),
+                _ => SortOrder == "asc"
+                    ? query.OrderBy(o => o.OrderDate)
+                    : query.OrderByDescending(o => o.OrderDate)
+            };
+
             Orders = await query
-                .OrderByDescending(o => o.OrderDate)
                 .Select(o => new OrderIndexViewModel
                 {
                     Id = o.Id,
                     OrderNumber = o.OrderNumber,
-                    CustomerName = o.Customer != null ? o.Customer.FullName : "����������",
+                    CustomerName = o.Customer != null ? o.Customer.FullName : GetLocalizedMessage("Неизвестно", "Unknown", "Белгісіз"),
                     OrderDate = o.OrderDate,
                     TotalAmount = o.TotalAmount,
                     Status = o.Status,
@@ -75,8 +108,18 @@ public class IndexModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "������ ��� �������� ������ �������");
-            TempData["Error"] = "�� ������� ��������� ������ �������.";
+            _logger.LogError(ex, "Ошибка при загрузке списка заказов");
+            TempData["Error"] = GetLocalizedMessage("Не удалось загрузить список заказов.", "Failed to load orders.", "Тапсырыстар тізімін жүктеу мүмкін болмады.");
         }
+    }
+
+    private string GetLocalizedMessage(string ru, string en, string kk)
+    {
+        return Language switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
     }
 }
