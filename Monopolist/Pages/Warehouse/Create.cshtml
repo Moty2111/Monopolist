@@ -2,12 +2,11 @@
 @model Monoplist.Pages.Warehouse.CreateModel
 @{
     Layout = null;
-    ViewData["Title"] = "Добавление склада";
-    var userName = User.Identity?.Name ?? "Пользователь";
+    ViewData["Title"] = Model.Language == "ru" ? "Добавление склада" : (Model.Language == "en" ? "Add warehouse" : "Қойманы қосу");
 }
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@Model.Language">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,9 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== ОБЩИЕ ПЕРЕМЕННЫЕ (как в Index.cshtml) ===== */
         :root {
-            --primary: #FF6B00;
+            --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
@@ -67,6 +65,61 @@
             --card-color-4: #fbbf24;
         }
 
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.compact-mode .form-group {
+            margin-bottom: 1rem;
+        }
+
+        body.compact-mode .form-control {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .btn-primary,
+        body.compact-mode .btn-secondary {
+            padding: 8px 18px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -86,7 +139,6 @@
             min-height: 100vh;
         }
 
-        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -173,7 +225,6 @@
                             color: var(--primary);
                         }
 
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -280,7 +331,6 @@
             flex: 1;
         }
 
-        /* ===== КОМПОНЕНТЫ ===== */
         .dashboard {
             background: var(--surface);
             border-radius: 22px;
@@ -303,7 +353,6 @@
             padding-bottom: 10px;
         }
 
-        /* ===== СТИЛИ ФОРМ ===== */
         .form-container {
             max-width: 1000px;
         }
@@ -352,7 +401,6 @@
             min-height: 80px;
         }
 
-        /* ===== СТИЛИ ДЛЯ ТАБЛИЦЫ ТОВАРОВ ===== */
         .products-section {
             margin-top: 30px;
             border-top: 2px solid var(--accent);
@@ -402,6 +450,30 @@
                 cursor: pointer;
                 accent-color: var(--primary);
             }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+            .search-box input {
+                width: 100%;
+                padding: 10px 15px;
+                border: 2px solid var(--border);
+                border-radius: 30px;
+                font-size: 0.95rem;
+                background: var(--surface);
+                color: var(--text-primary);
+            }
+
+        .select-all {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: var(--surface-hover);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .stock-badge {
             display: inline-block;
@@ -472,29 +544,27 @@
             display: block;
         }
 
-        .search-box {
-            margin-bottom: 15px;
-        }
-
-            .search-box input {
-                width: 100%;
-                padding: 10px 15px;
-                border: 2px solid var(--border);
-                border-radius: 30px;
-                font-size: 0.95rem;
-            }
-
-        .select-all {
-            margin-bottom: 10px;
-            padding: 8px;
-            background: var(--surface-hover);
-            border-radius: 8px;
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        /* ===== АДАПТИВНОСТЬ ===== */
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -572,55 +642,26 @@
         }
     </style>
 </head>
-<body>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-helmet-safety"></i>
-                <h2>Моноплист</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a asp-page="/Index"><i class="fas fa-home"></i> Главная панель</a></li>
-                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> Каталог товаров</a></li>
-                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> Продажи</a></li>
-                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> Клиенты</a></li>
-                    <li><a asp-page="/Warehouse/Index" class="active"><i class="fas fa-warehouse"></i> Склад</a></li>
-                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> Поставщики</a></li>
-                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> Отчеты</a></li>
-                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> Настройки</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_Sidebar")
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1 class="page-title">@ViewData["Title"]</h1>
-                <div class="user-info">
-                    <span><i class="fas fa-user-circle"></i> @userName</span>
-                    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <form method="post" asp-page="/Account/Logout" style="display: inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Выйти</span>
-                        </button>
-                    </form>
-                </div>
-            </header>
+            @await Html.PartialAsync("_Header")
 
-            <!-- Контент страницы -->
             <div class="content">
                 <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">Заполните информацию о складе</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Заполните информацию о складе" : Model.Language == "en" ? "Fill in the warehouse information" : "Қойма туралы ақпаратты толтырыңыз")</p>
 
                     <div class="form-container">
                         <form method="post" id="warehouseForm">
@@ -628,61 +669,60 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label asp-for="WarehouseInput.Name">Название склада</label>
-                                    <input asp-for="WarehouseInput.Name" class="form-control" placeholder="Например: Центральный склад" />
+                                    <label asp-for="WarehouseInput.Name">@(Model.Language == "ru" ? "Название склада" : Model.Language == "en" ? "Warehouse name" : "Қойма атауы")</label>
+                                    <input asp-for="WarehouseInput.Name" class="form-control" placeholder="@(Model.Language == "ru" ? "Например: Центральный склад" : Model.Language == "en" ? "e.g. Central warehouse" : "Мысалы: Орталық қойма")" />
                                     <span asp-validation-for="WarehouseInput.Name" class="text-danger"></span>
                                 </div>
 
                                 <div class="form-group">
-                                    <label asp-for="WarehouseInput.Location">Местоположение</label>
-                                    <input asp-for="WarehouseInput.Location" class="form-control" placeholder="Город, улица" />
+                                    <label asp-for="WarehouseInput.Location">@(Model.Language == "ru" ? "Местоположение" : Model.Language == "en" ? "Location" : "Орналасқан жері")</label>
+                                    <input asp-for="WarehouseInput.Location" class="form-control" placeholder="@(Model.Language == "ru" ? "Город, улица" : Model.Language == "en" ? "City, street" : "Қала, көше")" />
                                     <span asp-validation-for="WarehouseInput.Location" class="text-danger"></span>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="WarehouseInput.ImageUrl">URL изображения</label>
+                                <label asp-for="WarehouseInput.ImageUrl">@(Model.Language == "ru" ? "URL изображения" : Model.Language == "en" ? "Image URL" : "Сурет URL-і")</label>
                                 <input asp-for="WarehouseInput.ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
                                 <span asp-validation-for="WarehouseInput.ImageUrl" class="text-danger"></span>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="WarehouseInput.Description">Описание</label>
-                                <textarea asp-for="WarehouseInput.Description" class="form-control" rows="3" placeholder="Краткое описание склада"></textarea>
+                                <label asp-for="WarehouseInput.Description">@(Model.Language == "ru" ? "Описание" : Model.Language == "en" ? "Description" : "Сипаттама")</label>
+                                <textarea asp-for="WarehouseInput.Description" class="form-control" rows="3" placeholder="@(Model.Language == "ru" ? "Краткое описание склада" : Model.Language == "en" ? "Brief description of the warehouse" : "Қойманың қысқаша сипаттамасы")"></textarea>
                                 <span asp-validation-for="WarehouseInput.Description" class="text-danger"></span>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label asp-for="WarehouseInput.Capacity">Вместимость (макс. количество единиц)</label>
+                                    <label asp-for="WarehouseInput.Capacity">@(Model.Language == "ru" ? "Вместимость" : Model.Language == "en" ? "Capacity" : "Сыйымдылығы")</label>
                                     <input asp-for="WarehouseInput.Capacity" class="form-control" type="number" min="1" />
                                     <span asp-validation-for="WarehouseInput.Capacity" class="text-danger"></span>
                                 </div>
                             </div>
 
-                            <!-- Блок выбора товаров -->
                             <div class="products-section">
-                                <h3><i class="fas fa-boxes"></i> Товары на складе</h3>
-                                <p class="text-muted">Выберите товары, которые будут храниться на этом складе</p>
+                                <h3><i class="fas fa-boxes"></i> @(Model.Language == "ru" ? "Товары на складе" : Model.Language == "en" ? "Products in warehouse" : "Қоймадағы тауарлар")</h3>
+                                <p class="text-muted">@(Model.Language == "ru" ? "Выберите товары, которые будут храниться на этом складе (каждый товар может находиться только на одном складе)" : Model.Language == "en" ? "Select products that will be stored in this warehouse (each product can be in only one warehouse)" : "Осы қоймада сақталатын тауарларды таңдаңыз (әрбір тауар тек бір қоймада бола алады)")</p>
 
                                 <div class="search-box">
-                                    <input type="text" id="productSearch" class="form-control" placeholder="Поиск товаров..." />
+                                    <input type="text" id="productSearch" class="form-control" placeholder="@(Model.Language == "ru" ? "Поиск товаров..." : Model.Language == "en" ? "Search products..." : "Тауарларды іздеу...")" />
                                 </div>
 
                                 <div class="select-all">
                                     <input type="checkbox" id="selectAll" />
-                                    <label for="selectAll">Выбрать все товары</label>
+                                    <label for="selectAll">@(Model.Language == "ru" ? "Выбрать все товары" : Model.Language == "en" ? "Select all products" : "Барлық тауарларды таңдау")</label>
                                 </div>
 
                                 <div class="table-responsive">
                                     <table class="products-table" id="productsTable">
                                         <thead>
                                             <tr>
-                                                <th style="width: 50px;">Выбрать</th>
-                                                <th>Товар</th>
-                                                <th>Артикул</th>
-                                                <th>Остаток</th>
-                                                <th>Ед.</th>
+                                                <th style="width: 50px;">@(Model.Language == "ru" ? "Выбрать" : Model.Language == "en" ? "Select" : "Таңдау")</th>
+                                                <th>@(Model.Language == "ru" ? "Товар" : Model.Language == "en" ? "Product" : "Тауар")</th>
+                                                <th>@(Model.Language == "ru" ? "Артикул" : Model.Language == "en" ? "SKU" : "Артикул")</th>
+                                                <th>@(Model.Language == "ru" ? "Остаток" : Model.Language == "en" ? "Stock" : "Қалдық")</th>
+                                                <th>@(Model.Language == "ru" ? "Ед." : Model.Language == "en" ? "Unit" : "Өлш.")</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -713,8 +753,8 @@
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Создать склад</button>
-                                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> Отмена</a>
+                                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> @(Model.Language == "ru" ? "Создать склад" : Model.Language == "en" ? "Create warehouse" : "Қойманы құру")</button>
+                                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Отмена" : Model.Language == "en" ? "Cancel" : "Бас тарту")</a>
                             </div>
                         </form>
                     </div>
@@ -723,7 +763,6 @@
         </main>
     </div>
 
-    <!-- Скрипты валидации -->
     <partial name="_ValidationScriptsPartial" />
 
     <script>
@@ -733,14 +772,12 @@
             const body = document.body;
 
             if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    body.classList.toggle('sidebar-open');
-                });
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
 
-                document.addEventListener('click', function(event) {
+                document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
                             body.classList.remove('sidebar-open');
                         }
                     }
@@ -749,67 +786,70 @@
 
             // Переключение темы
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = themeToggle.querySelector('i');
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
 
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-
-            themeToggle.addEventListener('click', function() {
-                body.classList.toggle('dark-theme');
-                if (body.classList.contains('dark-theme')) {
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
                 }
+
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+            // Автоматическое скрытие алертов
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
             });
 
             // Поиск по товарам
             const searchInput = document.getElementById('productSearch');
             if (searchInput) {
                 searchInput.addEventListener('keyup', function() {
-                    const searchTerm = this.value.toLowerCase();
-                    const rows = document.querySelectorAll('.product-row');
-
-                    rows.forEach(row => {
+                    const term = this.value.toLowerCase();
+                    document.querySelectorAll('.product-row').forEach(row => {
                         const name = row.getAttribute('data-name') || '';
                         const article = row.getAttribute('data-article') || '';
-
-                        if (name.includes(searchTerm) || article.includes(searchTerm)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
+                        row.style.display = (name.includes(term) || article.includes(term)) ? '' : 'none';
                     });
                 });
             }
 
             // Выделить все
-            const selectAllCheckbox = document.getElementById('selectAll');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    const checkboxes = document.querySelectorAll('.product-checkbox:visible');
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.closest('tr').style.display !== 'none') {
-                            checkbox.checked = selectAllCheckbox.checked;
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    document.querySelectorAll('.product-checkbox:visible').forEach(cb => {
+                        if (cb.closest('tr').style.display !== 'none') {
+                            cb.checked = selectAll.checked;
                         }
                     });
                 });
 
-                // Обновляем состояние "Выбрать все" при изменении отдельных чекбоксов
-                document.querySelectorAll('.product-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('change', function() {
-                        const visibleCheckboxes = document.querySelectorAll('.product-checkbox:visible');
-                        const checkedVisible = document.querySelectorAll('.product-checkbox:visible:checked');
-                        selectAllCheckbox.checked = visibleCheckboxes.length === checkedVisible.length;
-                        selectAllCheckbox.indeterminate = checkedVisible.length > 0 && checkedVisible.length < visibleCheckboxes.length;
+                document.querySelectorAll('.product-checkbox').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        const visible = document.querySelectorAll('.product-checkbox:visible');
+                        const checked = document.querySelectorAll('.product-checkbox:visible:checked');
+                        selectAll.checked = visible.length === checked.length;
+                        selectAll.indeterminate = checked.length > 0 && checked.length < visible.length;
                     });
                 });
             }
