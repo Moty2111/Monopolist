@@ -16,7 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Стили из исходного файла, плюс добавлены для элементов сортировки */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -32,8 +31,7 @@
             --border: #e2e8f0;
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(255,107,0,0.15);
-            --shadow-hover: 0 12px 28px rgba(255,215,0,0.25);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
             --success: #10b981;
             --success-bg: #d1fae5;
             --danger: #ef4444;
@@ -474,73 +472,25 @@
             width: 100%;
             border-collapse: collapse;
             background: var(--surface);
-            font-size: 0.8rem;
-            table-layout: fixed;
-            word-wrap: break-word;
         }
 
-            .data-table th:nth-child(1) {
-                width: 20%;
-            }
-
-            .data-table th:nth-child(2) {
-                width: 12%;
-            }
-
-            .data-table th:nth-child(3) {
-                width: 18%;
-            }
-
-            .data-table th:nth-child(4) {
-                width: 8%;
-            }
-
-            .data-table th:nth-child(5) {
-                width: 12%;
-            }
-
-            .data-table th:nth-child(6) {
-                width: 10%;
-            }
-
-            .data-table thead tr {
-                background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
-            }
-
             .data-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
                 text-align: left;
-                padding: 8px 4px;
-                color: var(--text-primary);
-                font-weight: 700;
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
+                font-weight: 600;
+                color: var(--primary);
                 border-bottom: 2px solid var(--accent);
-                white-space: normal;
-                word-break: break-word;
             }
-
-                .data-table th i {
-                    margin-right: 2px;
-                    color: var(--primary);
-                    font-size: 0.8rem;
-                }
 
             .data-table td {
-                padding: 8px 4px;
+                padding: 10px 8px;
                 border-bottom: 1px solid var(--border);
                 color: var(--text-secondary);
-                font-weight: 600;
-                white-space: normal;
-                word-break: break-word;
             }
 
-            .data-table tbody tr:nth-child(even) {
-                background-color: rgba(0,0,0,0.02);
-            }
-
-            .data-table tbody tr:hover td {
-                background-color: rgba(255,107,0,0.05);
+            .data-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
             }
 
         .action-buttons {

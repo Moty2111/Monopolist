@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// Pages/Settings/Security.cshtml.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
 using Monoplist.ViewModels;
-using OtpNet;          // NuGet: Otp.NET
-using QRCoder;         // NuGet: QRCoder
+using OtpNet;
+using QRCoder;
 using System.Security.Claims;
-using System.Text;
 
 namespace Monoplist.Pages.Settings;
 
@@ -51,11 +51,11 @@ public class SecurityModel : PageModel
 
         // Загружаем настройки безопасности из БД
         Input.TwoFactorEnabled = user.TwoFactorEnabled;
-        Input.EmailConfirmed = !string.IsNullOrEmpty(user.Email); // В реальном проекте добавьте поле EmailConfirmed
-        Input.PhoneConfirmed = !string.IsNullOrEmpty(user.PhoneNumber); // Добавьте поле PhoneConfirmed
+        Input.EmailConfirmed = !string.IsNullOrEmpty(user.Email);
+        Input.PhoneConfirmed = !string.IsNullOrEmpty(user.PhoneNumber);
 
-        // Генерируем или получаем существующие сессии
-        Input.ActiveSessions = GetActiveSessions(userId);
+        // Получаем активные сессии из БД
+        Input.ActiveSessions = await GetActiveSessionsAsync(userId);
 
         return Page();
     }
@@ -76,7 +76,7 @@ public class SecurityModel : PageModel
         user.TwoFactorEnabled = false; // Ещё не подтверждён
         await _context.SaveChangesAsync();
 
-        // Создаём URI для TOTP (otpauth://totp/{issuer}:{account}?secret={secret}&issuer={issuer})
+        // Создаём URI для TOTP
         string issuer = "Моноплист";
         string account = user.Email ?? user.Username;
         string totpUri = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(account)}?secret={secretKey}&issuer={Uri.EscapeDataString(issuer)}";
@@ -91,7 +91,7 @@ public class SecurityModel : PageModel
         }
 
         TempData["SecretKey"] = secretKey;
-        TempData["ManualSetupKey"] = secretKey; // Для ручного ввода
+        TempData["ManualSetupKey"] = secretKey;
 
         TempData["Success"] = GetLocalizedMessage(
             "Отсканируйте QR-код в приложении Google Authenticator и введите код для подтверждения.",
@@ -241,11 +241,20 @@ public class SecurityModel : PageModel
     public async Task<IActionResult> OnPostRevokeSessionAsync(string sessionId)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
         await LoadUserSettings(userId);
 
-        Response.Cookies.Delete($"session_{userId}_{sessionId}");
+        var session = await _context.UserSessions
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.SessionId == sessionId);
+        if (session != null)
+        {
+            _context.UserSessions.Remove(session);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Сессия {SessionId} завершена пользователем {UserId}", sessionId, userId);
+        }
 
-        _logger.LogInformation("Сессия {SessionId} завершена", sessionId);
         TempData["Success"] = GetLocalizedMessage(
             "Сессия завершена.",
             "Session terminated.",
@@ -258,16 +267,18 @@ public class SecurityModel : PageModel
     public async Task<IActionResult> OnPostRevokeAllSessionsAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
         await LoadUserSettings(userId);
 
         var currentSessionId = Request.Cookies["session_id"];
-        foreach (var cookie in Request.Cookies.Keys)
-        {
-            if (cookie.StartsWith($"session_{userId}_") && cookie != $"session_{userId}_{currentSessionId}")
-            {
-                Response.Cookies.Delete(cookie);
-            }
-        }
+        var otherSessions = await _context.UserSessions
+            .Where(s => s.UserId == userId && s.SessionId != currentSessionId)
+            .ToListAsync();
+
+        _context.UserSessions.RemoveRange(otherSessions);
+        await _context.SaveChangesAsync();
 
         TempData["Success"] = GetLocalizedMessage(
             "Все остальные сессии завершены.",
@@ -275,6 +286,28 @@ public class SecurityModel : PageModel
             "Барлық басқа сессиялар аяқталды.");
 
         return RedirectToPage();
+    }
+
+    // Получение активных сессий из БД
+    private async Task<List<SessionInfo>> GetActiveSessionsAsync(int userId)
+    {
+        var currentSessionId = Request.Cookies["session_id"];
+
+        var sessions = await _context.UserSessions
+            .Where(s => s.UserId == userId && s.IsActive)
+            .OrderByDescending(s => s.LoginTime)
+            .Select(s => new SessionInfo
+            {
+                Id = s.SessionId,
+                Device = s.DeviceInfo ?? "Неизвестно",
+                Browser = s.BrowserInfo ?? "",
+                IpAddress = s.IpAddress ?? "",
+                LoginTime = s.LoginTime,
+                IsCurrent = s.SessionId == currentSessionId
+            })
+            .ToListAsync();
+
+        return sessions;
     }
 
     private async Task LoadUserSettings(int userId)
@@ -298,67 +331,5 @@ public class SecurityModel : PageModel
             "kk" => kk,
             _ => ru
         };
-    }
-
-    private List<SessionInfo> GetActiveSessions(int userId)
-    {
-        var sessions = new List<SessionInfo>();
-        var currentSessionId = Request.Cookies["session_id"] ?? Guid.NewGuid().ToString();
-
-        if (string.IsNullOrEmpty(Request.Cookies["session_id"]))
-        {
-            Response.Cookies.Append("session_id", currentSessionId, new CookieOptions
-            {
-                Expires = DateTime.Now.AddDays(30),
-                HttpOnly = true,
-                SameSite = SameSiteMode.Lax
-            });
-        }
-
-        sessions.Add(new SessionInfo
-        {
-            Id = currentSessionId,
-            Device = GetDeviceInfo(),
-            Browser = GetBrowserInfo(),
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
-            LoginTime = DateTime.Now,
-            IsCurrent = true
-        });
-
-        // Демо-сессии для примера (в реальном проекте – из БД)
-        for (int i = 1; i <= 3; i++)
-        {
-            sessions.Add(new SessionInfo
-            {
-                Id = $"demo_{i}",
-                Device = i % 2 == 0 ? "iPhone 12" : "Windows PC",
-                Browser = i % 2 == 0 ? "Safari" : "Chrome",
-                IpAddress = "192.168.1.10" + i,
-                LoginTime = DateTime.Now.AddDays(-i),
-                IsCurrent = false
-            });
-        }
-
-        return sessions;
-    }
-
-    private string GetDeviceInfo()
-    {
-        var userAgent = Request.Headers["User-Agent"].ToString();
-        if (userAgent.Contains("Windows")) return "Windows PC";
-        if (userAgent.Contains("Mac")) return "Mac";
-        if (userAgent.Contains("iPhone")) return "iPhone";
-        if (userAgent.Contains("Android")) return "Android";
-        return "Неизвестное устройство";
-    }
-
-    private string GetBrowserInfo()
-    {
-        var userAgent = Request.Headers["User-Agent"].ToString();
-        if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg")) return "Chrome";
-        if (userAgent.Contains("Firefox")) return "Firefox";
-        if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome")) return "Safari";
-        if (userAgent.Contains("Edg")) return "Edge";
-        return "Неизвестный браузер";
     }
 }

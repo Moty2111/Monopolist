@@ -595,39 +595,25 @@
             width: 100%;
             border-collapse: collapse;
             background: var(--surface);
-            font-size: 0.8rem;
-            table-layout: fixed;
-            word-wrap: break-word;
         }
 
             .data-table th {
+                background: var(--surface-hover);
+                padding: 12px 8px;
                 text-align: left;
-                padding: 8px 4px;
-                color: var(--text-primary);
-                font-weight: 700;
-                font-size: 0.75rem;
-                text-transform: uppercase;
+                font-weight: 600;
+                color: var(--primary);
                 border-bottom: 2px solid var(--accent);
             }
 
-                .data-table th i {
-                    margin-right: 2px;
-                    color: var(--primary);
-                }
-
             .data-table td {
-                padding: 8px 4px;
+                padding: 10px 8px;
                 border-bottom: 1px solid var(--border);
                 color: var(--text-secondary);
-                font-weight: 600;
             }
 
-            .data-table tbody tr:nth-child(even) {
-                background-color: rgba(0,0,0,0.02);
-            }
-
-            .data-table tbody tr:hover td {
-                background-color: rgba(255,107,0,0.05);
+            .data-table tbody tr:hover {
+                background: rgba(255,107,0,0.05);
             }
 
         .action-buttons {

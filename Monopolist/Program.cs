@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
+using Monoplist.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,10 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+
+// Добавляем middleware для обновления активности сессии
+app.UseMiddleware<Monoplist.Middleware.SessionMiddleware>();
+
 app.UseAuthorization();
 
 // Маппинг Razor Pages

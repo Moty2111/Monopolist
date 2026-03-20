@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Warehouse> Warehouses { get; set; } // Добавлено
+    public DbSet<UserSession> UserSessions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,5 +57,11 @@ public class AppDbContext : DbContext
             .WithMany(w => w.Products)
             .HasForeignKey(p => p.WarehouseId)
             .OnDelete(DeleteBehavior.SetNull); // При удалении склада товары остаются без склада
+
+        modelBuilder.Entity<UserSession>()
+        .HasOne(us => us.User)
+        .WithMany()
+        .HasForeignKey(us => us.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
     }
 }
