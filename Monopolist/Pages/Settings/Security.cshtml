@@ -1,4 +1,5 @@
 ﻿@page
+@using Monoplist.Helpers
 @model Monoplist.Pages.Settings.SecurityModel
 @{
     Layout = null;
@@ -784,15 +785,11 @@
                 <div class="dashboard">
                     @if (TempData["Success"] != null)
                     {
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> @TempData["Success"]
-                        </div>
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
                     }
                     @if (TempData["Error"] != null)
                     {
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
-                        </div>
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
                     }
                     @if (TempData["QrCodeBase64"] != null)
                     {
@@ -933,7 +930,7 @@
                                     <th>IP @(Model.Language == "ru" ? "адрес" : Model.Language == "en" ? "address" : "мекенжайы")</th>
                                     <th>@(Model.Language == "ru" ? "Время входа" : Model.Language == "en" ? "Login time" : "Кіру уақыты")</th>
                                     <th></th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var session in Model.Input.ActiveSessions)
@@ -961,7 +958,7 @@
                                             @session.Device (@session.Browser)
                                         </td>
                                         <td>@session.IpAddress</td>
-                                        <td>@session.LoginTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td>@TimeZoneHelper.Format(session.LoginTime)</td>
                                         <td>
                                             @if (session.IsCurrent)
                                             {
@@ -980,11 +977,19 @@
                                         </td>
                                     </tr>
                                 }
+                                
+                                @if (!Model.Input.ActiveSessions.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center" style="padding: 20px; color: var(--text-muted);">
+                                            @(Model.Language == "ru" ? "Нет активных сессий." : Model.Language == "en" ? "No active sessions." : "Белсенді сессиялар жоқ.")
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Кнопки навигации -->
                     <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 20px;">
                         <a asp-page="Index" class="btn-secondary">
                             <i class="fas fa-arrow-left"></i> @(Model.Language == "ru" ? "Назад к настройкам" : Model.Language == "en" ? "Back to settings" : "Баптауларға оралу")
@@ -1060,7 +1065,6 @@
                 });
             }
 
-            // Авто-скрытие уведомлений
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -1070,7 +1074,6 @@
                 }, 5000);
             });
 
-            // Закрытие модальных окон по клику на фон
             window.addEventListener('click', (e) => {
                 const modals = document.querySelectorAll('.modal.active');
                 modals.forEach(modal => {
@@ -1080,10 +1083,8 @@
                 });
             });
 
-            // Функции для телефона
             window.showPhoneModal = function() {
                 document.getElementById('phoneModal').classList.add('active');
-                // Автоматически отправляем код (можно убрать, если нужно вручную)
                 fetch('?handler=SendPhoneConfirmation', {
                     method: 'POST',
                     headers: {

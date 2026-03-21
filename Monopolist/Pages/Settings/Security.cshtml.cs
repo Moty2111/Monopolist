@@ -119,9 +119,13 @@ public class SecurityModel : PageModel
             return RedirectToPage();
         }
 
-        // Проверяем код с помощью Otp.NET
+        _logger.LogInformation("Проверка 2FA для пользователя {Username}, секрет: {Secret}", user.Username, user.TwoFactorSecret);
+
         var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
-        bool isValid = totp.VerifyTotp(code, out long timeStepMatched, VerificationWindow.RfcSpecifiedNetworkDelay);
+        // Используем расширенное окно верификации (как в Verify2fa)
+        bool isValid = totp.VerifyTotp(code, out long timeStepMatched, new VerificationWindow(previous: 2, future: 2));
+
+        _logger.LogInformation("Результат проверки 2FA: {IsValid}, timeStepMatched: {TimeStep}", isValid, timeStepMatched);
 
         if (isValid)
         {
@@ -165,7 +169,8 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
-    // Отправка подтверждения Email (пример)
+    // Остальные методы (SendEmailConfirmation, SendPhoneConfirmation, VerifyPhone, RevokeSession, RevokeAllSessions)
+    // остаются без изменений (как в предыдущей версии)
     public async Task<IActionResult> OnPostSendEmailConfirmationAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -174,9 +179,7 @@ public class SecurityModel : PageModel
 
         await LoadUserSettings(userId);
 
-        // Здесь должна быть реальная отправка письма
         _logger.LogInformation("Отправлено письмо подтверждения на {Email}", user.Email);
-
         TempData["Success"] = GetLocalizedMessage(
             $"Письмо с подтверждением отправлено на {user.Email}",
             $"Confirmation email sent to {user.Email}",
@@ -185,7 +188,6 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
-    // Отправка SMS для подтверждения телефона
     public async Task<IActionResult> OnPostSendPhoneConfirmationAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -194,7 +196,6 @@ public class SecurityModel : PageModel
 
         await LoadUserSettings(userId);
 
-        // Генерация кода и отправка SMS
         var code = new Random().Next(100000, 999999).ToString();
         TempData["PhoneCode"] = code;
         _logger.LogInformation("Отправлен SMS код {Code} на номер {Phone}", code, user.PhoneNumber);
@@ -207,7 +208,6 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
-    // Подтверждение телефона
     public async Task<IActionResult> OnPostVerifyPhoneAsync(string code)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -220,7 +220,6 @@ public class SecurityModel : PageModel
 
         if (savedCode == code)
         {
-            // В реальном проекте установите флаг PhoneConfirmed в БД
             TempData["Success"] = GetLocalizedMessage(
                 "Номер телефона подтвержден.",
                 "Phone number confirmed.",
@@ -237,7 +236,6 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
-    // Завершение сессии
     public async Task<IActionResult> OnPostRevokeSessionAsync(string sessionId)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -263,7 +261,6 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
-    // Завершение всех сессий, кроме текущей
     public async Task<IActionResult> OnPostRevokeAllSessionsAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -288,7 +285,6 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
-    // Получение активных сессий из БД
     private async Task<List<SessionInfo>> GetActiveSessionsAsync(int userId)
     {
         var currentSessionId = Request.Cookies["session_id"];
