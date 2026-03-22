@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +30,6 @@ namespace Monoplist.Pages.Account
 
             if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId) && !string.IsNullOrEmpty(sessionId))
             {
-                // Удаляем запись о сессии из базы данных
                 var userSession = await _context.UserSessions
                     .FirstOrDefaultAsync(us => us.UserId == userId && us.SessionId == sessionId);
                 if (userSession != null)
@@ -39,8 +37,6 @@ namespace Monoplist.Pages.Account
                     _context.UserSessions.Remove(userSession);
                     await _context.SaveChangesAsync();
                 }
-
-                // Удаляем куку с аватаркой
                 Response.Cookies.Delete($"user_avatar_{userId}");
             }
 
@@ -50,7 +46,8 @@ namespace Monoplist.Pages.Account
                 Response.Cookies.Delete(cookie);
             }
 
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            // Выходим из схемы "EmployeeCookie" (для сотрудников)
+            await HttpContext.SignOutAsync("EmployeeCookie");
 
             _logger.LogInformation("Пользователь {UserName} вышел", User.Identity?.Name ?? "Неизвестный");
 

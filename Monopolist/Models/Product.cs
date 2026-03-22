@@ -36,9 +36,13 @@ public class Product
 
     public int MinimumStock { get; set; } = 10;
 
+    // Новое поле для изображения товара
+    [StringLength(500)]
+    public string? ImageUrl { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
-    // Добавьте эти поля в существующий класс Product
+
     public int? WarehouseId { get; set; }
     public Warehouse? Warehouse { get; set; }
 }

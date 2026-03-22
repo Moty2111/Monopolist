@@ -1,7 +1,8 @@
 ﻿@page
-@model Monoplist.Pages.Account.LoginModel
+@model Monoplist.Pages.Account.CustomerRegisterModel
 @{
     Layout = null;
+    ViewData["Title"] = "Регистрация клиента";
 }
 
 <!DOCTYPE html>
@@ -9,7 +10,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Вход | Моноплист</title>
+    <title>@ViewData["Title"] | Моноплист</title>
 
     <!-- Preconnect for fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +26,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <style>
-        /* ===== БАЗОВЫЕ ПЕРЕМЕННЫЕ ===== */
+        /* ===== БАЗОВЫЕ ПЕРЕМЕННЫЕ (полностью скопированы из CustomerLogin.cshtml) ===== */
         body.login-page {
             margin: 0;
             padding: 0;
@@ -274,7 +275,7 @@
             transition: color 0.3s, border-color 0.3s;
         }
 
-        /* Табы переключения */
+        /* Табы переключения (копия из CustomerLogin) */
         .auth-tabs {
             display: flex;
             justify-content: center;
@@ -295,6 +296,8 @@
             transition: all 0.2s;
             border-radius: 40px;
             font-family: 'Poppins', sans-serif;
+            text-decoration: none;
+            display: inline-block;
         }
 
         body.dark-theme .auth-tab {
@@ -952,14 +955,14 @@
             <div class="logo-tagline">Стройматериалы для дома</div>
         </div>
 
-        <!-- Табы переключения -->
+        <!-- Табы переключения (активен таб "Регистрация") -->
         <div class="auth-tabs">
-            <button class="auth-tab active" data-tab="employee">Сотрудники</button>
-            <button class="auth-tab" data-tab="customer">Клиенты</button>
+            <a href="/Account/CustomerLogin" class="auth-tab">Вход</a>
+            <span class="auth-tab active">Регистрация</span>
         </div>
 
-        <!-- Форма для сотрудников -->
-        <div id="employee-form" class="auth-form">
+        <!-- Форма регистрации клиента -->
+        <div id="register-form" class="auth-form">
             @if (!ViewData.ModelState.IsValid)
             {
                 <div class="validation-summary alert alert-danger alert-dismissible">
@@ -975,23 +978,41 @@
                 </div>
             }
 
-            <form class="login-form" method="post" asp-route-returnUrl="@Model.ReturnUrl">
+            <form class="login-form" method="post">
                 @Html.AntiForgeryToken()
 
                 <div class="form-group">
-                    <label asp-for="Input.Username">Логин</label>
+                    <label asp-for="Input.FullName">ФИО *</label>
                     <div class="input-icon">
                         <i class="fas fa-user"></i>
-                        <input asp-for="Input.Username" class="form-control" placeholder="Введите ваш логин" autofocus autocomplete="username" />
+                        <input asp-for="Input.FullName" class="form-control" placeholder="Иванов Иван Иванович" />
                     </div>
-                    <span asp-validation-for="Input.Username" class="text-danger"></span>
+                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
                 </div>
 
                 <div class="form-group">
-                    <label asp-for="Input.Password">Пароль</label>
+                    <label asp-for="Input.Email">Email *</label>
+                    <div class="input-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input asp-for="Input.Email" class="form-control" placeholder="example@mail.com" />
+                    </div>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Input.Phone">Телефон</label>
+                    <div class="input-icon">
+                        <i class="fas fa-phone-alt"></i>
+                        <input asp-for="Input.Phone" class="form-control" placeholder="+7 (999) 123-45-67" />
+                    </div>
+                    <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Input.Password">Пароль *</label>
                     <div class="input-icon password-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input asp-for="Input.Password" class="form-control" placeholder="Введите ваш пароль" autocomplete="current-password" id="password-field" />
+                        <input asp-for="Input.Password" class="form-control" id="password-field" />
                         <button type="button" class="toggle-password" aria-label="Показать/скрыть пароль">
                             <i class="far fa-eye"></i>
                         </button>
@@ -999,68 +1020,23 @@
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
 
-                <div class="form-check">
-                    <input asp-for="Input.RememberMe" class="form-check-input" id="rememberMe" />
-                    <label class="form-check-label" for="rememberMe">Запомнить меня</label>
-                </div>
-
-                <button type="submit" class="login-btn">ВОЙТИ В СИСТЕМУ</button>
-
-                <div class="links-container">
-                    <a asp-page="/Account/ForgotPassword" class="forgot-password">Забыли пароль?</a>
-                </div>
-            </form>
-
-            @if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            {
-                <div class="demo-accounts">
-                    <h3>ДЕМО-АККАУНТЫ ДЛЯ ТЕСТИРОВАНИЯ</h3>
-                    <div class="account-item"><span class="role">Администратор</span><span class="credentials">admin / admin123</span></div>
-                    <div class="account-item"><span class="role">Менеджер</span><span class="credentials">manager / manager123</span></div>
-                    <div class="account-item"><span class="role">Продавец</span><span class="credentials">seller / seller123</span></div>
-                </div>
-            }
-        </div>
-
-        <!-- Форма для клиентов (исправлены имена полей) -->
-        <div id="customer-form" class="auth-form hidden-form">
-            <form class="login-form" method="post" action="/Account/CustomerLogin">
-                @Html.AntiForgeryToken()
-
                 <div class="form-group">
-                    <label>Email</label>
-                    <div class="input-icon">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" name="Email" class="form-control" placeholder="example@mail.com" autocomplete="email" />
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Пароль</label>
+                    <label asp-for="Input.ConfirmPassword">Подтверждение пароля *</label>
                     <div class="input-icon password-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" name="Password" class="form-control" placeholder="Введите пароль" id="customer-password-field" />
-                        <button type="button" class="toggle-password" data-target="customer-password-field" aria-label="Показать/скрыть пароль">
+                        <input asp-for="Input.ConfirmPassword" class="form-control" id="confirm-password-field" />
+                        <button type="button" class="toggle-password" data-target="confirm-password-field" aria-label="Показать/скрыть пароль">
                             <i class="far fa-eye"></i>
                         </button>
                     </div>
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                 </div>
 
-                <div class="form-check">
-                    <input type="checkbox" name="RememberMe" class="form-check-input" id="customerRememberMe" value="true" />
-                    <label class="form-check-label" for="customerRememberMe">Запомнить меня</label>
-                </div>
-
-                <button type="submit" class="login-btn">ВОЙТИ КАК КЛИЕНТ</button>
-
-                <div class="links-container">
-                    <a asp-page="/Account/ForgotPassword" class="forgot-password">Забыли пароль?</a>
-                </div>
+                <button type="submit" class="login-btn">ЗАРЕГИСТРИРОВАТЬСЯ</button>
             </form>
 
             <div class="customer-info">
-                <p>Нет аккаунта? <a asp-page="/Account/CustomerRegister">Зарегистрируйтесь</a></p>
-                <p>Для юридических лиц и оптовых закупок используйте форму для сотрудников.</p>
+                <p>Уже есть аккаунт? <a asp-page="/Account/CustomerLogin">Войдите</a></p>
             </div>
         </div>
 
@@ -1071,29 +1047,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Переключение табов
-            const tabButtons = document.querySelectorAll('.auth-tab');
-            const employeeForm = document.getElementById('employee-form');
-            const customerForm = document.getElementById('customer-form');
-
-            tabButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tab = this.getAttribute('data-tab');
-                    // Удаляем active у всех
-                    tabButtons.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    // Показываем нужную форму
-                    if (tab === 'employee') {
-                        employeeForm.classList.remove('hidden-form');
-                        customerForm.classList.add('hidden-form');
-                    } else {
-                        employeeForm.classList.add('hidden-form');
-                        customerForm.classList.remove('hidden-form');
-                    }
-                });
-            });
-
-            // Переключение видимости пароля (работает для обоих форм)
+            // Переключение видимости пароля
             const toggleButtons = document.querySelectorAll('.toggle-password');
             toggleButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -1102,7 +1056,6 @@
                     if (targetId) {
                         passwordField = document.getElementById(targetId);
                     } else {
-                        // Для формы сотрудников (поле имеет id="password-field")
                         passwordField = this.closest('.password-wrapper')?.querySelector('input');
                     }
                     if (passwordField) {

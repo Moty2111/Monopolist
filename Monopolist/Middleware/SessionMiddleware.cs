@@ -20,15 +20,16 @@ namespace Monoplist.Middleware
 
         public async Task InvokeAsync(HttpContext context, AppDbContext dbContext)
         {
-            // Если пользователь аутентифицирован
-            if (context.User.Identity?.IsAuthenticated == true)
+            // Проверяем, аутентифицирован ли сотрудник (схема EmployeeCookie)
+            var userIdClaim = context.User.FindFirst("UserId");
+            var isEmployee = userIdClaim != null && context.User.Identity?.IsAuthenticated == true;
+
+            if (isEmployee)
             {
-                var userIdClaim = context.User.FindFirst("UserId");
                 var sessionId = context.Request.Cookies["session_id"];
 
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId) && !string.IsNullOrEmpty(sessionId))
+                if (int.TryParse(userIdClaim.Value, out int userId) && !string.IsNullOrEmpty(sessionId))
                 {
-                    // Находим сессию в БД
                     var userSession = await dbContext.UserSessions
                         .FirstOrDefaultAsync(us => us.UserId == userId && us.SessionId == sessionId && us.IsActive);
 
@@ -40,15 +41,18 @@ namespace Monoplist.Middleware
                     }
                     else
                     {
-                        // Если сессии нет в БД (например, была удалена вручную), то разлогиниваем пользователя
+                        // Сессия не найдена – выходим из системы сотрудника
                         _logger.LogWarning("Сессия {SessionId} не найдена в БД. Выход пользователя {UserId}", sessionId, userId);
-                        await context.SignOutAsync();
+                        await context.SignOutAsync("EmployeeCookie");
                         context.Response.Cookies.Delete("session_id");
                         context.Response.Redirect("/Account/Login");
                         return;
                     }
                 }
             }
+
+            // Если аутентифицирован клиент (схема CustomerCookie), ничего не делаем,
+            // так как для клиентов сессии не отслеживаются в этой версии.
 
             await _next(context);
         }

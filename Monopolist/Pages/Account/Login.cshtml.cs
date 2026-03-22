@@ -68,7 +68,7 @@ public class LoginModel : PageModel
             return RedirectToPage("./Verify2fa");
         }
 
-        // Стандартный вход
+        // Стандартный вход – явно указываем схему EmployeeCookie
         await SignInUser(user, Input.RememberMe);
         return LocalRedirect(returnUrl);
     }
@@ -91,7 +91,8 @@ public class LoginModel : PageModel
             IsPersistent = rememberMe,
             ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
         };
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), props);
+        // Используем схему "EmployeeCookie"
+        await HttpContext.SignInAsync("EmployeeCookie", new ClaimsPrincipal(identity), props);
 
         // Аватарка в куки
         if (!string.IsNullOrEmpty(user.AvatarUrl))

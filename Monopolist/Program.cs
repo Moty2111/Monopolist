@@ -12,25 +12,41 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Настройка аутентификации с использованием кук
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.SlidingExpiration = true;
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
-            ? CookieSecurePolicy.SameAsRequest
-            : CookieSecurePolicy.Always;
-    });
+// Настройка аутентификации: задаём схему по умолчанию и регистрируем две схемы
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "EmployeeCookie";  // схема по умолчанию для сотрудников
+})
+.AddCookie("EmployeeCookie", options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.Cookie.Name = "Monoplist.Auth";
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+})
+.AddCookie("CustomerCookie", options =>
+{
+    options.LoginPath = "/Account/CustomerLogin";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.Cookie.Name = "Monoplist.Customer";
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+});
 
 builder.Services.AddAuthorization();
 
-// Добавляем сервисы Razor Pages (без MVC)
+// Добавляем сервисы Razor Pages
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -41,11 +57,7 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        // Создаём базу данных, если её нет (не удаляем существующую)
         context.Database.EnsureCreated();
-
-        // Добавляем тестовые данные только если таблицы пусты
         SeedData.Initialize(context);
         SeedDataWarehouse.Initialize(context);
     }
@@ -62,13 +74,9 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
-
-// Добавляем middleware для обновления активности сессии
-app.UseMiddleware<Monoplist.Middleware.SessionMiddleware>();
-
+app.UseMiddleware<SessionMiddleware>();
 app.UseAuthorization();
 
-// Маппинг Razor Pages
 app.MapRazorPages();
 
 app.Run();
