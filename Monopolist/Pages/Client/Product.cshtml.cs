@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
+using Monoplist.ViewModels;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
@@ -26,8 +27,6 @@ public class ProductModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        _logger.LogInformation("Запрос товара с ID: {Id}", id);
-
         var customerIdClaim = User.FindFirst("CustomerId")?.Value;
         if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId))
         {
@@ -47,7 +46,6 @@ public class ProductModel : PageModel
 
         if (product == null)
         {
-            _logger.LogWarning("Товар с ID {Id} не найден", id);
             return NotFound();
         }
 

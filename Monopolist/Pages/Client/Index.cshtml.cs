@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
+using Monoplist.ViewModels;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
@@ -25,17 +26,26 @@ public class IndexModel : PageModel
 
     [BindProperty(SupportsGet = true)]
     public string? Search { get; set; }
+
     [BindProperty(SupportsGet = true)]
-    public string? SortBy { get; set; }
+    public string? SortBy { get; set; } = "Name";
+
     [BindProperty(SupportsGet = true)]
     public int CategoryId { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public int PageNumber { get; set; } = 1;
+
+    public int PageSize { get; set; } = 12;
+    public int TotalPages { get; set; }
+    public int TotalItems { get; set; }
 
     public int SelectedCategoryId => CategoryId;
 
     public async Task OnGetAsync()
     {
-        var customerIdClaim = User.FindFirst("CustomerId")?.Value;
-        if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId))
+        var customerId = GetCustomerId();
+        if (customerId != null)
         {
             var customer = await _context.Customers.FindAsync(customerId);
             if (customer != null)
@@ -54,10 +64,19 @@ public class IndexModel : PageModel
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(Search))
+        {
             query = query.Where(p => p.Name.Contains(Search) || (p.Article != null && p.Article.Contains(Search)));
+        }
 
         if (CategoryId > 0)
+        {
             query = query.Where(p => p.CategoryId == CategoryId);
+        }
+
+        TotalItems = await query.CountAsync();
+        TotalPages = (int)Math.Ceiling((double)TotalItems / PageSize);
+        if (PageNumber < 1) PageNumber = 1;
+        if (PageNumber > TotalPages && TotalPages > 0) PageNumber = TotalPages;
 
         query = SortBy switch
         {
@@ -69,6 +88,8 @@ public class IndexModel : PageModel
         };
 
         Products = await query
+            .Skip((PageNumber - 1) * PageSize)
+            .Take(PageSize)
             .Select(p => new ProductCardViewModel
             {
                 Id = p.Id,
@@ -84,22 +105,22 @@ public class IndexModel : PageModel
             .ToListAsync();
     }
 
-    public async Task<IActionResult> OnPostAddToCartAsync(int productId, int quantity)
+    public async Task<IActionResult> OnGetFavorites()
     {
-        TempData["Info"] = "Товар добавлен в корзину (демо)";
-        return RedirectToPage();
-    }
-}
+        var customerId = GetCustomerId();
+        if (customerId == null) return new JsonResult(new List<int>());
 
-public class ProductCardViewModel
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? Article { get; set; }
-    public string CategoryName { get; set; } = string.Empty;
-    public string Unit { get; set; } = "шт";
-    public decimal SalePrice { get; set; }
-    public int CurrentStock { get; set; }
-    public string? ImageUrl { get; set; }
-    public string? Description { get; set; }
+        var favorites = await _context.Favorites
+            .Where(f => f.CustomerId == customerId)
+            .Select(f => f.ProductId)
+            .ToListAsync();
+        return new JsonResult(favorites);
+    }
+
+    private int? GetCustomerId()
+    {
+        var claim = User.FindFirst("CustomerId")?.Value;
+        if (claim != null && int.TryParse(claim, out int id)) return id;
+        return null;
+    }
 }
