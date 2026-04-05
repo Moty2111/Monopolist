@@ -21,6 +21,9 @@ namespace Monoplist.ViewModels
 
         // Новый виджет: топ-5 товаров по продажам
         public List<TopProductViewModel> TopProducts { get; set; } = new();
+
+        // Флаг, показывающий, используются ли демо-данные (когда БД пуста)
+        public bool IsUsingSampleData { get; set; } = false;
     }
 
     // Модель для топ-товаров

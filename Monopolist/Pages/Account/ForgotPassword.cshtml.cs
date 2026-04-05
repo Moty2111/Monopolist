@@ -3,61 +3,75 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
 
-namespace Monoplist.Pages.Account
+namespace Monoplist.Pages.Account;
+
+public class ForgotPasswordModel : PageModel
 {
-    public class ForgotPasswordModel : PageModel
+    private readonly AppDbContext _context;
+    private readonly ILogger<ForgotPasswordModel> _logger;
+
+    public ForgotPasswordModel(AppDbContext context, ILogger<ForgotPasswordModel> logger)
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<ForgotPasswordModel> _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public ForgotPasswordModel(AppDbContext context, ILogger<ForgotPasswordModel> logger)
+    [BindProperty]
+    public InputModel Input { get; set; } = new();
+
+    [TempData]
+    public string? SuccessMessage { get; set; }
+
+    [TempData]
+    public string? GeneratedToken { get; set; }
+
+    public class InputModel
+    {
+        [Required(ErrorMessage = "Логин обязателен.")]
+        [Display(Name = "Логин")]
+        public string Username { get; set; } = string.Empty;
+    }
+
+    public void OnGet()
+    {
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        if (!ModelState.IsValid)
+            return Page();
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Username == Input.Username);
+
+        if (user == null)
         {
-            _context = context;
-            _logger = logger;
-        }
-
-        [BindProperty]
-        public InputModel Input { get; set; } = new();
-
-        [TempData]
-        public string? SuccessMessage { get; set; }
-
-        public class InputModel
-        {
-            [Required(ErrorMessage = "Логин обязателен.")]
-            [Display(Name = "Логин")]
-            public string Username { get; set; } = string.Empty;
-        }
-
-        public void OnGet()
-        {
-        }
-
-        public async Task<IActionResult> OnPostAsync()
-        {
-            if (!ModelState.IsValid)
-                return Page();
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == Input.Username);
-
-            if (user == null)
-            {
-                _logger.LogWarning("Попытка восстановления пароля для несуществующего логина: {Username}", Input.Username);
-            }
-            else
-            {
-                _logger.LogInformation("Запрос на восстановление пароля для пользователя: {Username}", Input.Username);
-                // Здесь можно отправить email со ссылкой на сброс пароля.
-                // В демо-версии просто показываем информационное сообщение.
-            }
-
-            // Безопасно: всегда показываем одинаковое сообщение
-            SuccessMessage = "Если указанный логин существует, на привязанный к нему email будет отправлена инструкция по восстановлению пароля.";
-
+            _logger.LogWarning("Попытка восстановления пароля для несуществующего логина: {Username}", Input.Username);
+            // Не показываем, что пользователь не найден (безопасность)
+            SuccessMessage = "Если указанный логин существует, администратор получит уведомление. Свяжитесь с администратором для получения одноразового ключа.";
             return Page();
         }
+
+        // Генерация одноразового токена (8 символов: цифры и заглавные буквы)
+        var token = GenerateRandomToken(8);
+        user.ResetToken = token;
+        user.ResetTokenExpiry = DateTime.UtcNow.AddHours(24); // токен действует 24 часа
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Сгенерирован ключ восстановления для пользователя {Username}: {Token}", user.Username, token);
+
+        GeneratedToken = token;
+        SuccessMessage = $"Сгенерирован одноразовый ключ доступа: {token}\nПередайте его администратору. Администратор сможет сбросить ваш пароль.\nКлюч действителен 24 часа.";
+
+        return Page();
+    }
+
+    private string GenerateRandomToken(int length)
+    {
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+        return new string(Enumerable.Repeat(chars, length)
+            .Select(s => s[RandomNumberGenerator.GetInt32(s.Length)]).ToArray());
     }
 }

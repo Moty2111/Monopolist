@@ -751,6 +751,18 @@
                 border-top-color: #FF6B00;
             }
 
+            /* Дополнительный стиль для подсказки в тёмной теме */
+            body.dark-theme .form-text {
+                color: #a0aec0 !important;
+            }
+
+        .form-text {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            color: #6c757d;
+            display: block;
+        }
+
         /* ===== ПРЕЛОАДЕР ===== */
         .preloader {
             position: fixed;
@@ -991,12 +1003,13 @@
                     <label asp-for="Input.Password">Пароль</label>
                     <div class="input-icon password-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input asp-for="Input.Password" class="form-control" placeholder="Введите ваш пароль" autocomplete="current-password" id="password-field" />
+                        <input asp-for="Input.Password" class="form-control" placeholder="Введите пароль или одноразовый ключ" autocomplete="current-password" id="password-field" />
                         <button type="button" class="toggle-password" aria-label="Показать/скрыть пароль">
                             <i class="far fa-eye"></i>
                         </button>
                     </div>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    <small class="form-text">Вы можете использовать одноразовый ключ, полученный при восстановлении пароля.</small>
                 </div>
 
                 <div class="form-check">

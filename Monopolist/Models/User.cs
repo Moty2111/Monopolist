@@ -46,4 +46,8 @@ public class User
     // === ДЛЯ 2FA ===
     public string? TwoFactorSecret { get; set; }      // Секретный ключ для TOTP (сохраняется в БД)
     public bool TwoFactorEnabled { get; set; }         // Включена ли 2FA
+     
+    // Поля для сброса пароля
+    public string? ResetToken { get; set; }
+    public DateTime? ResetTokenExpiry { get; set; }
 }

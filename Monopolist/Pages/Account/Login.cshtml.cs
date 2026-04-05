@@ -31,7 +31,7 @@ public class LoginModel : PageModel
         [Required(ErrorMessage = "Имя пользователя обязательно.")]
         public string Username { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Пароль обязателен.")]
+        [Required(ErrorMessage = "Пароль или одноразовый ключ обязателен.")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
@@ -51,15 +51,36 @@ public class LoginModel : PageModel
             return Page();
 
         var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Username == Input.Username && u.Password == Input.Password);
+            .FirstOrDefaultAsync(u => u.Username == Input.Username);
 
         if (user == null)
         {
-            ModelState.AddModelError(string.Empty, "Неверное имя пользователя или пароль.");
+            ModelState.AddModelError(string.Empty, "Неверное имя пользователя или пароль/ключ.");
             return Page();
         }
 
-        // Если 2FA включена
+        bool passwordValid = (user.Password == Input.Password);
+        bool tokenValid = false;
+
+        if (!passwordValid && !string.IsNullOrEmpty(user.ResetToken) && user.ResetTokenExpiry > DateTime.UtcNow)
+        {
+            tokenValid = (user.ResetToken == Input.Password);
+        }
+
+        if (!passwordValid && !tokenValid)
+        {
+            ModelState.AddModelError(string.Empty, "Неверное имя пользователя или пароль/ключ.");
+            return Page();
+        }
+
+        // Если использован одноразовый токен, удаляем его
+        if (tokenValid)
+        {
+            user.ResetToken = null;
+            user.ResetTokenExpiry = null;
+            await _context.SaveChangesAsync();
+        }
+
         if (user.TwoFactorEnabled && !string.IsNullOrEmpty(user.TwoFactorSecret))
         {
             TempData["UserId"] = user.Id;
@@ -68,12 +89,10 @@ public class LoginModel : PageModel
             return RedirectToPage("./Verify2fa");
         }
 
-        // Стандартный вход – явно указываем схему EmployeeCookie
         await SignInUser(user, Input.RememberMe);
         return LocalRedirect(returnUrl);
     }
 
-    // Общий метод для входа (используется и в Login, и в Verify2fa)
     public async Task SignInUser(User user, bool rememberMe)
     {
         user.LastLoginAt = DateTime.UtcNow;
@@ -91,10 +110,8 @@ public class LoginModel : PageModel
             IsPersistent = rememberMe,
             ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
         };
-        // Используем схему "EmployeeCookie"
         await HttpContext.SignInAsync("EmployeeCookie", new ClaimsPrincipal(identity), props);
 
-        // Аватарка в куки
         if (!string.IsNullOrEmpty(user.AvatarUrl))
         {
             Response.Cookies.Append($"user_avatar_{user.Id}", user.AvatarUrl, new CookieOptions
@@ -106,7 +123,6 @@ public class LoginModel : PageModel
             });
         }
 
-        // Сессия
         var sessionId = Guid.NewGuid().ToString();
         var userSession = new UserSession
         {

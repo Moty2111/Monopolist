@@ -138,7 +138,7 @@ public class IndexModel : PageModel
                 }
             }
 
-            // Топ-5 товаров по продажам (за всё время или за последний месяц – можно настроить)
+            // Топ-5 товаров по продажам (только завершённые заказы)
             var topProducts = await _context.OrderItems
                 .Include(oi => oi.Product)
                 .Where(oi => oi.Order.Status == "Completed")
@@ -164,8 +164,9 @@ public class IndexModel : PageModel
             DashboardData.CategorySales = categorySales;
             DashboardData.Forecast = forecast;
             DashboardData.TopProducts = topProducts;
+            DashboardData.IsUsingSampleData = false;
 
-            // Если какие-то списки пусты, подставляем тестовые данные и показываем предупреждение
+            // Если какие-то данные отсутствуют, подставляем демо-данные
             bool usingSampleData = false;
 
             if (!DashboardData.LatestOrders.Any())
@@ -198,12 +199,13 @@ public class IndexModel : PageModel
                 usingSampleData = true;
             }
 
+            DashboardData.IsUsingSampleData = usingSampleData;
             if (usingSampleData)
             {
                 TempData["Warning"] = GetLocalizedMessage(
-                    "Некоторые данные отсутствуют в БД. Показаны примеры.",
-                    "Some data is missing in the database. Examples are shown.",
-                    "ДБ-де кейбір деректер жоқ. Мысалдар көрсетілген.");
+                    "Некоторые данные отсутствуют в БД. Показаны тестовые значения (отмечены *).",
+                    "Some data is missing in the database. Test values are shown (marked *).",
+                    "ДБ-де кейбір деректер жоқ. Сынақ мәндері көрсетілген (* белгісімен).");
             }
         }
         catch (Exception ex)
@@ -220,6 +222,7 @@ public class IndexModel : PageModel
             DashboardData.CategorySales = GetSampleCategorySales();
             DashboardData.Forecast = 45000;
             DashboardData.TopProducts = GetSampleTopProducts();
+            DashboardData.IsUsingSampleData = true;
 
             TempData["Error"] = GetLocalizedMessage(
                 "Не удалось загрузить данные из БД. Показаны тестовые данные.",
@@ -269,11 +272,11 @@ public class IndexModel : PageModel
     {
         return new List<LowStockProductViewModel>
         {
-            new LowStockProductViewModel { Name = "Цемент М500", CategoryName = "Сыпучие материалы", CurrentStock = 10, MinimumStock = 50 },
-            new LowStockProductViewModel { Name = "Кирпич красный", CategoryName = "Стеновые материалы", CurrentStock = 200, MinimumStock = 500 },
-            new LowStockProductViewModel { Name = "Арматура 12 мм", CategoryName = "Металлопрокат", CurrentStock = 8, MinimumStock = 20 },
-            new LowStockProductViewModel { Name = "Гвозди 100мм", CategoryName = "Метизы", CurrentStock = 2, MinimumStock = 15 },
-            new LowStockProductViewModel { Name = "Пена монтажная", CategoryName = "Химия", CurrentStock = 3, MinimumStock = 10 }
+            new LowStockProductViewModel { Name = "Цемент М500 *", CategoryName = "Сыпучие материалы", CurrentStock = 10, MinimumStock = 50 },
+            new LowStockProductViewModel { Name = "Кирпич красный *", CategoryName = "Стеновые материалы", CurrentStock = 200, MinimumStock = 500 },
+            new LowStockProductViewModel { Name = "Арматура 12 мм *", CategoryName = "Металлопрокат", CurrentStock = 8, MinimumStock = 20 },
+            new LowStockProductViewModel { Name = "Гвозди 100мм *", CategoryName = "Метизы", CurrentStock = 2, MinimumStock = 15 },
+            new LowStockProductViewModel { Name = "Пена монтажная *", CategoryName = "Химия", CurrentStock = 3, MinimumStock = 10 }
         };
     }
 
@@ -297,11 +300,11 @@ public class IndexModel : PageModel
     {
         return new List<CategorySalesViewModel>
         {
-            new CategorySalesViewModel { CategoryName = "Сыпучие материалы", ItemsSold = 450, TotalAmount = 450 * 350, Percentage = 37.5 },
-            new CategorySalesViewModel { CategoryName = "Отделочные материалы", ItemsSold = 320, TotalAmount = 320 * 500, Percentage = 26.7 },
-            new CategorySalesViewModel { CategoryName = "Крепёж", ItemsSold = 210, TotalAmount = 210 * 180, Percentage = 17.5 },
-            new CategorySalesViewModel { CategoryName = "Лакокрасочные", ItemsSold = 150, TotalAmount = 150 * 1200, Percentage = 12.5 },
-            new CategorySalesViewModel { CategoryName = "Инструменты", ItemsSold = 90, TotalAmount = 90 * 800, Percentage = 7.5 }
+            new CategorySalesViewModel { CategoryName = "Сыпучие материалы *", ItemsSold = 450, TotalAmount = 450 * 350, Percentage = 37.5 },
+            new CategorySalesViewModel { CategoryName = "Отделочные материалы *", ItemsSold = 320, TotalAmount = 320 * 500, Percentage = 26.7 },
+            new CategorySalesViewModel { CategoryName = "Крепёж *", ItemsSold = 210, TotalAmount = 210 * 180, Percentage = 17.5 },
+            new CategorySalesViewModel { CategoryName = "Лакокрасочные *", ItemsSold = 150, TotalAmount = 150 * 1200, Percentage = 12.5 },
+            new CategorySalesViewModel { CategoryName = "Инструменты *", ItemsSold = 90, TotalAmount = 90 * 800, Percentage = 7.5 }
         };
     }
 
@@ -309,11 +312,11 @@ public class IndexModel : PageModel
     {
         return new List<TopProductViewModel>
         {
-            new TopProductViewModel { Name = "Цемент М500", TotalSold = 120, TotalRevenue = 120 * 350, Unit = "шт" },
-            new TopProductViewModel { Name = "Плитка керамическая", TotalSold = 85, TotalRevenue = 85 * 500, Unit = "шт" },
-            new TopProductViewModel { Name = "Краска белая 10л", TotalSold = 64, TotalRevenue = 64 * 1200, Unit = "шт" },
-            new TopProductViewModel { Name = "Гипсокартон 12.5мм", TotalSold = 42, TotalRevenue = 42 * 550, Unit = "шт" },
-            new TopProductViewModel { Name = "Саморезы 4.2х75", TotalSold = 30, TotalRevenue = 30 * 180, Unit = "уп" }
+            new TopProductViewModel { Name = "Саморезы 4.2х75 *", TotalSold = 30, TotalRevenue = 30 * 180, Unit = "уп" },
+            new TopProductViewModel { Name = "Плитка керамическая *", TotalSold = 21, TotalRevenue = 21 * 500, Unit = "шт" },
+            new TopProductViewModel { Name = "Краска белая 10л *", TotalSold = 13, TotalRevenue = 13 * 1200, Unit = "шт" },
+            new TopProductViewModel { Name = "Цемент M500 50кг *", TotalSold = 10, TotalRevenue = 10 * 350, Unit = "шт" },
+            new TopProductViewModel { Name = "Гипсокартон 12.5мм *", TotalSold = 8, TotalRevenue = 8 * 550, Unit = "шт" }
         };
     }
 }
