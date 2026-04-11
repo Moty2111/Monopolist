@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="ru">
+<html lang="@(ViewBag.Language ?? "ru")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,24 +23,28 @@
         }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="@(ViewBag.Theme ?? "light")">
     @if (User.Identity?.IsAuthenticated == true)
     {
         <div class="app">
             @await Html.PartialAsync("_Sidebar")
-            <main class="main-content" aria-label="Основное содержимое">
-                <header class="top-bar" aria-label="Верхняя панель">
-                    <button class="menu-toggle" id="sidebarToggle" aria-label="Открыть меню">
+            <main class="main-content" aria-label="@GetLocalized("Основное содержимое", "Main content", "Негізгі мазмұн")">
+                <header class="top-bar" aria-label="@GetLocalized("Верхняя панель", "Top bar", "Жоғарғы панель")">
+                    <button class="menu-toggle" id="sidebarToggle" aria-label="@GetLocalized("Открыть меню", "Open menu", "Мәзірді ашу")">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="page-title">@ViewData["Title"]</div>
                     <div class="user-info">
+                        <!-- Кнопка переключения темы -->
+                        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="@GetLocalized("Сменить тему", "Toggle theme", "Тақырыпты ауыстыру")">
+                            <i class="fas @(ViewBag.Theme == "dark" ? "fa-moon" : "fa-sun")"></i>
+                        </button>
                         <span class="user-name">@User.Identity?.Name</span>
                         <form method="post" asp-page="/Account/Logout" class="logout-form">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn-logout" aria-label="Выйти из системы">
+                            <button type="submit" class="btn-logout" aria-label="@GetLocalized("Выйти из системы", "Logout", "Жүйеден шығу")">
                                 <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                                <span class="logout-text">Выйти</span>
+                                <span class="logout-text">@GetLocalized("Выйти", "Logout", "Шығу")</span>
                             </button>
                         </form>
                     </div>
@@ -52,6 +56,7 @@
         </div>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                // Боковое меню (мобильное)
                 const toggleBtn = document.getElementById('sidebarToggle');
                 const sidebar = document.querySelector('.sidebar');
                 const body = document.body;
@@ -61,27 +66,74 @@
                         toggleBtn.setAttribute('aria-expanded', body.classList.contains('sidebar-open'));
                     });
                 }
+
+                // Переключение темы (сохраняем настройку на сервере через AJAX)
+                const themeBtn = document.getElementById('themeToggleBtn');
+                if (themeBtn) {
+                    themeBtn.addEventListener('click', async function() {
+                        const currentTheme = document.body.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                        // Меняем тему на клиенте
+                        document.body.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                        // Меняем иконку
+                        const icon = themeBtn.querySelector('i');
+                        if (icon) {
+                            icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+                        }
+                        // Отправляем на сервер для сохранения в БД (если пользователь авторизован)
+                        try {
+                            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                            await fetch('/Settings/Appearance?handler=SetTheme', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'RequestVerificationToken': token
+                                },
+                                body: JSON.stringify({ theme: newTheme })
+                            });
+                        } catch (error) {
+                            console.error('Ошибка сохранения темы', error);
+                        }
+                    });
+                }
             });
         </script>
     }
     else
     {
-        <main class="login-layout" aria-label="Страница входа">
+        <main class="login-layout" aria-label="@GetLocalized("Страница входа", "Login page", "Кіру беті")">
             @RenderBody()
         </main>
     }
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
-        function toggleTheme() {
-            const body = document.body;
-            const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        }
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.body.setAttribute('data-theme', savedTheme);
+        // Инициализация темы из localStorage (если не установлена сервером)
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme && document.body.getAttribute('data-theme') !== savedTheme) {
+                document.body.setAttribute('data-theme', savedTheme);
+                const themeIcon = document.querySelector('#themeToggleBtn i');
+                if (themeIcon) {
+                    themeIcon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+                }
+            }
+        })();
     </script>
 </body>
 </html>
+
+@functions {
+    // Вспомогательная функция локализации (использует язык из ViewBag или куки)
+    private string GetLocalized(string ru, string en, string kk)
+    {
+        var lang = ViewBag.Language as string ?? "ru";
+        return lang switch
+        {
+            "en" => en,
+            "kk" => kk,
+            _ => ru
+        };
+    }
+}

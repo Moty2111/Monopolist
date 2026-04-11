@@ -241,6 +241,18 @@
             color: var(--text-primary);
         }
 
+        .logout-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+            .logout-btn:hover {
+                color: var(--primary);
+            }
+
         /* Основной контент */
         .main {
             max-width: 1200px;
@@ -434,13 +446,23 @@
             </div>
             <div class="user-actions">
                 <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-                <a href="/Client/Index" class="cart-icon" id="cartIcon">
+                <a href="/Client/Cart" class="cart-icon" id="cartIcon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
                 <div class="customer-badge">
                     <i class="fas fa-user-circle"></i>
                     <span class="customer-name">@Model.CustomerName</span>
+                    @if (!Model.IsGuest)
+                    {
+                        <form method="post" asp-page="/Account/CustomerLogout">
+                            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="logout-btn" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i></a>
+                    }
                 </div>
             </div>
         </div>
@@ -507,26 +529,12 @@
 
         // Инициализация карты OpenLayers
         document.addEventListener('DOMContentLoaded', function() {
-            // Координаты центра (Москва)
             const center = ol.proj.fromLonLat([37.618423, 55.751244]);
-            const view = new ol.View({
-                center: center,
-                zoom: 13
-            });
-
-            // Слой карты (OpenStreetMap)
-            const tileLayer = new ol.layer.Tile({
-                source: new ol.source.OSM()
-            });
-
-            // Маркер (точка)
+            const view = new ol.View({ center: center, zoom: 13 });
+            const tileLayer = new ol.layer.Tile({ source: new ol.source.OSM() });
             const markerLayer = new ol.layer.Vector({
                 source: new ol.source.Vector({
-                    features: [
-                        new ol.Feature({
-                            geometry: new ol.geom.Point(center)
-                        })
-                    ]
+                    features: [ new ol.Feature({ geometry: new ol.geom.Point(center) }) ]
                 }),
                 style: new ol.style.Style({
                     image: new ol.style.Icon({
@@ -536,25 +544,11 @@
                     })
                 })
             });
-
-            const map = new ol.Map({
-                target: 'map',
-                layers: [tileLayer, markerLayer],
-                view: view
-            });
-
-            // Попап при клике на маркер
-            const popup = new ol.Overlay({
-                element: document.createElement('div'),
-                positioning: 'bottom-center',
-                offset: [0, -10]
-            });
+            const map = new ol.Map({ target: 'map', layers: [tileLayer, markerLayer], view: view });
+            const popup = new ol.Overlay({ element: document.createElement('div'), positioning: 'bottom-center', offset: [0, -10] });
             map.addOverlay(popup);
-
             map.on('click', function(evt) {
-                const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-                    return feature;
-                });
+                const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
                 if (feature) {
                     const coord = feature.getGeometry().getCoordinates();
                     const popupElement = popup.getElement();

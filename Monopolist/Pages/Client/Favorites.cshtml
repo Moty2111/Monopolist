@@ -64,6 +64,7 @@
             overflow-x: hidden;
         }
 
+        /* Шестерёнки */
         .gear {
             position: fixed;
             font-size: 6rem;
@@ -116,6 +117,7 @@
             }
         }
 
+        /* Шапка */
         .header {
             background: rgba(var(--surface-rgb), 0.95);
             backdrop-filter: blur(10px);
@@ -254,6 +256,7 @@
                 color: var(--primary);
             }
 
+        /* Основной контент */
         .main {
             max-width: 1400px;
             margin: 0 auto;
@@ -296,6 +299,7 @@
             font-size: 18px;
         }
 
+        /* Сетка избранного */
         .favorites-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -433,6 +437,7 @@
                 transform: translateY(-2px);
             }
 
+        /* Пустое состояние */
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -445,6 +450,39 @@
                 opacity: 0.5;
             }
 
+        /* Сообщение для гостя */
+        .guest-message-box {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+            .guest-message-box i {
+                font-size: 64px;
+                color: var(--primary);
+                margin-bottom: 20px;
+            }
+
+            .guest-message-box h2 {
+                margin-bottom: 16px;
+            }
+
+            .guest-message-box .btn-primary {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 28px;
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                border-radius: 40px;
+                color: white;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+        /* Футер */
         .footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -460,6 +498,7 @@
                 text-decoration: none;
             }
 
+        /* Адаптивность */
         @@media (max-width: 1024px) {
             .header-container {
                 flex-wrap: wrap;
@@ -567,9 +606,16 @@
                 <div class="customer-badge">
                     <i class="fas fa-user-circle"></i>
                     <span class="customer-name">@Model.CustomerName</span>
-                    <form method="post" asp-page="/Account/CustomerLogout">
-                        <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
-                    </form>
+                    @if (!Model.IsGuest)
+                    {
+                        <form method="post" asp-page="/Account/CustomerLogout">
+                            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="logout-btn" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i></a>
+                    }
                 </div>
             </div>
         </div>
@@ -581,7 +627,17 @@
             <p>Товары, которые вам понравились</p>
         </div>
 
-        @if (Model.FavoriteProducts.Any())
+        @if (Model.IsGuest)
+        {
+            <div class="guest-message-box">
+                <i class="fas fa-heart"></i>
+                <h2>Избранное доступно только авторизованным пользователям</h2>
+                <p>Войдите или зарегистрируйтесь, чтобы добавлять товары в избранное.</p>
+                <a href="/Account/Login" class="btn-primary">Войти</a>
+                <a href="/Account/CustomerRegister" class="btn-primary" style="margin-left: 12px;">Зарегистрироваться</a>
+            </div>
+        }
+        else if (Model.FavoriteProducts.Any())
         {
             <div class="favorites-grid">
                 @foreach (var product in Model.FavoriteProducts)
@@ -648,9 +704,17 @@
             }
         });
 
+        function getAntiForgeryToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        }
+
         async function updateCartCount() {
             try {
-                const response = await fetch('/Client/Cart?handler=Count');
+                const token = getAntiForgeryToken();
+                const response = await fetch('/Client/Cart?handler=Count', {
+                    method: 'GET',
+                    headers: { 'RequestVerificationToken': token }
+                });
                 const data = await response.json();
                 const countSpan = document.getElementById('cartCount');
                 if (data.count > 0) {
@@ -659,17 +723,17 @@
                 } else {
                     countSpan.style.display = 'none';
                 }
-            } catch (error) {
-                console.error('Ошибка получения количества товаров', error);
-            }
+            } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
 
         async function addToCart(productId, productName, price) {
             const formData = new FormData();
             formData.append('productId', productId);
+            const token = getAntiForgeryToken();
             const response = await fetch('/Client/Cart?handler=Add', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: { 'RequestVerificationToken': token }
             });
             if (response.ok) {
                 alert(`${productName} добавлен в корзину!`);
@@ -682,9 +746,11 @@
         async function removeFromFavorites(productId) {
             const formData = new FormData();
             formData.append('productId', productId);
+            const token = getAntiForgeryToken();
             const response = await fetch('/Client/Favorites?handler=Remove', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: { 'RequestVerificationToken': token }
             });
             if (response.ok) {
                 location.reload();
@@ -693,23 +759,28 @@
             }
         }
 
-        document.querySelectorAll('.add-to-cart').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const id = btn.getAttribute('data-product-id');
-                const name = btn.getAttribute('data-product-name');
-                const price = btn.getAttribute('data-product-price');
-                await addToCart(id, name, price);
-            });
-        });
+        @if (!Model.IsGuest)
+        {
+                <text>
+                document.querySelectorAll('.add-to-cart').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const id = btn.getAttribute('data-product-id');
+                        const name = btn.getAttribute('data-product-name');
+                        const price = btn.getAttribute('data-product-price');
+                        await addToCart(id, name, price);
+                    });
+                });
 
-        document.querySelectorAll('.remove-favorite').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const id = btn.getAttribute('data-product-id');
-                await removeFromFavorites(id);
-            });
-        });
+                document.querySelectorAll('.remove-favorite').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const id = btn.getAttribute('data-product-id');
+                        await removeFromFavorites(id);
+                    });
+                });
+                </text>
+        }
 
         updateCartCount();
     </script>

@@ -8,8 +8,7 @@ using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
 
-[Authorize(AuthenticationSchemes = "CustomerCookie")]
-[IgnoreAntiforgeryToken] // упрощает AJAX-запросы без передачи токена
+[Authorize(AuthenticationSchemes = "CustomerCookie, GuestCookie")]
 public class OrdersModel : PageModel
 {
     private readonly AppDbContext _context;
@@ -20,10 +19,10 @@ public class OrdersModel : PageModel
     }
 
     public List<OrderViewModel> Orders { get; set; } = new();
-    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = "Гость";
     public decimal CustomerDiscount { get; set; }
+    public bool IsGuest { get; private set; }
 
-    // Фильтры и пагинация
     [BindProperty(SupportsGet = true)]
     public string? StatusFilter { get; set; }
 
@@ -42,69 +41,81 @@ public class OrdersModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var customerIdClaim = User.FindFirst("CustomerId")?.Value;
-        if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId))
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        IsGuest = role != "Customer";
+
+        if (!IsGuest)
         {
-            var customer = await _context.Customers.FindAsync(customerId);
-            if (customer != null)
+            var customerIdClaim = User.FindFirst("CustomerId")?.Value;
+            if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId) && customerId > 0)
             {
-                CustomerName = customer.FullName;
-                CustomerDiscount = customer.Discount;
-            }
-
-            var query = _context.Orders
-                .Where(o => o.CustomerId == customerId)
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                .AsQueryable();
-
-            if (!string.IsNullOrEmpty(StatusFilter) && StatusFilter != "All")
-            {
-                query = query.Where(o => o.Status == StatusFilter);
-            }
-
-            if (DateFrom.HasValue)
-            {
-                query = query.Where(o => o.OrderDate >= DateFrom.Value);
-            }
-            if (DateTo.HasValue)
-            {
-                var endDate = DateTo.Value.Date.AddDays(1);
-                query = query.Where(o => o.OrderDate < endDate);
-            }
-
-            TotalItems = await query.CountAsync();
-            TotalPages = (int)Math.Ceiling((double)TotalItems / PageSize);
-            if (PageNumber < 1) PageNumber = 1;
-            if (PageNumber > TotalPages && TotalPages > 0) PageNumber = TotalPages;
-
-            var orders = await query
-                .OrderByDescending(o => o.OrderDate)
-                .Skip((PageNumber - 1) * PageSize)
-                .Take(PageSize)
-                .ToListAsync();
-
-            Orders = orders.Select(o => new OrderViewModel
-            {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                OrderDate = o.OrderDate,
-                TotalAmount = o.TotalAmount,
-                Status = o.Status,
-                PaymentMethod = o.PaymentMethod,
-                Items = o.OrderItems.Select(oi => new OrderItemViewModel
+                var customer = await _context.Customers.FindAsync(customerId);
+                if (customer != null)
                 {
-                    ProductName = oi.Product?.Name ?? "Неизвестно",
-                    Quantity = oi.Quantity,
-                    Price = oi.PriceAtSale,
-                    Unit = oi.Product?.Unit ?? "шт"
-                }).ToList()
-            }).ToList();
+                    CustomerName = customer.FullName;
+                    CustomerDiscount = customer.Discount;
+                }
+
+                var query = _context.Orders
+                    .Where(o => o.CustomerId == customerId)
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.Product)
+                    .AsQueryable();
+
+                if (!string.IsNullOrEmpty(StatusFilter) && StatusFilter != "All")
+                    query = query.Where(o => o.Status == StatusFilter);
+                if (DateFrom.HasValue)
+                    query = query.Where(o => o.OrderDate >= DateFrom.Value);
+                if (DateTo.HasValue)
+                {
+                    var endDate = DateTo.Value.Date.AddDays(1);
+                    query = query.Where(o => o.OrderDate < endDate);
+                }
+
+                TotalItems = await query.CountAsync();
+                TotalPages = (int)Math.Ceiling((double)TotalItems / PageSize);
+                if (PageNumber < 1) PageNumber = 1;
+                if (PageNumber > TotalPages && TotalPages > 0) PageNumber = TotalPages;
+
+                var orders = await query
+                    .OrderByDescending(o => o.OrderDate)
+                    .Skip((PageNumber - 1) * PageSize)
+                    .Take(PageSize)
+                    .ToListAsync();
+
+                Orders = orders.Select(o => new OrderViewModel
+                {
+                    Id = o.Id,
+                    OrderNumber = o.OrderNumber,
+                    OrderDate = o.OrderDate,
+                    TotalAmount = o.TotalAmount,
+                    Status = o.Status,
+                    PaymentMethod = o.PaymentMethod,
+                    Items = o.OrderItems.Select(oi => new OrderItemViewModel
+                    {
+                        ProductName = oi.Product?.Name ?? "Неизвестно",
+                        Quantity = oi.Quantity,
+                        Price = oi.PriceAtSale,
+                        Unit = oi.Product?.Unit ?? "шт"
+                    }).ToList()
+                }).ToList();
+            }
+            else
+            {
+                IsGuest = true;
+                CustomerName = "Гость";
+            }
+        }
+        else
+        {
+            CustomerName = "Гость";
+            CustomerDiscount = 0;
         }
     }
 
     public async Task<IActionResult> OnPostReorderAsync(int orderId)
     {
+        if (IsGuest) return Unauthorized();
         var customerIdClaim = User.FindFirst("CustomerId")?.Value;
         if (customerIdClaim == null || !int.TryParse(customerIdClaim, out int customerId))
             return Unauthorized();
@@ -114,8 +125,7 @@ public class OrdersModel : PageModel
             .ThenInclude(oi => oi.Product)
             .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId);
 
-        if (order == null)
-            return NotFound();
+        if (order == null) return NotFound();
 
         var items = order.OrderItems.Select(oi => new
         {

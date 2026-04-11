@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
@@ -9,7 +11,7 @@ using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
 
-[Authorize(AuthenticationSchemes = "CustomerCookie")]
+[Authorize(AuthenticationSchemes = "CustomerCookie, GuestCookie")]
 public class ProductModel : PageModel
 {
     private readonly AppDbContext _context;
@@ -22,19 +24,26 @@ public class ProductModel : PageModel
     }
 
     public ProductDetailViewModel Product { get; set; } = new();
-    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = "Гость";
     public decimal CustomerDiscount { get; set; }
+    public bool IsGuest { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        var customerIdClaim = User.FindFirst("CustomerId")?.Value;
-        if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId))
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        IsGuest = role != "Customer";
+
+        if (!IsGuest)
         {
-            var customer = await _context.Customers.FindAsync(customerId);
-            if (customer != null)
+            var customerIdClaim = User.FindFirst("CustomerId")?.Value;
+            if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId) && customerId > 0)
             {
-                CustomerName = customer.FullName;
-                CustomerDiscount = customer.Discount;
+                var customer = await _context.Customers.FindAsync(customerId);
+                if (customer != null)
+                {
+                    CustomerName = customer.FullName;
+                    CustomerDiscount = customer.Discount;
+                }
             }
         }
 
@@ -44,10 +53,7 @@ public class ProductModel : PageModel
             .Include(p => p.Warehouse)
             .FirstOrDefaultAsync(p => p.Id == id);
 
-        if (product == null)
-        {
-            return NotFound();
-        }
+        if (product == null) return NotFound();
 
         Product = new ProductDetailViewModel
         {
@@ -68,7 +74,6 @@ public class ProductModel : PageModel
         return Page();
     }
 }
-
 public class ProductDetailViewModel
 {
     public int Id { get; set; }

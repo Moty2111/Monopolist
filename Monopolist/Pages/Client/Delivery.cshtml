@@ -238,6 +238,18 @@
             color: var(--text-primary);
         }
 
+        .logout-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+            .logout-btn:hover {
+                color: var(--primary);
+            }
+
         /* Основной контент */
         .main {
             max-width: 1000px;
@@ -421,13 +433,23 @@
             </div>
             <div class="user-actions">
                 <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-                <a href="/Client/Index" class="cart-icon" id="cartIcon">
+                <a href="/Client/Cart" class="cart-icon" id="cartIcon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
                 <div class="customer-badge">
                     <i class="fas fa-user-circle"></i>
                     <span class="customer-name">@Model.CustomerName</span>
+                    @if (!Model.IsGuest)
+                    {
+                        <form method="post" asp-page="/Account/CustomerLogout">
+                            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="logout-btn" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i></a>
+                    }
                 </div>
             </div>
         </div>

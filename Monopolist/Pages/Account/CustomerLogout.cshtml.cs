@@ -11,6 +11,7 @@ public class CustomerLogoutModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         await HttpContext.SignOutAsync("CustomerCookie");
+        await HttpContext.SignOutAsync("GuestCookie");
         return RedirectToPage("/Account/CustomerLogin");
     }
 }

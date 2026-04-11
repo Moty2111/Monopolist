@@ -374,6 +374,37 @@
             display: block;
         }
 
+        .guest-message-box {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+            .guest-message-box i {
+                font-size: 64px;
+                color: var(--primary);
+                margin-bottom: 20px;
+            }
+
+            .guest-message-box h2 {
+                margin-bottom: 16px;
+            }
+
+            .guest-message-box .btn-primary {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 28px;
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                border-radius: 40px;
+                color: white;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
         /* Футер */
         .footer {
             background: var(--surface);
@@ -494,9 +525,16 @@
                 <div class="customer-badge">
                     <i class="fas fa-user-circle"></i>
                     <span class="customer-name">@Model.CustomerName</span>
-                    <form method="post" asp-page="/Account/CustomerLogout">
-                        <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
-                    </form>
+                    @if (!Model.IsGuest)
+                    {
+                        <form method="post" asp-page="/Account/CustomerLogout">
+                            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="logout-btn" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i></a>
+                    }
                 </div>
             </div>
         </div>
@@ -508,44 +546,57 @@
             <p>Управление личными данными</p>
         </div>
 
-        @if (TempData["Success"] != null)
+        @if (Model.IsGuest)
         {
-            <div class="alert-success">
-                <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <div class="guest-message-box">
+                <i class="fas fa-user-circle"></i>
+                <h2>Личный кабинет доступен только авторизованным пользователям</h2>
+                <p>Войдите или зарегистрируйтесь, чтобы управлять профилем.</p>
+                <a href="/Account/Login" class="btn-primary">Войти</a>
+                <a href="/Account/CustomerRegister" class="btn-primary" style="margin-left: 12px;">Зарегистрироваться</a>
             </div>
         }
+        else
+        {
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-success">
+                    <i class="fas fa-check-circle"></i> @TempData["Success"]
+                </div>
+            }
 
-        <form method="post" class="profile-form">
-            @Html.AntiForgeryToken()
-            <div class="form-group">
-                <label asp-for="Input.FullName">ФИО *</label>
-                <input asp-for="Input.FullName" />
-                <span asp-validation-for="Input.FullName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.Email">Email</label>
-                <input asp-for="Input.Email" type="email" />
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.Phone">Телефон</label>
-                <input asp-for="Input.Phone" />
-                <span asp-validation-for="Input.Phone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.NewPassword">Новый пароль (оставьте пустым, если не меняете)</label>
-                <input asp-for="Input.NewPassword" type="password" />
-                <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.ConfirmPassword">Подтверждение пароля</label>
-                <input asp-for="Input.ConfirmPassword" type="password" />
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <button type="submit" class="btn-save"><i class="fas fa-save"></i> Сохранить изменения</button>
-            </div>
-        </form>
+            <form method="post" class="profile-form">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label asp-for="Input.FullName">ФИО *</label>
+                    <input asp-for="Input.FullName" />
+                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.Email">Email</label>
+                    <input asp-for="Input.Email" type="email" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.Phone">Телефон</label>
+                    <input asp-for="Input.Phone" />
+                    <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.NewPassword">Новый пароль (оставьте пустым, если не меняете)</label>
+                    <input asp-for="Input.NewPassword" type="password" />
+                    <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.ConfirmPassword">Подтверждение пароля</label>
+                    <input asp-for="Input.ConfirmPassword" type="password" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn-save"><i class="fas fa-save"></i> Сохранить изменения</button>
+                </div>
+            </form>
+        }
     </main>
 
     <footer class="footer">
@@ -554,7 +605,6 @@
     </footer>
 
     <script>
-        // Тёмная тема (как в Index)
         const themeToggle = document.getElementById('themeToggle');
         const icon = themeToggle.querySelector('i');
         const savedTheme = localStorage.getItem('clientTheme');
@@ -576,12 +626,12 @@
             }
         });
 
-        // Получение количества товаров в корзине с сервера
         async function updateCartCount() {
             try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                 const response = await fetch('/Client/Cart?handler=Count', {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'RequestVerificationToken': token }
                 });
                 const data = await response.json();
                 const countSpan = document.getElementById('cartCount');
@@ -591,9 +641,7 @@
                 } else {
                     countSpan.style.display = 'none';
                 }
-            } catch (error) {
-                console.error('Ошибка получения количества товаров', error);
-            }
+            } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
 
         updateCartCount();

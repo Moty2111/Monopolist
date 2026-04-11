@@ -1,4 +1,3 @@
-// Pages/Account/CustomerRegister.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -49,7 +48,7 @@ public class CustomerRegisterModel : PageModel
     public IActionResult OnGet()
     {
         if (User.Identity?.IsAuthenticated == true)
-            return RedirectToPage("/Customer/Index");
+            return RedirectToPage("/Client/Index");
         return Page();
     }
 

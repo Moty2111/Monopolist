@@ -904,7 +904,6 @@
                         <form method="get" class="search-form">
                             <input type="text" class="search-input" name="searchString" placeholder="@(Model.Language == "ru" ? "Поиск по номеру, клиенту..." : Model.Language == "en" ? "Search by order number, customer..." : "Нөмірі, клиент бойынша іздеу...")" value="@Model.SearchString" />
 
-                            <!-- Поле выбора сортировки -->
                             <select name="sortField" class="sort-select" onchange="this.form.submit()">
                                 <option value="OrderDate" selected="@(Model.SortField == "OrderDate")">@(Model.Language == "ru" ? "Дата" : "Date")</option>
                                 <option value="OrderNumber" selected="@(Model.SortField == "OrderNumber")">@(Model.Language == "ru" ? "Номер" : "Order #")</option>
@@ -914,7 +913,6 @@
                                 <option value="PaymentMethod" selected="@(Model.SortField == "PaymentMethod")">@(Model.Language == "ru" ? "Оплата" : "Payment")</option>
                             </select>
 
-                            <!-- Направление сортировки -->
                             <select name="sortOrder" class="sort-select" onchange="this.form.submit()">
                                 <option value="asc" selected="@(Model.SortOrder == "asc")">@(Model.Language == "ru" ? "По возрастанию" : "Ascending")</option>
                                 <option value="desc" selected="@(Model.SortOrder == "desc")">@(Model.Language == "ru" ? "По убыванию" : "Descending")</option>
@@ -960,17 +958,18 @@
                                             <td>@order.TotalAmount.ToString("N0") ₽</td>
                                             <td>
                                                 @{
+                                                    // Исправлен перевод статуса
                                                     string statusText = order.Status switch
                                                     {
                                                         "Completed" => Model.Language == "ru" ? "Выполнен" : Model.Language == "en" ? "Completed" : "Орындалды",
-                                                        "Pending" => Model.Language == "ru" ? "Ожидание" : Model.Language == "en" ? "Pending" : "Күтілуде",
+                                                        "Pending" or "Processing" => Model.Language == "ru" ? "В обработке" : Model.Language == "en" ? "Pending" : "Өңделуде",
                                                         "Cancelled" => Model.Language == "ru" ? "Отменён" : Model.Language == "en" ? "Cancelled" : "Бас тартылды",
                                                         _ => order.Status
                                                     };
                                                     string statusClass = order.Status.ToLower() switch
                                                     {
                                                         "completed" => "status-completed",
-                                                        "pending" => "status-pending",
+                                                        "pending" or "processing" => "status-pending",
                                                         "cancelled" => "status-cancelled",
                                                         _ => ""
                                                     };

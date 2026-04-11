@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
-using System.Security.Claims;
 
 namespace Monoplist.Pages.Account
 {
@@ -40,17 +39,18 @@ namespace Monoplist.Pages.Account
                 Response.Cookies.Delete($"user_avatar_{userId}");
             }
 
-            // Удаляем все куки, связанные с сессией (включая session_id)
+            // Удаляем все куки
             foreach (var cookie in Request.Cookies.Keys)
             {
                 Response.Cookies.Delete(cookie);
             }
 
-            // Выходим из схемы "EmployeeCookie" (для сотрудников)
+            // Выход из всех схем
             await HttpContext.SignOutAsync("EmployeeCookie");
+            await HttpContext.SignOutAsync("CustomerCookie");
+            await HttpContext.SignOutAsync("GuestCookie");
 
-            _logger.LogInformation("Пользователь {UserName} вышел", User.Identity?.Name ?? "Неизвестный");
-
+            _logger.LogInformation("Пользователь вышел");
             return RedirectToPage("/Account/Login");
         }
     }

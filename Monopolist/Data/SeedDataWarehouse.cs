@@ -20,7 +20,7 @@ public static class SeedDataWarehouse
                 {
                     Name = "Центральный склад",
                     Location = "Москва, ул. Промышленная, 15",
-                    ImageUrl = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                    ImageUrl = "https://i.pinimg.com/736x/ed/57/0c/ed570cd81644ac62cdd5fad3fd83922c.jpg",
                     Description = "Главный склад стройматериалов, крупногабаритные товары",
                     Capacity = 5000,
                     CurrentOccupancy = 0,
@@ -30,7 +30,7 @@ public static class SeedDataWarehouse
                 {
                     Name = "Западный терминал",
                     Location = "Красногорск, ул. Складская, 8",
-                    ImageUrl = "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                    ImageUrl = "https://i.pinimg.com/736x/ed/14/f2/ed14f203c3d43085f56e202be82d6713.jpg",
                     Description = "Склад отделочных материалов и инструментов",
                     Capacity = 3000,
                     CurrentOccupancy = 0,
@@ -40,7 +40,7 @@ public static class SeedDataWarehouse
                 {
                     Name = "Восточный склад",
                     Location = "Люберцы, ул. Заводская, 3",
-                    ImageUrl = "https://images.unsplash.com/photo-1534430480872-3498386e7856?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                    ImageUrl = "https://i.pinimg.com/736x/92/fa/bb/92fabb601f5b831dfc7315535e97c1af.jpg",
                     Description = "Склад лакокрасочных материалов и химии",
                     Capacity = 2000,
                     CurrentOccupancy = 0,

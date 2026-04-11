@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
 
-[Authorize(AuthenticationSchemes = "CustomerCookie")]
+[Authorize(AuthenticationSchemes = "CustomerCookie, GuestCookie")]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _context;
@@ -21,8 +21,9 @@ public class IndexModel : PageModel
 
     public List<ProductCardViewModel> Products { get; set; } = new();
     public List<Category> Categories { get; set; } = new();
-    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = "Гость";
     public decimal CustomerDiscount { get; set; }
+    public bool IsGuest { get; private set; }
 
     [BindProperty(SupportsGet = true)]
     public string? Search { get; set; }
@@ -44,14 +45,20 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var customerId = GetCustomerId();
-        if (customerId != null)
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        IsGuest = role != "Customer";
+
+        if (!IsGuest)
         {
-            var customer = await _context.Customers.FindAsync(customerId);
-            if (customer != null)
+            var customerId = GetCustomerId();
+            if (customerId != null && customerId > 0)
             {
-                CustomerName = customer.FullName;
-                CustomerDiscount = customer.Discount;
+                var customer = await _context.Customers.FindAsync(customerId);
+                if (customer != null)
+                {
+                    CustomerName = customer.FullName;
+                    CustomerDiscount = customer.Discount;
+                }
             }
         }
 
@@ -64,14 +71,10 @@ public class IndexModel : PageModel
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(Search))
-        {
             query = query.Where(p => p.Name.Contains(Search) || (p.Article != null && p.Article.Contains(Search)));
-        }
 
         if (CategoryId > 0)
-        {
             query = query.Where(p => p.CategoryId == CategoryId);
-        }
 
         TotalItems = await query.CountAsync();
         TotalPages = (int)Math.Ceiling((double)TotalItems / PageSize);
@@ -107,6 +110,7 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnGetFavorites()
     {
+        if (IsGuest) return new JsonResult(new List<int>());
         var customerId = GetCustomerId();
         if (customerId == null) return new JsonResult(new List<int>());
 
@@ -120,7 +124,7 @@ public class IndexModel : PageModel
     private int? GetCustomerId()
     {
         var claim = User.FindFirst("CustomerId")?.Value;
-        if (claim != null && int.TryParse(claim, out int id)) return id;
+        if (claim != null && int.TryParse(claim, out int id) && id > 0) return id;
         return null;
     }
 }

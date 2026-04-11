@@ -387,6 +387,25 @@
                 text-decoration: underline;
             }
 
+        .guest-message {
+            margin-top: 16px;
+            font-size: 14px;
+            text-align: center;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 12px;
+        }
+
+        .guest-message a {
+            color: #FF6B00;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        body.dark .guest-message {
+            background: #2a2a2a;
+        }
+
         /* Футер */
         .footer {
             background: var(--surface);
@@ -513,9 +532,16 @@
                 <div class="customer-badge">
                     <i class="fas fa-user-circle"></i>
                     <span class="customer-name">@Model.CustomerName</span>
-                    <form method="post" asp-page="/Account/CustomerLogout">
-                        <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
-                    </form>
+                    @if (!Model.IsGuest)
+                    {
+                        <form method="post" asp-page="/Account/CustomerLogout">
+                            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="logout-btn" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i></a>
+                    }
                 </div>
             </div>
         </div>
@@ -559,9 +585,20 @@
                 <div class="supplier">
                     <i class="fas fa-truck"></i> Поставщик: @Model.Product.SupplierName
                 </div>
-                <button class="add-to-cart-btn" data-product-id="@Model.Product.Id" data-product-name="@Model.Product.Name" data-product-price="@Model.Product.SalePrice">
-                    <i class="fas fa-shopping-cart"></i> В корзину
-                </button>
+
+                @if (!Model.IsGuest)
+                {
+                    <button class="add-to-cart-btn" data-product-id="@Model.Product.Id" data-product-name="@Model.Product.Name" data-product-price="@Model.Product.SalePrice">
+                        <i class="fas fa-shopping-cart"></i> В корзину
+                    </button>
+                }
+                else
+                {
+                    <div class="guest-message">
+                        <a href="/Account/Login">Войдите</a> или <a href="/Account/CustomerRegister">зарегистрируйтесь</a>, чтобы купить
+                    </div>
+                }
+
                 <div>
                     <a href="/Client/Index" class="back-link"><i class="fas fa-arrow-left"></i> Назад к товарам</a>
                 </div>

@@ -724,16 +724,26 @@
                                             <td><strong>@log.Username</strong></td>
                                             <td>
                                                 @{
-                                                    string actionClass = log.Action.Contains("Вход") ? "action-login" :
-                                                    log.Action.Contains("Создание") ? "action-create" :
-                                                    log.Action.Contains("Удаление") ? "action-delete" :
-                                                    log.Action.Contains("Редактирование") ? "action-edit" : "";
+                                                    string actionText = log.Action switch
+                                                    {
+                                                        string a when a.Contains("Вход") || a.Contains("Login") => Model.Language == "ru" ? "Вход в систему" : (Model.Language == "en" ? "Login" : "Жүйеге кіру"),
+                                                        string a when a.Contains("Создание") || a.Contains("Create") => Model.Language == "ru" ? "Создание заказа" : (Model.Language == "en" ? "Create order" : "Тапсырыс құру"),
+                                                        string a when a.Contains("Добавление") || a.Contains("Add") => Model.Language == "ru" ? "Добавление товара" : (Model.Language == "en" ? "Add product" : "Тауар қосу"),
+                                                        string a when a.Contains("Удаление") || a.Contains("Delete") => Model.Language == "ru" ? "Удаление пользователя" : (Model.Language == "en" ? "Delete user" : "Пайдаланушыны жою"),
+                                                        string a when a.Contains("Редактирование") || a.Contains("Edit") => Model.Language == "ru" ? "Редактирование товара" : (Model.Language == "en" ? "Edit product" : "Тауарды өңдеу"),
+                                                        _ => log.Action
+                                                    };
+                                                    string actionClass = log.Action.Contains("Вход") || log.Action.Contains("Login") ? "action-login" :
+                                                    log.Action.Contains("Создание") || log.Action.Contains("Create") ? "action-create" :
+                                                    log.Action.Contains("Удаление") || log.Action.Contains("Delete") ? "action-delete" :
+                                                    log.Action.Contains("Редактирование") || log.Action.Contains("Edit") ? "action-edit" : "";
                                                 }
-                                                <span class="action-badge @actionClass">@log.Action</span>
+                                                <span class="action-badge @actionClass">@actionText</span>
                                             </td>
                                             <td>@log.Details</td>
                                             <td>@log.IpAddress</td>
                                         </tr>
+                                    }
                                     }
                                 </tbody>
                             </table>

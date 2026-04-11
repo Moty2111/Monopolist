@@ -874,6 +874,47 @@
             border-top-color: #FFD700;
         }
 
+        /* ===== СТИЛИ ДЛЯ ГОСТЯ ===== */
+        .guest-section {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,107,0,0.3);
+        }
+
+        .guest-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,107,0,0.1);
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: #FF6B00;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+            .guest-link:hover {
+                background: rgba(255,107,0,0.2);
+                text-decoration: underline;
+            }
+
+        .guest-note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        body.dark-theme .guest-link {
+            background: rgba(255,107,0,0.2);
+            color: #FFD700;
+        }
+
+        body.dark-theme .guest-note {
+            color: #aaa;
+        }
+
         @@media (max-width: 480px) {
             .login-card {
                 padding: 30px 20px;
@@ -1074,6 +1115,16 @@
             <div class="customer-info">
                 <p>Нет аккаунта? <a asp-page="/Account/CustomerRegister">Зарегистрируйтесь</a></p>
                 <p>Для юридических лиц и оптовых закупок используйте форму для сотрудников.</p>
+            </div>
+        </div>
+
+        <!-- Режим гостя -->
+        <div class="guest-section">
+            <a href="/Account/GuestLogin" class="guest-link">
+                <i class="fas fa-user-friends"></i> Продолжить как гость
+            </a>
+            <div class="guest-note">
+                <i class="fas fa-info-circle"></i> Гость может просматривать товары, но для покупки потребуется регистрация.
             </div>
         </div>
 

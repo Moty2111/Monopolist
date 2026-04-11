@@ -1,10 +1,10 @@
-// Pages/Account/CustomerLogin.cshtml.cs
-using Microsoft.AspNetCore.Authentication;
+п»їusing Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
+using Monoplist.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
@@ -27,11 +27,11 @@ public class CustomerLoginModel : PageModel
 
     public class InputModel
     {
-        [Required(ErrorMessage = "Email обязателен")]
+        [Required(ErrorMessage = "Email РѕР±СЏР·Р°С‚РµР»РµРЅ")]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Пароль обязателен")]
+        [Required(ErrorMessage = "РџР°СЂРѕР»СЊ РѕР±СЏР·Р°С‚РµР»РµРЅ")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
@@ -50,10 +50,13 @@ public class CustomerLoginModel : PageModel
         if (!ModelState.IsValid)
             return Page();
 
+        // Р’С‹С…РѕРґ РёР· РіРѕСЃС‚РµРІРѕР№ СЃС…РµРјС‹ (РµСЃР»Рё Р±С‹Р»Р°)
+        await HttpContext.SignOutAsync("GuestCookie");
+
         var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == Input.Email);
         if (customer == null || customer.Password != Input.Password)
         {
-            ModelState.AddModelError(string.Empty, "Неверный email или пароль.");
+            ModelState.AddModelError(string.Empty, "РќРµРІРµСЂРЅС‹Р№ email РёР»Рё РїР°СЂРѕР»СЊ.");
             return Page();
         }
 
@@ -62,7 +65,7 @@ public class CustomerLoginModel : PageModel
             new Claim(ClaimTypes.Name, customer.FullName),
             new Claim(ClaimTypes.Email, customer.Email),
             new Claim("CustomerId", customer.Id.ToString()),
-            new Claim("CustomerRole", "Customer")
+            new Claim(ClaimTypes.Role, "Customer")
         };
 
         var identity = new ClaimsIdentity(claims, "CustomerCookie");

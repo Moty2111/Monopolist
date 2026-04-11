@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+п»їusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +9,8 @@ using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
 
-[Authorize(AuthenticationSchemes = "CustomerCookie")]
-[IgnoreAntiforgeryToken] // для упрощения
+[Authorize(AuthenticationSchemes = "CustomerCookie, GuestCookie")]
+[IgnoreAntiforgeryToken]
 public class FavoritesModel : PageModel
 {
     private readonly AppDbContext _context;
@@ -21,47 +21,61 @@ public class FavoritesModel : PageModel
     }
 
     public List<ProductCardViewModel> FavoriteProducts { get; set; } = new();
-    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = "Р“РѕСЃС‚СЊ";
     public decimal CustomerDiscount { get; set; }
+    public bool IsGuest { get; private set; }
 
     public async Task OnGetAsync()
     {
-        var customerId = GetCustomerId();
-        if (customerId == null) return;
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        IsGuest = role != "Customer";
 
-        var customer = await _context.Customers.FindAsync(customerId);
-        if (customer != null)
+        if (!IsGuest)
         {
-            CustomerName = customer.FullName;
-            CustomerDiscount = customer.Discount;
+            var customerId = GetCustomerId();
+            if (customerId != null && customerId > 0)
+            {
+                var customer = await _context.Customers.FindAsync(customerId);
+                if (customer != null)
+                {
+                    CustomerName = customer.FullName;
+                    CustomerDiscount = customer.Discount;
+                }
+
+                var favorites = await _context.Favorites
+                    .Include(f => f.Product)
+                        .ThenInclude(p => p.Warehouse)
+                    .Where(f => f.CustomerId == customerId)
+                    .Select(f => f.Product)
+                    .ToListAsync();
+
+                FavoriteProducts = favorites.Select(p => new ProductCardViewModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Article = p.Article,
+                    CategoryName = p.Category != null ? p.Category.Name : "Р‘РµР· РєР°С‚РµРіРѕСЂРёРё",
+                    Unit = p.Unit,
+                    SalePrice = p.SalePrice,
+                    CurrentStock = p.CurrentStock,
+                    ImageUrl = p.ImageUrl ?? (p.Warehouse != null ? p.Warehouse.ImageUrl : null),
+                    Description = p.Warehouse != null ? p.Warehouse.Description : null
+                }).ToList();
+            }
+            else
+            {
+                IsGuest = true;
+                CustomerName = "Р“РѕСЃС‚СЊ";
+            }
         }
-
-        var favorites = await _context.Favorites
-            .Include(f => f.Product)
-                .ThenInclude(p => p.Warehouse)
-            .Where(f => f.CustomerId == customerId)
-            .Select(f => f.Product)
-            .ToListAsync();
-
-        FavoriteProducts = favorites.Select(p => new ProductCardViewModel
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Article = p.Article,
-            CategoryName = p.Category != null ? p.Category.Name : "Без категории",
-            Unit = p.Unit,
-            SalePrice = p.SalePrice,
-            CurrentStock = p.CurrentStock,
-            ImageUrl = p.ImageUrl ?? (p.Warehouse != null ? p.Warehouse.ImageUrl : null),
-            Description = p.Warehouse != null ? p.Warehouse.Description : null
-        }).ToList();
     }
 
     [HttpPost]
     public async Task<IActionResult> OnPostAddAsync(int productId)
     {
+        if (IsGuest) return Unauthorized();
         var customerId = GetCustomerId();
-        if (customerId == null) return Unauthorized();
+        if (customerId == null || customerId <= 0) return Unauthorized();
 
         var existing = await _context.Favorites
             .FirstOrDefaultAsync(f => f.CustomerId == customerId && f.ProductId == productId);
@@ -81,8 +95,9 @@ public class FavoritesModel : PageModel
     [HttpPost]
     public async Task<IActionResult> OnPostRemoveAsync(int productId)
     {
+        if (IsGuest) return Unauthorized();
         var customerId = GetCustomerId();
-        if (customerId == null) return Unauthorized();
+        if (customerId == null || customerId <= 0) return Unauthorized();
 
         var favorite = await _context.Favorites
             .FirstOrDefaultAsync(f => f.CustomerId == customerId && f.ProductId == productId);
@@ -98,7 +113,7 @@ public class FavoritesModel : PageModel
     private int? GetCustomerId()
     {
         var claim = User.FindFirst("CustomerId")?.Value;
-        if (claim != null && int.TryParse(claim, out int id)) return id;
+        if (claim != null && int.TryParse(claim, out int id) && id > 0) return id;
         return null;
     }
 }
