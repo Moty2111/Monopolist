@@ -144,6 +144,7 @@
             min-height: 100vh;
         }
 
+        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -230,6 +231,7 @@
                             color: var(--primary);
                         }
 
+        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-content {
             flex: 1;
             display: flex;
@@ -412,32 +414,6 @@
                 border-color: var(--primary);
             }
 
-        .btn-logout {
-            background: none;
-            border: 2px solid var(--accent);
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-            .btn-logout:hover {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                border-color: transparent;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
-            }
-
-                .btn-logout:hover i {
-                    color: white;
-                }
-
         .content {
             padding: 24px;
             flex: 1;
@@ -508,7 +484,7 @@
             gap: 15px;
         }
 
-        .btn-primary {
+        .btn-primary, .btn-secondary, .btn-danger {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -520,6 +496,10 @@
             cursor: pointer;
             transition: var(--transition);
             text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             box-shadow: 0 4px 10px rgba(255,107,0,0.3);
@@ -531,20 +511,9 @@
             }
 
         .btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: 2px solid var(--border);
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
             background: var(--surface);
             color: var(--text-secondary);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid var(--border);
         }
 
             .btn-secondary:hover {
@@ -554,17 +523,6 @@
             }
 
         .btn-danger {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
             background: var(--danger);
             color: white;
             box-shadow: 0 4px 10px rgba(239,68,68,0.3);
@@ -687,34 +645,6 @@
                 background: rgba(255,107,0,0.05);
             }
 
-            .data-table th:nth-child(1) {
-                width: 10%;
-            }
-
-            .data-table th:nth-child(2) {
-                width: 15%;
-            }
-
-            .data-table th:nth-child(3) {
-                width: 10%;
-            }
-
-            .data-table th:nth-child(4) {
-                width: 10%;
-            }
-
-            .data-table th:nth-child(5) {
-                width: 12%;
-            }
-
-            .data-table th:nth-child(6) {
-                width: 12%;
-            }
-
-            .data-table th:nth-child(7) {
-                width: 8%;
-            }
-
         .status-badge {
             display: inline-block;
             padding: 4px 10px;
@@ -834,7 +764,7 @@
                 font-size: 1.25rem;
             }
 
-            .user-info span {
+            .user-profile .user-details {
                 display: none;
             }
 
@@ -882,10 +812,66 @@
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        @await Html.PartialAsync("_Sidebar")
+        <!-- Боковое меню (встроенное, с локализацией) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-helmet-safety"></i>
+                <h2>Моноплист</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> @(Model.Language == "ru" ? "Главная панель" : Model.Language == "en" ? "Dashboard" : "Бас панель")</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> @(Model.Language == "ru" ? "Каталог товаров" : Model.Language == "en" ? "Products" : "Тауарлар каталогы")</a></li>
+                    <li><a asp-page="/Orders/Index" class="active"><i class="fas fa-shopping-cart"></i> @(Model.Language == "ru" ? "Продажи" : Model.Language == "en" ? "Orders" : "Сатулар")</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> @(Model.Language == "ru" ? "Клиенты" : Model.Language == "en" ? "Customers" : "Клиенттер")</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> @(Model.Language == "ru" ? "Склад" : Model.Language == "en" ? "Warehouse" : "Қойма")</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> @(Model.Language == "ru" ? "Поставщики" : Model.Language == "en" ? "Suppliers" : "Жеткізушілер")</a></li>
+                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> @(Model.Language == "ru" ? "Отчеты" : Model.Language == "en" ? "Reports" : "Есептер")</a></li>
+                    <li><a asp-page="/Settings/Index"><i class="fas fa-cog"></i> @(Model.Language == "ru" ? "Настройки" : Model.Language == "en" ? "Settings" : "Баптаулар")</a></li>
+                </ul>
+            </nav>
+        </aside>
 
         <main class="main-content">
-            @await Html.PartialAsync("_Header")
+            <!-- Верхняя панель (встроенная, с локализацией) -->
+            <header class="top-bar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="user-info">
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <div class="user-avatar">
+                            @if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <img src="@avatarUrl" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">@User.Identity?.Name</span>
+                            <span class="user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="user-menu" id="userMenu">
+                        <a asp-page="/Settings/Profile" class="menu-item"><i class="fas fa-user"></i> @(Model.Language == "ru" ? "Профиль" : Model.Language == "en" ? "Profile" : "Профиль")</a>
+                        <a asp-page="/Settings/Security" class="menu-item"><i class="fas fa-shield-alt"></i> @(Model.Language == "ru" ? "Безопасность" : Model.Language == "en" ? "Security" : "Қауіпсіздік")</a>
+                        <a asp-page="/Settings/Appearance" class="menu-item"><i class="fas fa-palette"></i> @(Model.Language == "ru" ? "Внешний вид" : Model.Language == "en" ? "Appearance" : "Сыртқы түр")</a>
+                        <div class="menu-divider"></div>
+                        <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="menu-item logout"><i class="fas fa-sign-out-alt"></i> @(Model.Language == "ru" ? "Выйти" : Model.Language == "en" ? "Logout" : "Шығу")</button>
+                        </form>
+                    </div>
+                </div>
+            </header>
 
             <div class="content">
                 <div class="dashboard">
@@ -958,7 +944,6 @@
                                             <td>@order.TotalAmount.ToString("N0") ₽</td>
                                             <td>
                                                 @{
-                                                    // Исправлен перевод статуса
                                                     string statusText = order.Status switch
                                                     {
                                                         "Completed" => Model.Language == "ru" ? "Выполнен" : Model.Language == "en" ? "Completed" : "Орындалды",
