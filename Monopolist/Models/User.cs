@@ -17,7 +17,7 @@ public class User
     [Required, StringLength(20)]
     public string Role { get; set; } = "Seller";
 
-    // Новые поля для профиля
+    // Профиль
     [StringLength(100)]
     public string? FullName { get; set; }
 
@@ -39,15 +39,24 @@ public class User
     public bool Animations { get; set; } = true;
     public string? CustomColor { get; set; } = "#FF6B00";
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-    public string? AvatarUrl { get; set; }
+    // === УВЕДОМЛЕНИЯ ===
+    public bool OrderNotifications { get; set; } = true;
+    public bool StockNotifications { get; set; } = true;
+    public bool CustomerNotifications { get; set; } = true;
+    public bool DailyReport { get; set; } = false;
 
-    // === ДЛЯ 2FA ===
-    public string? TwoFactorSecret { get; set; }      // Секретный ключ для TOTP (сохраняется в БД)
-    public bool TwoFactorEnabled { get; set; }         // Включена ли 2FA
-     
-    // Поля для сброса пароля
+    // === 2FA ===
+    public string? TwoFactorSecret { get; set; }
+    public bool TwoFactorEnabled { get; set; }
+
+    // Сброс пароля
     public string? ResetToken { get; set; }
     public DateTime? ResetTokenExpiry { get; set; }
+
+    // Временные метки
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
+
+    // Аватар
+    public string? AvatarUrl { get; set; }
 }

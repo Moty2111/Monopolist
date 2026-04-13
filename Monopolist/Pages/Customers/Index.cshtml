@@ -5,6 +5,7 @@
     ViewData["Title"] = Model.Language == "ru" ? "Клиенты" : (Model.Language == "en" ? "Customers" : "Клиенттер");
     var userId = User.FindFirst("UserId")?.Value;
     var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
+    bool canViewPassword = User.IsInRole("Admin") || User.IsInRole("Manager");
 }
 
 <!DOCTYPE html>
@@ -116,9 +117,7 @@
             max-width: 150px;
         }
 
-        body.compact-mode .btn-primary,
-        body.compact-mode .search-btn,
-        body.compact-mode .reset-btn {
+        body.compact-mode .btn-primary, body.compact-mode .search-btn, body.compact-mode .reset-btn {
             padding: 6px 16px;
         }
 
@@ -667,8 +666,7 @@
         }
 
         @@media (max-width: 992px) {
-            .data-table th:nth-child(3),
-            .data-table td:nth-child(3) {
+            .data-table th:nth-child(3), .data-table td:nth-child(3) {
                 display: none;
             }
         }
@@ -736,8 +734,7 @@
                 justify-content: center;
             }
 
-            .data-table th:nth-child(5),
-            .data-table td:nth-child(5) {
+            .data-table th:nth-child(5), .data-table td:nth-child(5) {
                 display: none;
             }
         }
@@ -751,8 +748,7 @@
                 padding: 8px 12px;
             }
 
-            .data-table th:nth-child(2),
-            .data-table td:nth-child(2) {
+            .data-table th:nth-child(2), .data-table td:nth-child(2) {
                 display: none;
             }
         }
@@ -760,7 +756,6 @@
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню (встроенное, с локализацией) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -781,16 +776,11 @@
         </aside>
 
         <main class="main-content">
-            <!-- Верхняя панель (встроенная, с локализацией) -->
             <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
-                        <i class="fas fa-sun"></i>
-                    </div>
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")"><i class="fas fa-sun"></i></div>
                     <div class="user-profile" onclick="toggleUserMenu()">
                         <div class="user-avatar">
                             @if (!string.IsNullOrEmpty(avatarUrl))
@@ -875,6 +865,10 @@
                                         <th><i class="fas fa-user"></i> @(Model.Language == "ru" ? "ФИО / Название" : Model.Language == "en" ? "Full name" : "Аты-жөні / Атауы")</th>
                                         <th><i class="fas fa-phone"></i> @(Model.Language == "ru" ? "Телефон" : Model.Language == "en" ? "Phone" : "Телефон")</th>
                                         <th><i class="fas fa-envelope"></i> Email</th>
+                                        @if (canViewPassword)
+                                        {
+                                            <th><i class="fas fa-key"></i> @(Model.Language == "ru" ? "Пароль" : Model.Language == "en" ? "Password" : "Құпиясөз")</th>
+                                        }
                                         <th><i class="fas fa-percent"></i> @(Model.Language == "ru" ? "Скидка" : Model.Language == "en" ? "Discount" : "Жеңілдік")</th>
                                         <th><i class="fas fa-calendar"></i> @(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</th>
                                         <th><i class="fas fa-cogs"></i> @(Model.Language == "ru" ? "Действия" : Model.Language == "en" ? "Actions" : "Әрекеттер")</th>
@@ -887,6 +881,10 @@
                                             <td>@customer.FullName</td>
                                             <td>@customer.Phone</td>
                                             <td>@customer.Email</td>
+                                            @if (canViewPassword)
+                                            {
+                                                <td>@customer.Password</td>
+                                            }
                                             <td>@customer.Discount%</td>
                                             <td>@customer.RegistrationDate.ToString("dd.MM.yyyy")</td>
                                             <td>
@@ -925,70 +923,41 @@
 
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // JavaScript из оригинального Index.cshtml (без изменений)
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
-
             if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    body.classList.toggle('sidebar-open');
-                });
-
+                menuToggle.addEventListener('click', function() { body.classList.toggle('sidebar-open'); });
                 document.addEventListener('click', function(event) {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open'))
                             body.classList.remove('sidebar-open');
-                        }
                     }
                 });
             }
-
             const themeToggle = document.getElementById('themeToggle');
             if (themeToggle) {
                 const themeIcon = themeToggle.querySelector('i');
                 const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
-                if (savedTheme === 'dark') {
-                    body.classList.add('dark-theme');
-                    themeIcon?.classList.remove('fa-sun');
-                    themeIcon?.classList.add('fa-moon');
-                }
-
+                if (savedTheme === 'dark') { body.classList.add('dark-theme'); themeIcon?.classList.remove('fa-sun'); themeIcon?.classList.add('fa-moon'); }
                 themeToggle.addEventListener('click', function() {
                     body.classList.toggle('dark-theme');
                     if (body.classList.contains('dark-theme')) {
-                        themeIcon?.classList.remove('fa-sun');
-                        themeIcon?.classList.add('fa-moon');
-                        localStorage.setItem('theme', 'dark');
+                        themeIcon?.classList.remove('fa-sun'); themeIcon?.classList.add('fa-moon'); localStorage.setItem('theme', 'dark');
                     } else {
-                        themeIcon?.classList.remove('fa-moon');
-                        themeIcon?.classList.add('fa-sun');
-                        localStorage.setItem('theme', 'light');
+                        themeIcon?.classList.remove('fa-moon'); themeIcon?.classList.add('fa-sun'); localStorage.setItem('theme', 'light');
                     }
                 });
             }
-
             const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.style.display = 'none', 500);
-                }, 5000);
-            });
+            alerts.forEach(alert => { setTimeout(() => { alert.style.transition = 'opacity 0.5s'; alert.style.opacity = '0'; setTimeout(() => alert.style.display = 'none', 500); }, 5000); });
         });
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('show');
-        }
-
+        function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
         window.addEventListener('click', function(event) {
             const userInfo = document.querySelector('.user-info');
             const userMenu = document.getElementById('userMenu');
-            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) userMenu.classList.remove('show');
         });
     </script>
 </body>

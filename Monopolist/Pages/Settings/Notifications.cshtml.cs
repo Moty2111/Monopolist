@@ -44,12 +44,11 @@ public class NotificationsModel : PageModel
         Theme = user.Theme ?? "light";
         CustomColor = user.CustomColor ?? "#FF6B00";
 
-        // Загружаем настройки уведомлений из куки
-        Input.EmailNotifications = Request.Cookies[$"notify_email_{userId}"] == "true";
-        Input.OrderNotifications = Request.Cookies[$"notify_order_{userId}"] == "true";
-        Input.StockNotifications = Request.Cookies[$"notify_stock_{userId}"] == "true";
-        Input.CustomerNotifications = Request.Cookies[$"notify_customer_{userId}"] == "true";
-        Input.DailyReport = Request.Cookies[$"notify_daily_{userId}"] == "true";
+        // Загружаем настройки уведомлений из БД
+        Input.OrderNotifications = user.OrderNotifications;
+        Input.StockNotifications = user.StockNotifications;
+        Input.CustomerNotifications = user.CustomerNotifications;
+        Input.DailyReport = user.DailyReport;
 
         return Page();
     }
@@ -63,21 +62,20 @@ public class NotificationsModel : PageModel
         }
 
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            return NotFound();
 
         try
         {
-            var cookieOptions = new CookieOptions
-            {
-                Expires = DateTime.Now.AddYears(1),
-                HttpOnly = true,
-                SameSite = SameSiteMode.Lax
-            };
+            // Обновляем настройки уведомлений в БД
+            user.OrderNotifications = Input.OrderNotifications;
+            user.StockNotifications = Input.StockNotifications;
+            user.CustomerNotifications = Input.CustomerNotifications;
+            user.DailyReport = Input.DailyReport;
+            user.UpdatedAt = DateTime.UtcNow;
 
-            Response.Cookies.Append($"notify_email_{userId}", Input.EmailNotifications.ToString(), cookieOptions);
-            Response.Cookies.Append($"notify_order_{userId}", Input.OrderNotifications.ToString(), cookieOptions);
-            Response.Cookies.Append($"notify_stock_{userId}", Input.StockNotifications.ToString(), cookieOptions);
-            Response.Cookies.Append($"notify_customer_{userId}", Input.CustomerNotifications.ToString(), cookieOptions);
-            Response.Cookies.Append($"notify_daily_{userId}", Input.DailyReport.ToString(), cookieOptions);
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = GetLocalizedMessage(
                 "Настройки уведомлений сохранены",

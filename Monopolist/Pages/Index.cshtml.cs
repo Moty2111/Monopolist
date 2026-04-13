@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.ViewModels;
 using Monoplist.Data;
+using Monoplist.Models;
 using System.Security.Claims;
 using System;
 using System.Collections.Generic;
@@ -32,9 +34,14 @@ public class IndexModel : PageModel
     public string Theme { get; set; } = "light";
     public string CustomColor { get; set; } = "#FF6B00";
 
+    // Уведомления
+    public List<NotificationViewModel> Notifications { get; set; } = new();
+    public int UnreadNotificationsCount { get; set; }
+
     public async Task OnGetAsync()
     {
         await LoadUserSettings();
+        await LoadNotifications();
 
         try
         {
@@ -245,6 +252,42 @@ public class IndexModel : PageModel
         }
     }
 
+    private async Task LoadNotifications()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        if (userId == 0) return;
+
+        var notifications = await _context.Notifications
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(20)
+            .ToListAsync();
+
+        Notifications = notifications.Select(n => new NotificationViewModel
+        {
+            Id = n.Id,
+            Title = n.Title,
+            Message = n.Message,
+            Link = n.Link,
+            Type = n.Type.ToString().ToLower(),
+            IsRead = n.IsRead,
+            CreatedAt = n.CreatedAt,
+            TimeAgo = GetTimeAgo(n.CreatedAt)
+        }).ToList();
+
+        UnreadNotificationsCount = notifications.Count(n => !n.IsRead);
+    }
+
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+        if (timeSpan.TotalMinutes < 1) return GetLocalizedMessage("только что", "just now", "жаңа ғана");
+        if (timeSpan.TotalMinutes < 60) return $"{(int)timeSpan.TotalMinutes} {GetLocalizedMessage("мин", "min", "мин")}";
+        if (timeSpan.TotalHours < 24) return $"{(int)timeSpan.TotalHours} {GetLocalizedMessage("ч", "h", "сағ")}";
+        if (timeSpan.TotalDays < 7) return $"{(int)timeSpan.TotalDays} {GetLocalizedMessage("дн", "d", "күн")}";
+        return dateTime.ToString("dd.MM.yyyy");
+    }
+
     private string GetLocalizedMessage(string ru, string en, string kk)
     {
         return Language switch
@@ -318,5 +361,30 @@ public class IndexModel : PageModel
             new TopProductViewModel { Name = "Цемент M500 50кг *", TotalSold = 10, TotalRevenue = 10 * 350, Unit = "шт" },
             new TopProductViewModel { Name = "Гипсокартон 12.5мм *", TotalSold = 8, TotalRevenue = 8 * 550, Unit = "шт" }
         };
+    }
+
+    // Обработчики для уведомлений
+    public async Task<IActionResult> OnPostMarkAsReadAsync(int id)
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var notification = await _context.Notifications.FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
+        if (notification != null)
+        {
+            notification.IsRead = true;
+            await _context.SaveChangesAsync();
+        }
+        return new OkResult();
+    }
+
+    public async Task<IActionResult> OnPostMarkAllAsReadAsync()
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        var unread = await _context.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ToListAsync();
+        foreach (var n in unread)
+            n.IsRead = true;
+        await _context.SaveChangesAsync();
+        return new OkResult();
     }
 }

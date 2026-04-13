@@ -1,5 +1,4 @@
-﻿// Pages/Customers/Edit.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +23,12 @@ public class EditModel : PageModel
     [BindProperty]
     public Customer Customer { get; set; } = new();
 
-    // Свойства для персонализации
+    [BindProperty]
+    public string? NewPassword { get; set; }
+
+    [BindProperty]
+    public string? ConfirmPassword { get; set; }
+
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -33,15 +37,11 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
-        if (id == null)
-            return NotFound();
-
+        if (id == null) return NotFound();
         await LoadUserSettings();
-
-        Customer = await _context.Customers.FindAsync(id);
-        if (Customer == null)
-            return NotFound();
-
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer == null) return NotFound();
+        Customer = customer;
         return Page();
     }
 
@@ -53,13 +53,41 @@ public class EditModel : PageModel
             return Page();
         }
 
+        var customerToUpdate = await _context.Customers.FindAsync(Customer.Id);
+        if (customerToUpdate == null) return NotFound();
+
+        // Проверка паролей, если указаны
+        if (!string.IsNullOrWhiteSpace(NewPassword))
+        {
+            if (NewPassword != ConfirmPassword)
+            {
+                ModelState.AddModelError(string.Empty, GetLocalizedMessage("Пароли не совпадают.", "Passwords do not match.", "Құпиясөздер сәйкес келмейді."));
+                await LoadUserSettings();
+                return Page();
+            }
+            if (NewPassword.Length < 4)
+            {
+                ModelState.AddModelError(string.Empty, GetLocalizedMessage("Пароль должен содержать минимум 4 символа.", "Password must be at least 4 characters.", "Құпиясөз кемінде 4 таңбадан тұруы керек."));
+                await LoadUserSettings();
+                return Page();
+            }
+            customerToUpdate.Password = NewPassword;
+        }
+
         try
         {
-            Customer.UpdatedAt = DateTime.Now;
-            _context.Attach(Customer).State = EntityState.Modified;
+            customerToUpdate.FullName = Customer.FullName;
+            customerToUpdate.Phone = Customer.Phone;
+            customerToUpdate.Email = Customer.Email;
+            customerToUpdate.Discount = Customer.Discount;
+            customerToUpdate.UpdatedAt = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = GetLocalizedMessage("Данные клиента обновлены.", "Customer data updated.", "Клиент деректері жаңартылды.");
+            TempData["Success"] = GetLocalizedMessage(
+                "Данные клиента обновлены.",
+                "Customer data updated.",
+                "Клиент деректері жаңартылды.");
             return RedirectToPage("./Index");
         }
         catch (DbUpdateConcurrencyException)
@@ -72,7 +100,10 @@ public class EditModel : PageModel
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при обновлении клиента");
-            ModelState.AddModelError(string.Empty, GetLocalizedMessage("Произошла ошибка при сохранении. Попробуйте снова.", "An error occurred while saving. Please try again.", "Сақтау кезінде қате орын алды. Қайталап көріңіз."));
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при сохранении. Попробуйте снова.",
+                "An error occurred while saving. Please try again.",
+                "Сақтау кезінде қате орын алды. Қайталап көріңіз."));
             await LoadUserSettings();
             return Page();
         }

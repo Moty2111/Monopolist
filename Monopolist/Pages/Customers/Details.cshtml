@@ -5,6 +5,7 @@
     ViewData["Title"] = Model.Language == "ru" ? "Информация о клиенте" : (Model.Language == "en" ? "Customer information" : "Клиент туралы ақпарат");
     var userId = User.FindFirst("UserId")?.Value;
     var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
+    bool canViewPassword = User.IsInRole("Admin") || User.IsInRole("Manager");
 }
 
 <!DOCTYPE html>
@@ -18,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Все стили из оригинального Details.cshtml */
+        /* Стили из оригинального Details.cshtml */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -680,7 +681,6 @@
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню (локализованное) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -701,16 +701,11 @@
         </aside>
 
         <main class="main-content">
-            <!-- Верхняя панель (локализованная) -->
             <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
-                        <i class="fas fa-sun"></i>
-                    </div>
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")"><i class="fas fa-sun"></i></div>
                     <div class="user-profile" onclick="toggleUserMenu()">
                         <div class="user-avatar">
                             @if (!string.IsNullOrEmpty(avatarUrl))
@@ -763,6 +758,11 @@
                             <dd>@Model.Customer.Phone</dd>
                             <dt>Email</dt>
                             <dd>@Model.Customer.Email</dd>
+                            @if (canViewPassword)
+                            {
+                                <dt>@(Model.Language == "ru" ? "Пароль" : Model.Language == "en" ? "Password" : "Құпиясөз")</dt>
+                                <dd>@Model.Customer.Password</dd>
+                            }
                             <dt>@(Model.Language == "ru" ? "Скидка" : Model.Language == "en" ? "Discount" : "Жеңілдік")</dt>
                             <dd>@Model.Customer.Discount%</dd>
                             <dt>@(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</dt>
@@ -828,68 +828,39 @@
     </div>
 
     <script>
-        // JavaScript без изменений
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
-
             if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    body.classList.toggle('sidebar-open');
-                });
-
+                menuToggle.addEventListener('click', function() { body.classList.toggle('sidebar-open'); });
                 document.addEventListener('click', function(event) {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open'))
                             body.classList.remove('sidebar-open');
-                        }
                     }
                 });
             }
-
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = themeToggle.querySelector('i');
             const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-
+            if (savedTheme === 'dark') { body.classList.add('dark-theme'); themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon'); }
             themeToggle.addEventListener('click', function() {
                 body.classList.toggle('dark-theme');
                 if (body.classList.contains('dark-theme')) {
-                    themeIcon.classList.remove('fa-sun');
-                    themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon'); localStorage.setItem('theme', 'dark');
                 } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.remove('fa-moon'); themeIcon.classList.add('fa-sun'); localStorage.setItem('theme', 'light');
                 }
             });
-
             const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.style.display = 'none', 500);
-                }, 5000);
-            });
+            alerts.forEach(alert => { setTimeout(() => { alert.style.transition = 'opacity 0.5s'; alert.style.opacity = '0'; setTimeout(() => alert.style.display = 'none', 500); }, 5000); });
         });
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('show');
-        }
-
+        function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
         window.addEventListener('click', function(event) {
             const userInfo = document.querySelector('.user-info');
             const userMenu = document.getElementById('userMenu');
-            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) userMenu.classList.remove('show');
         });
     </script>
 </body>

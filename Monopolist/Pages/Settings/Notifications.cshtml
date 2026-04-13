@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Оригинальные стили Notifications.cshtml (без изменений) */
+        /* Все стили сохранены из исходного файла */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -107,8 +107,7 @@
             padding: 8px 12px;
         }
 
-        body.compact-mode .btn-primary,
-        body.compact-mode .btn-secondary {
+        body.compact-mode .btn-primary, body.compact-mode .btn-secondary {
             padding: 8px 18px;
         }
 
@@ -704,17 +703,7 @@
                         <form method="post">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                            <div class="notifications-group">
-                                <h3><i class="fas fa-envelope"></i> @(Model.Language == "ru" ? "Общие уведомления" : Model.Language == "en" ? "General notifications" : "Жалпы хабарландырулар")</h3>
-                                <div class="notification-item">
-                                    <input asp-for="Input.EmailNotifications" />
-                                    <div class="notification-info">
-                                        <div class="notification-title">@(Model.Language == "ru" ? "Email уведомления" : Model.Language == "en" ? "Email notifications" : "Email хабарландырулар")</div>
-                                        <div class="notification-description">@(Model.Language == "ru" ? "Получать уведомления на электронную почту" : Model.Language == "en" ? "Receive notifications by email" : "Электрондық поштаға хабарландыру алу")</div>
-                                    </div>
-                                </div>
-                            </div>
-
+                            <!-- Уведомления о новых заказах -->
                             <div class="notifications-group">
                                 <h3><i class="fas fa-shopping-cart"></i> @(Model.Language == "ru" ? "Продажи" : Model.Language == "en" ? "Orders" : "Сатулар")</h3>
                                 <div class="notification-item">
@@ -726,6 +715,7 @@
                                 </div>
                             </div>
 
+                            <!-- Уведомления о низком остатке -->
                             <div class="notifications-group">
                                 <h3><i class="fas fa-box"></i> @(Model.Language == "ru" ? "Склад" : Model.Language == "en" ? "Warehouse" : "Қойма")</h3>
                                 <div class="notification-item">
@@ -737,6 +727,7 @@
                                 </div>
                             </div>
 
+                            <!-- Уведомления о новых клиентах -->
                             <div class="notifications-group">
                                 <h3><i class="fas fa-users"></i> @(Model.Language == "ru" ? "Клиенты" : Model.Language == "en" ? "Customers" : "Клиенттер")</h3>
                                 <div class="notification-item">
@@ -748,6 +739,7 @@
                                 </div>
                             </div>
 
+                            <!-- Ежедневный отчёт -->
                             <div class="notifications-group">
                                 <h3><i class="fas fa-chart-line"></i> @(Model.Language == "ru" ? "Отчеты" : Model.Language == "en" ? "Reports" : "Есептер")</h3>
                                 <div class="notification-item">

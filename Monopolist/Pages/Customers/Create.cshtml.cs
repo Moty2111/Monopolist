@@ -1,5 +1,4 @@
-﻿// Pages/Customers/Create.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Monoplist.Data;
@@ -23,7 +22,6 @@ public class CreateModel : PageModel
     [BindProperty]
     public Customer Customer { get; set; } = new();
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -46,20 +44,38 @@ public class CreateModel : PageModel
 
         try
         {
-            Customer.RegistrationDate = DateTime.Now;
+            if (string.IsNullOrWhiteSpace(Customer.Password))
+            {
+                Customer.Password = GenerateTemporaryPassword();
+            }
+
+            Customer.RegistrationDate = DateTime.UtcNow;
             _context.Customers.Add(Customer);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = GetLocalizedMessage("Клиент успешно добавлен.", "Customer added successfully.", "Клиент сәтті қосылды.");
+            TempData["Success"] = GetLocalizedMessage(
+                "Клиент успешно добавлен.",
+                "Customer added successfully.",
+                "Клиент сәтті қосылды.");
             return RedirectToPage("./Index");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при создании клиента");
-            ModelState.AddModelError(string.Empty, GetLocalizedMessage("Произошла ошибка при сохранении. Попробуйте снова.", "An error occurred while saving. Please try again.", "Сақтау кезінде қате орын алды. Қайталап көріңіз."));
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при сохранении. Попробуйте снова.",
+                "An error occurred while saving. Please try again.",
+                "Сақтау кезінде қате орын алды. Қайталап көріңіз."));
             await LoadUserSettings();
             return Page();
         }
+    }
+
+    private string GenerateTemporaryPassword()
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
     }
 
     private async Task LoadUserSettings()

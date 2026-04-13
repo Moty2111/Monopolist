@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     // Новые таблицы для корзины и избранного
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
