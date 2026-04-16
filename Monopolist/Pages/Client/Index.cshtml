@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ========== БАЗОВЫЕ ПЕРЕМЕННЫЕ ========== */
+        /* Все стили из предыдущей версии (оставляем без изменений) */
         :root {
             --primary: #FF6B00;
             --primary-dark: #E05E00;
@@ -64,7 +64,6 @@
             overflow-x: hidden;
         }
 
-        /* Шестерёнки */
         .gear {
             position: fixed;
             font-size: 6rem;
@@ -117,7 +116,6 @@
             }
         }
 
-        /* Шапка */
         .header {
             background: rgba(var(--surface-rgb), 0.95);
             backdrop-filter: blur(10px);
@@ -173,7 +171,7 @@
             gap: 6px;
         }
 
-            .nav-link:hover {
+            .nav-link:hover, .nav-link.active {
                 color: var(--primary);
             }
 
@@ -238,6 +236,30 @@
             border: 1px solid var(--border);
         }
 
+        .customer-avatar-link {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .customer-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .customer-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
         .customer-name {
             font-weight: 500;
             font-size: 15px;
@@ -256,7 +278,7 @@
                 color: var(--primary);
             }
 
-        /* Основной контент */
+        /* Основной контент (как в исходнике) */
         .main {
             max-width: 1400px;
             margin: 0 auto;
@@ -299,7 +321,6 @@
             font-size: 18px;
         }
 
-        /* Панель фильтров */
         .filters-bar {
             background: var(--surface);
             border-radius: var(--radius);
@@ -367,7 +388,6 @@
                 transform: translateY(-2px);
             }
 
-        /* Сетка товаров */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -564,7 +584,6 @@
                 transform: translateY(-2px);
             }
 
-        /* Уведомление */
         .alert {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
@@ -582,7 +601,6 @@
             background: linear-gradient(135deg, #059669, #047857);
         }
 
-        /* Пагинация */
         .pagination {
             display: flex;
             justify-content: center;
@@ -620,7 +638,6 @@
                 pointer-events: none;
             }
 
-        /* Пустое состояние */
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -633,7 +650,6 @@
                 opacity: 0.5;
             }
 
-        /* Футер */
         .footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -649,7 +665,6 @@
                 text-decoration: none;
             }
 
-        /* Стиль для сообщения гостя */
         .guest-message {
             font-size: 12px;
             text-align: center;
@@ -659,17 +674,16 @@
             border-radius: 20px;
         }
 
-        .guest-message a {
-            color: #FF6B00;
-            font-weight: bold;
-            text-decoration: none;
-        }
+            .guest-message a {
+                color: #FF6B00;
+                font-weight: bold;
+                text-decoration: none;
+            }
 
         body.dark .guest-message {
             background: #2a2a2a;
         }
 
-        /* Адаптивность */
         @@media (max-width: 1024px) {
             .header-container {
                 flex-wrap: wrap;
@@ -788,7 +802,18 @@
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
                 <div class="customer-badge">
-                    <i class="fas fa-user-circle"></i>
+                    <a href="/Client/Profile" class="customer-avatar-link">
+                        <div class="customer-avatar">
+                            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                            {
+                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                    </a>
                     <span class="customer-name">@Model.CustomerName</span>
                     @if (!Model.IsGuest)
                     {
@@ -899,7 +924,7 @@
                 }
             </div>
 
-            @if (Model.TotalPages > 1)
+            if (Model.TotalPages > 1)
             {
                 <div class="pagination">
                     @if (Model.PageNumber > 1)
@@ -950,7 +975,6 @@
     </footer>
 
     <script>
-        // Тёмная тема (как в предыдущих версиях)
         const themeToggle = document.getElementById('themeToggle');
         const icon = themeToggle.querySelector('i');
         const savedTheme = localStorage.getItem('clientTheme');
@@ -972,68 +996,37 @@
             }
         });
 
-        // Получение токена для защиты от CSRF (если нужен)
-        function getAntiForgeryToken() {
-            return document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        }
+        function getAntiForgeryToken() { return document.querySelector('input[name="__RequestVerificationToken"]')?.value; }
 
-        // Обновление счётчика корзины
         async function updateCartCount() {
             try {
-                const response = await fetch('/Client/Cart?handler=Count', {
-                    method: 'GET',
-                    headers: {
-                        'RequestVerificationToken': getAntiForgeryToken()
-                    }
-                });
+                const response = await fetch('/Client/Cart?handler=Count', { method: 'GET', headers: { 'RequestVerificationToken': getAntiForgeryToken() } });
                 const data = await response.json();
                 const countSpan = document.getElementById('cartCount');
-                if (data.count > 0) {
-                    countSpan.style.display = 'inline-block';
-                    countSpan.innerText = data.count;
-                } else {
-                    countSpan.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Ошибка получения количества товаров', error);
-            }
+                if (data.count > 0) { countSpan.style.display = 'inline-block'; countSpan.innerText = data.count; }
+                else { countSpan.style.display = 'none'; }
+            } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
 
-        // Добавление в корзину
         async function addToCart(productId, productName, price, btnElement) {
             const formData = new FormData();
             formData.append('productId', productId);
-            const response = await fetch('/Client/Cart?handler=Add', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'RequestVerificationToken': getAntiForgeryToken()
-                }
-            });
+            const response = await fetch('/Client/Cart?handler=Add', { method: 'POST', body: formData, headers: { 'RequestVerificationToken': getAntiForgeryToken() } });
             if (response.ok) {
                 showNotification(`${productName} добавлен в корзину!`, 'success');
                 updateCartCount();
                 const originalText = btnElement.innerHTML;
                 btnElement.innerHTML = '<i class="fas fa-check"></i> В корзине';
                 setTimeout(() => btnElement.innerHTML = originalText, 1000);
-            } else {
-                showNotification('Ошибка добавления в корзину', 'error');
-            }
+            } else { showNotification('Ошибка добавления в корзину', 'error'); }
         }
 
-        // Управление избранным
         async function toggleFavorite(productId, btn) {
             const isActive = btn.classList.contains('active');
             const handler = isActive ? 'Remove' : 'Add';
             const formData = new FormData();
             formData.append('productId', productId);
-            const response = await fetch(`/Client/Favorites?handler=${handler}`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'RequestVerificationToken': getAntiForgeryToken()
-                }
-            });
+            const response = await fetch(`/Client/Favorites?handler=${handler}`, { method: 'POST', body: formData, headers: { 'RequestVerificationToken': getAntiForgeryToken() } });
             if (response.ok) {
                 if (isActive) {
                     btn.classList.remove('active');
@@ -1046,9 +1039,7 @@
                     btn.style.transform = 'scale(1.3)';
                     setTimeout(() => btn.style.transform = '', 200);
                 }
-            } else {
-                showNotification('Ошибка', 'error');
-            }
+            } else { showNotification('Ошибка', 'error'); }
         }
 
         function showNotification(message, type = 'info') {
@@ -1066,23 +1057,13 @@
             notif.style.fontWeight = '600';
             notif.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
             document.body.appendChild(notif);
-            setTimeout(() => {
-                notif.style.transition = 'opacity 0.5s';
-                notif.style.opacity = '0';
-                setTimeout(() => notif.remove(), 500);
-            }, 2000);
+            setTimeout(() => { notif.style.transition = 'opacity 0.5s'; notif.style.opacity = '0'; setTimeout(() => notif.remove(), 500); }, 2000);
         }
 
-        // Загрузка текущего состояния избранного
         async function loadFavorites() {
             if (@Model.IsGuest.ToString().ToLower()) return;
             try {
-                const response = await fetch('/Client/Index?handler=Favorites', {
-                    method: 'GET',
-                    headers: {
-                        'RequestVerificationToken': getAntiForgeryToken()
-                    }
-                });
+                const response = await fetch('/Client/Index?handler=Favorites', { method: 'GET', headers: { 'RequestVerificationToken': getAntiForgeryToken() } });
                 const favorites = await response.json();
                 document.querySelectorAll('.favorite-btn').forEach(btn => {
                     const productId = btn.getAttribute('data-product-id');
@@ -1094,16 +1075,12 @@
                         btn.innerHTML = '<i class="far fa-heart"></i>';
                     }
                 });
-            } catch (error) {
-                console.error('Ошибка загрузки избранного', error);
-            }
+            } catch (error) { console.error('Ошибка загрузки избранного', error); }
         }
 
-        // Обработчики
         document.querySelectorAll('.favorite-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 const productId = btn.getAttribute('data-product-id');
                 await toggleFavorite(productId, btn);
             });

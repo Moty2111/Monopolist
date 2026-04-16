@@ -18,6 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
+        /* Стили как в оригинальном Create.cshtml (без изменений) */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -66,7 +67,7 @@
         }
 
         body.compact-mode .sidebar-header {
-            padding: 16px;
+            padding: 16px 16px;
         }
 
             body.compact-mode .sidebar-header i {
@@ -106,8 +107,7 @@
             padding: 8px 12px;
         }
 
-        body.compact-mode .btn-primary,
-        body.compact-mode .btn-secondary {
+        body.compact-mode .btn-primary, body.compact-mode .btn-secondary {
             padding: 8px 18px;
         }
 
@@ -135,7 +135,6 @@
             min-height: 100vh;
         }
 
-        /* Сайдбар (полностью как в Index) */
         .sidebar {
             width: 280px;
             background: var(--surface);
@@ -207,19 +206,21 @@
                         text-align: center;
                         font-size: 1.25rem;
                         color: var(--text-muted);
+                        transition: var(--transition);
                     }
 
-                    .sidebar-nav li a:hover, .sidebar-nav li a.active {
+                    .sidebar-nav li a:hover,
+                    .sidebar-nav li a.active {
                         background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
                         color: var(--primary);
                         transform: translateX(4px);
                     }
 
-                        .sidebar-nav li a:hover i, .sidebar-nav li a.active i {
+                        .sidebar-nav li a:hover i,
+                        .sidebar-nav li a.active i {
                             color: var(--primary);
                         }
 
-        /* Основной контент */
         .main-content {
             flex: 1;
             display: flex;
@@ -499,22 +500,18 @@
                 box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
             }
 
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FF6B00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1em;
+        .image-preview {
+            margin-top: 10px;
+            max-width: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
         }
 
-        .form-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 0;
-        }
-
-            .form-row .form-group {
-                flex: 1;
+            .image-preview img {
+                width: 100%;
+                height: auto;
+                display: block;
             }
 
         .form-actions {
@@ -611,11 +608,6 @@
                 padding: 16px;
             }
 
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-
             .form-actions {
                 flex-direction: column;
             }
@@ -625,11 +617,20 @@
                 justify-content: center;
             }
         }
+
+        @@media (max-width: 480px) {
+            .btn-logout span {
+                display: none;
+            }
+
+            .btn-logout {
+                padding: 8px 12px;
+            }
+        }
     </style>
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -649,15 +650,12 @@
             </nav>
         </aside>
 
-        <!-- Основной контент -->
         <main class="main-content">
             <header class="top-bar">
                 <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
-                        <i class="fas fa-sun"></i>
-                    </div>
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")"><i class="fas fa-sun"></i></div>
                     <div class="user-profile" onclick="toggleUserMenu()">
                         <div class="user-avatar">
                             @if (!string.IsNullOrEmpty(avatarUrl))
@@ -700,10 +698,10 @@
                     }
 
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">@(Model.Language == "ru" ? "Заполните форму для нового товара" : Model.Language == "en" ? "Fill in the new product form" : "Жаңа тауар үшін форманы толтырыңыз")</p>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Заполните информацию о товаре" : Model.Language == "en" ? "Fill in product information" : "Тауар туралы ақпаратты толтырыңыз")</p>
 
                     <div class="form-container">
-                        <form method="post">
+                        <form method="post" enctype="multipart/form-data">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                             <div class="form-group">
@@ -713,55 +711,82 @@
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Product.Article">@(Model.Language == "ru" ? "Артикул" : Model.Language == "en" ? "SKU" : "Артикул")</label>
+                                <label asp-for="Product.Article">@(Model.Language == "ru" ? "Артикул" : Model.Language == "en" ? "Article" : "Артикул")</label>
                                 <input asp-for="Product.Article" class="form-control" />
                                 <span asp-validation-for="Product.Article" class="text-danger"></span>
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Product.CategoryId">@(Model.Language == "ru" ? "Категория" : Model.Language == "en" ? "Category" : "Санаты")</label>
+                                <label asp-for="Product.Description">@(Model.Language == "ru" ? "Описание" : Model.Language == "en" ? "Description" : "Сипаттама")</label>
+                                <textarea asp-for="Product.Description" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Product.Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Product.CategoryId">@(Model.Language == "ru" ? "Категория" : Model.Language == "en" ? "Category" : "Санат")</label>
                                 <select asp-for="Product.CategoryId" asp-items="Model.Categories" class="form-control">
-                                    <option value="">@(Model.Language == "ru" ? "-- Выберите категорию --" : Model.Language == "en" ? "-- Select category --" : "-- Санатын таңдаңыз --")</option>
+                                    <option value="">@(Model.Language == "ru" ? "-- Выберите категорию --" : Model.Language == "en" ? "-- Select category --" : "-- Санатты таңдаңыз --")</option>
                                 </select>
                                 <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
                             </div>
 
                             <div class="form-group">
                                 <label asp-for="Product.Unit">@(Model.Language == "ru" ? "Единица измерения" : Model.Language == "en" ? "Unit" : "Өлшем бірлігі")</label>
-                                <input asp-for="Product.Unit" class="form-control" placeholder="@(Model.Language == "ru" ? "шт, кг, м..." : Model.Language == "en" ? "pcs, kg, m..." : "дана, кг, м...")" />
+                                <input asp-for="Product.Unit" class="form-control" />
                                 <span asp-validation-for="Product.Unit" class="text-danger"></span>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group">
+                            <div class="form-row" style="display: flex; gap: 20px;">
+                                <div class="form-group" style="flex: 1;">
                                     <label asp-for="Product.PurchasePrice">@(Model.Language == "ru" ? "Цена закупки" : Model.Language == "en" ? "Purchase price" : "Сатып алу бағасы")</label>
-                                    <input asp-for="Product.PurchasePrice" class="form-control" />
+                                    <input asp-for="Product.PurchasePrice" class="form-control" type="number" step="0.01" min="0" />
                                     <span asp-validation-for="Product.PurchasePrice" class="text-danger"></span>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="flex: 1;">
                                     <label asp-for="Product.SalePrice">@(Model.Language == "ru" ? "Цена продажи" : Model.Language == "en" ? "Sale price" : "Сату бағасы")</label>
-                                    <input asp-for="Product.SalePrice" class="form-control" />
+                                    <input asp-for="Product.SalePrice" class="form-control" type="number" step="0.01" min="0" />
                                     <span asp-validation-for="Product.SalePrice" class="text-danger"></span>
                                 </div>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group">
+                            <div class="form-row" style="display: flex; gap: 20px;">
+                                <div class="form-group" style="flex: 1;">
                                     <label asp-for="Product.CurrentStock">@(Model.Language == "ru" ? "Текущий остаток" : Model.Language == "en" ? "Current stock" : "Ағымдағы қалдық")</label>
-                                    <input asp-for="Product.CurrentStock" class="form-control" />
+                                    <input asp-for="Product.CurrentStock" class="form-control" type="number" min="0" />
                                     <span asp-validation-for="Product.CurrentStock" class="text-danger"></span>
                                 </div>
-                                <div class="form-group">
-                                    <label asp-for="Product.MinimumStock">@(Model.Language == "ru" ? "Минимальный запас" : Model.Language == "en" ? "Minimum stock" : "Минималды қор")</label>
-                                    <input asp-for="Product.MinimumStock" class="form-control" />
+                                <div class="form-group" style="flex: 1;">
+                                    <label asp-for="Product.MinimumStock">@(Model.Language == "ru" ? "Минимальный остаток" : Model.Language == "en" ? "Minimum stock" : "Ең аз қалдық")</label>
+                                    <input asp-for="Product.MinimumStock" class="form-control" type="number" min="0" />
                                     <span asp-validation-for="Product.MinimumStock" class="text-danger"></span>
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label asp-for="Product.SupplierId">@(Model.Language == "ru" ? "Поставщик" : Model.Language == "en" ? "Supplier" : "Жеткізуші")</label>
-                                <select asp-for="Product.SupplierId" asp-items="Model.Suppliers" class="form-control"></select>
+                                <select asp-for="Product.SupplierId" asp-items="Model.Suppliers" class="form-control">
+                                    <option value="">@(Model.Language == "ru" ? "-- Выберите поставщика --" : Model.Language == "en" ? "-- Select supplier --" : "-- Жеткізушіні таңдаңыз --")</option>
+                                </select>
                                 <span asp-validation-for="Product.SupplierId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Product.WarehouseId">@(Model.Language == "ru" ? "Склад" : Model.Language == "en" ? "Warehouse" : "Қойма")</label>
+                                <select asp-for="Product.WarehouseId" asp-items="Model.Warehouses" class="form-control">
+                                    <option value="">@(Model.Language == "ru" ? "-- Выберите склад --" : Model.Language == "en" ? "-- Select warehouse --" : "-- Қойманы таңдаңыз --")</option>
+                                </select>
+                                <span asp-validation-for="Product.WarehouseId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="imageFile">@(Model.Language == "ru" ? "Изображение товара" : Model.Language == "en" ? "Product image" : "Тауар суреті")</label>
+                                <input type="file" id="imageFile" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
+                                <div class="input-hint" style="font-size:0.85rem; color: var(--text-muted); margin-top:4px;">
+                                    @(Model.Language == "ru" ? "Поддерживаются форматы JPG, PNG, GIF. Максимальный размер 5 МБ." : Model.Language == "en" ? "Supported formats: JPG, PNG, GIF. Maximum size 5 MB." : "JPG, PNG, GIF форматтарына қолдау көрсетіледі. Максималды өлшемі 5 МБ.")
+                                </div>
+                                <div id="imagePreviewContainer" class="image-preview" style="display: none;">
+                                    <img id="imagePreview" src="#" alt="Preview" />
+                                </div>
                             </div>
 
                             <div class="form-actions">
@@ -777,66 +802,56 @@
 
     <partial name="_ValidationScriptsPartial" />
     <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            const container = document.getElementById('imagePreviewContainer');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                container.style.display = 'none';
+                preview.src = '#';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
-
             if (menuToggle) {
-                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
-                document.addEventListener('click', (e) => {
+                menuToggle.addEventListener('click', function() { body.classList.toggle('sidebar-open'); });
+                document.addEventListener('click', function(event) {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open'))
                             body.classList.remove('sidebar-open');
-                        }
                     }
                 });
             }
-
             const themeToggle = document.getElementById('themeToggle');
-            if (themeToggle) {
-                const themeIcon = themeToggle.querySelector('i');
-                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
-                if (savedTheme === 'dark') {
-                    body.classList.add('dark-theme');
-                    themeIcon.classList.remove('fa-sun');
-                    themeIcon.classList.add('fa-moon');
+            const themeIcon = themeToggle.querySelector('i');
+            const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+            if (savedTheme === 'dark') { body.classList.add('dark-theme'); themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon'); }
+            themeToggle.addEventListener('click', function() {
+                body.classList.toggle('dark-theme');
+                if (body.classList.contains('dark-theme')) {
+                    themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon'); localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('fa-moon'); themeIcon.classList.add('fa-sun'); localStorage.setItem('theme', 'light');
                 }
-
-                themeToggle.addEventListener('click', () => {
-                    body.classList.toggle('dark-theme');
-                    if (body.classList.contains('dark-theme')) {
-                        themeIcon.classList.remove('fa-sun');
-                        themeIcon.classList.add('fa-moon');
-                        localStorage.setItem('theme', 'dark');
-                    } else {
-                        themeIcon.classList.remove('fa-moon');
-                        themeIcon.classList.add('fa-sun');
-                        localStorage.setItem('theme', 'light');
-                    }
-                });
-            }
-
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.style.display = 'none', 500);
-                }, 5000);
             });
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => { setTimeout(() => { alert.style.transition = 'opacity 0.5s'; alert.style.opacity = '0'; setTimeout(() => alert.style.display = 'none', 500); }, 5000); });
         });
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('show');
-        }
-
+        function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
         window.addEventListener('click', function(event) {
             const userInfo = document.querySelector('.user-info');
             const userMenu = document.getElementById('userMenu');
-            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) userMenu.classList.remove('show');
         });
     </script>
 </body>

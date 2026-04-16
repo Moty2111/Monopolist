@@ -20,7 +20,6 @@ public class Customer
     [StringLength(100), EmailAddress]
     public string? Email { get; set; }
 
-    // Пароль в открытом виде (только для теста)
     [Required, StringLength(100, MinimumLength = 4)]
     public string Password { get; set; } = string.Empty;
 
@@ -29,6 +28,10 @@ public class Customer
 
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    // Новое поле – URL аватара
+    [StringLength(500)]
+    public string? AvatarUrl { get; set; }
 
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }

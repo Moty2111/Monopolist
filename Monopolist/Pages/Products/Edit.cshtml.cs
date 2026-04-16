@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
-using Monoplist.ViewModels;
+using Monoplist.Models;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
@@ -13,21 +13,23 @@ namespace Monoplist.Pages.Products;
 public class EditModel : PageModel
 {
     private readonly AppDbContext _context;
+    private readonly IWebHostEnvironment _environment;
     private readonly ILogger<EditModel> _logger;
 
-    public EditModel(AppDbContext context, ILogger<EditModel> logger)
+    public EditModel(AppDbContext context, IWebHostEnvironment environment, ILogger<EditModel> logger)
     {
         _context = context;
+        _environment = environment;
         _logger = logger;
     }
 
     [BindProperty]
-    public ProductEditViewModel Product { get; set; } = new();
+    public Product Product { get; set; } = new();
 
     public SelectList Categories { get; set; } = default!;
     public SelectList Suppliers { get; set; } = default!;
+    public SelectList Warehouses { get; set; } = default!;
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -36,59 +38,101 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
-        if (id == null)
-            return NotFound();
-
+        if (id == null) return NotFound();
         await LoadUserSettings();
-
         var product = await _context.Products.FindAsync(id);
-        if (product == null)
-            return NotFound();
-
-        Product.Id = product.Id;
-        Product.Name = product.Name;
-        Product.Article = product.Article;
-        Product.CategoryId = product.CategoryId;
-        Product.Unit = product.Unit;
-        Product.PurchasePrice = product.PurchasePrice;
-        Product.SalePrice = product.SalePrice;
-        Product.CurrentStock = product.CurrentStock;
-        Product.SupplierId = product.SupplierId;
-        Product.MinimumStock = product.MinimumStock;
-
-        await PopulateDropdownsAsync(Product.CategoryId, Product.SupplierId);
+        if (product == null) return NotFound();
+        Product = product;
+        await PopulateDropdownsAsync();
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync()
+    public async Task<IActionResult> OnPostAsync(IFormFile? imageFile)
     {
         if (!ModelState.IsValid)
         {
             await LoadUserSettings();
-            await PopulateDropdownsAsync(Product.CategoryId, Product.SupplierId);
+            await PopulateDropdownsAsync();
             return Page();
         }
 
+        var productToUpdate = await _context.Products.FindAsync(Product.Id);
+        if (productToUpdate == null) return NotFound();
+
         try
         {
-            var product = await _context.Products.FindAsync(Product.Id);
-            if (product == null)
-                return NotFound();
+            // Обработка нового изображения
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                // Проверка размера
+                if (imageFile.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                        "Размер файла не должен превышать 5 МБ.",
+                        "File size must not exceed 5 MB.",
+                        "Файл өлшемі 5 МБ-тан аспауы керек."));
+                    await LoadUserSettings();
+                    await PopulateDropdownsAsync();
+                    return Page();
+                }
 
-            product.Name = Product.Name;
-            product.Article = Product.Article;
-            product.CategoryId = Product.CategoryId;
-            product.Unit = Product.Unit;
-            product.PurchasePrice = Product.PurchasePrice;
-            product.SalePrice = Product.SalePrice;
-            product.CurrentStock = Product.CurrentStock;
-            product.SupplierId = Product.SupplierId;
-            product.MinimumStock = Product.MinimumStock;
-            product.UpdatedAt = DateTime.Now;
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                        "Допустимые форматы: JPG, JPEG, PNG, GIF.",
+                        "Allowed formats: JPG, JPEG, PNG, GIF.",
+                        "Рұқсат етілген форматтар: JPG, JPEG, PNG, GIF."));
+                    await LoadUserSettings();
+                    await PopulateDropdownsAsync();
+                    return Page();
+                }
+
+                // Удаление старого файла (если есть)
+                if (!string.IsNullOrEmpty(productToUpdate.ImageUrl))
+                {
+                    var oldFilePath = Path.Combine(_environment.WebRootPath, productToUpdate.ImageUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
+
+                // Сохранение нового файла
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "products");
+                Directory.CreateDirectory(uploadsFolder);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                productToUpdate.ImageUrl = $"/uploads/products/{fileName}";
+            }
+
+            // Обновление остальных полей
+            productToUpdate.Name = Product.Name;
+            productToUpdate.Article = Product.Article;
+            productToUpdate.Description = Product.Description;
+            productToUpdate.CategoryId = Product.CategoryId;
+            productToUpdate.Unit = Product.Unit;
+            productToUpdate.PurchasePrice = Product.PurchasePrice;
+            productToUpdate.SalePrice = Product.SalePrice;
+            productToUpdate.CurrentStock = Product.CurrentStock;
+            productToUpdate.MinimumStock = Product.MinimumStock;
+            productToUpdate.SupplierId = Product.SupplierId;
+            productToUpdate.WarehouseId = Product.WarehouseId;
+            productToUpdate.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = GetLocalizedMessage($"Товар «{product.Name}» обновлён.", $"Product «{product.Name}» updated.", $"«{product.Name}» тауары жаңартылды.");
+            TempData["Success"] = GetLocalizedMessage(
+                "Товар успешно обновлён.",
+                "Product updated successfully.",
+                "Тауар сәтті жаңартылды.");
             return RedirectToPage("./Index");
         }
         catch (DbUpdateConcurrencyException)
@@ -100,36 +144,27 @@ public class EditModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при обновлении товара {ProductId}", Product.Id);
-            ModelState.AddModelError(string.Empty, GetLocalizedMessage("Произошла ошибка при обновлении.", "An error occurred while updating.", "Жаңарту кезінде қате орын алды."));
+            _logger.LogError(ex, "Ошибка при обновлении товара");
+            ModelState.AddModelError(string.Empty, GetLocalizedMessage(
+                "Произошла ошибка при сохранении. Попробуйте снова.",
+                "An error occurred while saving. Please try again.",
+                "Сақтау кезінде қате орын алды. Қайталап көріңіз."));
             await LoadUserSettings();
-            await PopulateDropdownsAsync(Product.CategoryId, Product.SupplierId);
+            await PopulateDropdownsAsync();
             return Page();
         }
     }
 
-    private async Task PopulateDropdownsAsync(object? selectedCategory = null, object? selectedSupplier = null)
+    private async Task PopulateDropdownsAsync()
     {
-        var categories = await _context.Categories
-            .OrderBy(c => c.Name)
-            .Select(c => new SelectListItem
-            {
-                Value = c.Id.ToString(),
-                Text = c.Name
-            })
-            .ToListAsync();
-        Categories = new SelectList(categories, "Value", "Text", selectedCategory);
+        var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+        Categories = new SelectList(categories, "Id", "Name", Product.CategoryId);
 
-        var suppliers = await _context.Suppliers
-            .OrderBy(s => s.Name)
-            .Select(s => new SelectListItem
-            {
-                Value = s.Id.ToString(),
-                Text = s.Name
-            })
-            .ToListAsync();
-        suppliers.Insert(0, new SelectListItem { Value = "", Text = GetLocalizedMessage("— Не выбран —", "— Not selected —", "— Таңдалмаған —") });
-        Suppliers = new SelectList(suppliers, "Value", "Text", selectedSupplier);
+        var suppliers = await _context.Suppliers.OrderBy(s => s.Name).ToListAsync();
+        Suppliers = new SelectList(suppliers, "Id", "Name", Product.SupplierId);
+
+        var warehouses = await _context.Warehouses.OrderBy(w => w.Name).ToListAsync();
+        Warehouses = new SelectList(warehouses, "Id", "Name", Product.WarehouseId);
     }
 
     private async Task LoadUserSettings()

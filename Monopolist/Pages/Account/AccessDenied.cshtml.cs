@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace Monoplist.Pages.Account;
 
-[AllowAnonymous] // чтобы даже неаутентифицированные могли видеть (хотя обычно они не попадают)
+[AllowAnonymous] 
 public class AccessDeniedModel : PageModel
 {
     private readonly AppDbContext _context;
@@ -17,7 +17,6 @@ public class AccessDeniedModel : PageModel
         _context = context;
     }
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -31,7 +30,6 @@ public class AccessDeniedModel : PageModel
 
     private async Task LoadUserSettings()
     {
-        // Пытаемся получить настройки пользователя, если он аутентифицирован
         var userIdClaim = User.FindFirst("UserId");
         if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
         {
@@ -45,6 +43,5 @@ public class AccessDeniedModel : PageModel
                 CustomColor = user.CustomColor ?? "#FF6B00";
             }
         }
-        // Если пользователь не аутентифицирован, оставляем значения по умолчанию
     }
 }

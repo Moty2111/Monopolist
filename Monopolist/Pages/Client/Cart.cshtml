@@ -173,7 +173,7 @@
             gap: 6px;
         }
 
-            .nav-link:hover {
+            .nav-link:hover, .nav-link.active {
                 color: var(--primary);
             }
 
@@ -237,6 +237,30 @@
             border-radius: 40px;
             border: 1px solid var(--border);
         }
+
+        .customer-avatar-link {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .customer-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .customer-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
 
         .customer-name {
             font-weight: 500;
@@ -411,7 +435,6 @@
                 background: linear-gradient(135deg, var(--primary-dark), var(--primary));
             }
 
-        /* Пустое состояние */
         .empty-cart {
             text-align: center;
             padding: 80px 20px;
@@ -424,7 +447,6 @@
                 opacity: 0.5;
             }
 
-        /* Сообщение для гостя */
         .guest-message-box {
             text-align: center;
             padding: 60px 20px;
@@ -456,7 +478,6 @@
                 font-weight: 600;
             }
 
-        /* Выбор способа оплаты */
         .payment-section {
             margin-bottom: 20px;
             padding: 0 0 15px 0;
@@ -519,7 +540,6 @@
                 text-decoration: none;
             }
 
-        /* Адаптивность */
         @@media (max-width: 1024px) {
             .header-container {
                 flex-wrap: wrap;
@@ -641,7 +661,18 @@
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
                 <div class="customer-badge">
-                    <i class="fas fa-user-circle"></i>
+                    <a href="/Client/Profile" class="customer-avatar-link">
+                        <div class="customer-avatar">
+                            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                            {
+                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                    </a>
                     <span class="customer-name">@Model.CustomerName</span>
                     @if (!Model.IsGuest)
                     {
@@ -752,7 +783,6 @@
     </footer>
 
     <script>
-        // Тёмная тема
         const themeToggle = document.getElementById('themeToggle');
         const icon = themeToggle.querySelector('i');
         const savedTheme = localStorage.getItem('clientTheme');
@@ -774,12 +804,10 @@
             }
         });
 
-        // Получение CSRF-токена
         function getAntiForgeryToken() {
             return document.querySelector('input[name="__RequestVerificationToken"]')?.value;
         }
 
-        // Обновление счётчика корзины в шапке
         async function updateCartCount() {
             try {
                 const token = getAntiForgeryToken();
@@ -795,12 +823,9 @@
                 } else {
                     countSpan.style.display = 'none';
                 }
-            } catch (error) {
-                console.error('Ошибка получения количества товаров', error);
-            }
+            } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
 
-        // Выбор способа оплаты – визуальное выделение
         document.querySelectorAll('.payment-method').forEach(method => {
             const radio = method.querySelector('input[type="radio"]');
             if (radio) {
@@ -813,11 +838,9 @@
             }
         });
 
-        // Обработчики событий на странице корзины (только если не гость)
         @if (!Model.IsGuest)
         {
                 <text>
-                // Изменение количества
                 document.querySelectorAll('.cart-quantity input').forEach(input => {
                     input.addEventListener('change', async (e) => {
                         const cartItemId = input.getAttribute('data-id');
@@ -832,17 +855,11 @@
                             body: formData,
                             headers: { 'RequestVerificationToken': token }
                         });
-                        if (response.ok) {
-                            location.reload();
-                        } else {
-                            const error = await response.text();
-                            alert(error || 'Ошибка обновления количества');
-                            location.reload();
-                        }
+                        if (response.ok) { location.reload(); }
+                        else { const error = await response.text(); alert(error || 'Ошибка обновления количества'); location.reload(); }
                     });
                 });
 
-                // Удаление товара
                 document.querySelectorAll('.cart-remove').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
                         const cartItemId = btn.getAttribute('data-id');
@@ -854,15 +871,11 @@
                             body: formData,
                             headers: { 'RequestVerificationToken': token }
                         });
-                        if (response.ok) {
-                            location.reload();
-                        } else {
-                            alert('Ошибка удаления товара');
-                        }
+                        if (response.ok) { location.reload(); }
+                        else { alert('Ошибка удаления товара'); }
                     });
                 });
 
-                // Оформление заказа
                 const checkoutBtn = document.getElementById('checkout-btn');
                 if (checkoutBtn) {
                     checkoutBtn.addEventListener('click', async () => {
@@ -872,28 +885,15 @@
                         try {
                             const response = await fetch('/Client/Cart?handler=Checkout', {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'RequestVerificationToken': token
-                                },
+                                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
                                 body: JSON.stringify({ paymentMethod: paymentMethod })
                             });
                             if (response.ok) {
                                 const data = await response.json();
-                                if (data.success) {
-                                    alert('Заказ оформлен!');
-                                    window.location.href = '/Client/Orders';
-                                } else {
-                                    alert('Ошибка оформления заказа');
-                                }
-                            } else {
-                                const errorText = await response.text();
-                                alert('Ошибка: ' + errorText);
-                            }
-                        } catch (error) {
-                            console.error(error);
-                            alert('Ошибка при отправке запроса');
-                        }
+                                if (data.success) { alert('Заказ оформлен!'); window.location.href = '/Client/Orders'; }
+                                else { alert('Ошибка оформления заказа'); }
+                            } else { const errorText = await response.text(); alert('Ошибка: ' + errorText); }
+                        } catch (error) { console.error(error); alert('Ошибка при отправке запроса'); }
                     });
                 }
                 </text>

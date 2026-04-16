@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
@@ -25,6 +23,7 @@ public class ProductModel : PageModel
 
     public ProductDetailViewModel Product { get; set; } = new();
     public string CustomerName { get; set; } = "Гость";
+    public string? AvatarUrl { get; set; }
     public decimal CustomerDiscount { get; set; }
     public bool IsGuest { get; private set; }
 
@@ -43,6 +42,7 @@ public class ProductModel : PageModel
                 {
                     CustomerName = customer.FullName;
                     CustomerDiscount = customer.Discount;
+                    AvatarUrl = customer.AvatarUrl;
                 }
             }
         }
@@ -74,6 +74,7 @@ public class ProductModel : PageModel
         return Page();
     }
 }
+
 public class ProductDetailViewModel
 {
     public int Id { get; set; }

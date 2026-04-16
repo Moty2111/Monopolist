@@ -22,6 +22,7 @@ public class IndexModel : PageModel
     public List<ProductCardViewModel> Products { get; set; } = new();
     public List<Category> Categories { get; set; } = new();
     public string CustomerName { get; set; } = "Гость";
+    public string? AvatarUrl { get; set; }
     public decimal CustomerDiscount { get; set; }
     public bool IsGuest { get; private set; }
 
@@ -40,25 +41,22 @@ public class IndexModel : PageModel
     public int PageSize { get; set; } = 12;
     public int TotalPages { get; set; }
     public int TotalItems { get; set; }
-
     public int SelectedCategoryId => CategoryId;
 
     public async Task OnGetAsync()
     {
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        var customerIdClaim = User.FindFirst("CustomerId")?.Value;
         IsGuest = role != "Customer";
 
-        if (!IsGuest)
+        if (!IsGuest && int.TryParse(customerIdClaim, out int customerId))
         {
-            var customerId = GetCustomerId();
-            if (customerId != null && customerId > 0)
+            var customer = await _context.Customers.FindAsync(customerId);
+            if (customer != null)
             {
-                var customer = await _context.Customers.FindAsync(customerId);
-                if (customer != null)
-                {
-                    CustomerName = customer.FullName;
-                    CustomerDiscount = customer.Discount;
-                }
+                CustomerName = customer.FullName;
+                CustomerDiscount = customer.Discount;
+                AvatarUrl = customer.AvatarUrl;
             }
         }
 
@@ -111,20 +109,13 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnGetFavorites()
     {
         if (IsGuest) return new JsonResult(new List<int>());
-        var customerId = GetCustomerId();
-        if (customerId == null) return new JsonResult(new List<int>());
+        var customerIdClaim = User.FindFirst("CustomerId")?.Value;
+        if (!int.TryParse(customerIdClaim, out int customerId)) return new JsonResult(new List<int>());
 
         var favorites = await _context.Favorites
             .Where(f => f.CustomerId == customerId)
             .Select(f => f.ProductId)
             .ToListAsync();
         return new JsonResult(favorites);
-    }
-
-    private int? GetCustomerId()
-    {
-        var claim = User.FindFirst("CustomerId")?.Value;
-        if (claim != null && int.TryParse(claim, out int id) && id > 0) return id;
-        return null;
     }
 }

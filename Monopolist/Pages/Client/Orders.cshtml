@@ -16,7 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ========== БАЗОВЫЕ ПЕРЕМЕННЫЕ (как на главной) ========== */
         :root {
             --primary: #FF6B00;
             --primary-dark: #E05E00;
@@ -64,7 +63,6 @@
             overflow-x: hidden;
         }
 
-        /* Шестерёнки */
         .gear {
             position: fixed;
             font-size: 6rem;
@@ -73,17 +71,50 @@
             animation: spin 30s linear infinite;
             pointer-events: none;
         }
-        body.dark .gear { color: rgba(255,107,0,0.25); }
-        .gear1 { top: 5%; left: 2%; animation-duration: 40s; }
-        .gear2 { bottom: 10%; right: 3%; animation-duration: 35s; animation-direction: reverse; font-size: 8rem; }
-        .gear3 { top: 30%; right: 5%; animation-duration: 45s; font-size: 5rem; }
-        .gear4 { bottom: 30%; left: 5%; animation-duration: 50s; animation-direction: reverse; font-size: 7rem; }
-        @@keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+
+        body.dark .gear {
+            color: rgba(255,107,0,0.25);
         }
 
-        /* Шапка */
+        .gear1 {
+            top: 5%;
+            left: 2%;
+            animation-duration: 40s;
+        }
+
+        .gear2 {
+            bottom: 10%;
+            right: 3%;
+            animation-duration: 35s;
+            animation-direction: reverse;
+            font-size: 8rem;
+        }
+
+        .gear3 {
+            top: 30%;
+            right: 5%;
+            animation-duration: 45s;
+            font-size: 5rem;
+        }
+
+        .gear4 {
+            bottom: 30%;
+            left: 5%;
+            animation-duration: 50s;
+            animation-direction: reverse;
+            font-size: 7rem;
+        }
+
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .header {
             background: rgba(var(--surface-rgb), 0.95);
             backdrop-filter: blur(10px);
@@ -117,7 +148,10 @@
             color: transparent;
             text-decoration: none;
         }
-        .logo i { font-size: 30px; }
+
+            .logo i {
+                font-size: 30px;
+            }
 
         .nav-links {
             display: flex;
@@ -135,7 +169,10 @@
             align-items: center;
             gap: 6px;
         }
-        .nav-link:hover { color: var(--primary); }
+
+            .nav-link:hover, .nav-link.active {
+                color: var(--primary);
+            }
 
         .user-actions {
             display: flex;
@@ -154,7 +191,12 @@
             color: var(--text-secondary);
             transition: var(--transition);
         }
-        .theme-toggle:hover { border-color: var(--primary); color: var(--primary); transform: rotate(15deg); }
+
+            .theme-toggle:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                transform: rotate(15deg);
+            }
 
         .cart-icon {
             position: relative;
@@ -163,7 +205,11 @@
             transition: var(--transition);
             text-decoration: none;
         }
-        .cart-icon:hover { color: var(--primary); transform: scale(1.05); }
+
+            .cart-icon:hover {
+                color: var(--primary);
+                transform: scale(1.05);
+            }
 
         .cart-count {
             position: absolute;
@@ -189,6 +235,30 @@
             border: 1px solid var(--border);
         }
 
+        .customer-avatar-link {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .customer-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .customer-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
         .customer-name {
             font-weight: 500;
             font-size: 15px;
@@ -202,7 +272,10 @@
             color: var(--text-muted);
             cursor: pointer;
         }
-        .logout-btn:hover { color: var(--primary); }
+
+            .logout-btn:hover {
+                color: var(--primary);
+            }
 
         .main {
             max-width: 1400px;
@@ -214,24 +287,38 @@
             margin-bottom: 32px;
             text-align: center;
         }
-        .welcome h1 {
-            font-size: 42px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary-light));
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            animation: gradientShift 6s infinite linear;
-        }
-        @@keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .welcome p { color: var(--text-muted); margin-top: 8px; font-size: 18px; }
 
-        /* Панель фильтров */
+            .welcome h1 {
+                font-size: 42px;
+                font-weight: 800;
+                background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary-light));
+                background-size: 200% auto;
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                animation: gradientShift 6s infinite linear;
+            }
+
+        @@keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .welcome p {
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-size: 18px;
+        }
+
         .filters-bar {
             background: var(--surface);
             border-radius: var(--radius);
@@ -249,27 +336,33 @@
             flex: 1;
             min-width: 160px;
         }
-        .filter-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            letter-spacing: 0.5px;
-        }
-        .filter-group select, .filter-group input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            background: var(--surface);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 14px;
-            transition: var(--transition);
-        }
-        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--primary); }
+
+            .filter-group label {
+                display: block;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: var(--text-muted);
+                margin-bottom: 6px;
+                letter-spacing: 0.5px;
+            }
+
+            .filter-group select, .filter-group input {
+                width: 100%;
+                padding: 10px 12px;
+                border: 2px solid var(--border);
+                border-radius: 12px;
+                background: var(--surface);
+                color: var(--text-primary);
+                font-family: inherit;
+                font-size: 14px;
+                transition: var(--transition);
+            }
+
+                .filter-group select:focus, .filter-group input:focus {
+                    outline: none;
+                    border-color: var(--primary);
+                }
 
         .reset-filters {
             background: none;
@@ -286,10 +379,18 @@
             white-space: nowrap;
             text-decoration: none;
         }
-        .reset-filters:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
-        /* Стили для списка заказов */
-        .orders-list { display: flex; flex-direction: column; gap: 24px; }
+            .reset-filters:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                transform: translateY(-2px);
+            }
+
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
 
         .order-card {
             background: var(--surface);
@@ -299,7 +400,11 @@
             transition: var(--transition);
             box-shadow: var(--shadow);
         }
-        .order-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+
+            .order-card:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-hover);
+            }
 
         .order-header {
             padding: 20px 24px;
@@ -311,8 +416,24 @@
             align-items: center;
             gap: 12px;
         }
-        .order-number { font-size: 18px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-        .order-date { color: var(--text-muted); font-size: 14px; display: flex; align-items: center; gap: 6px; }
+
+        .order-number {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .order-date {
+            color: var(--text-muted);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .order-status {
             padding: 4px 12px;
             border-radius: 20px;
@@ -324,15 +445,52 @@
             align-items: center;
             gap: 6px;
         }
-        .order-status.completed { background: #d1fae5; color: #065f46; }
-        .order-status.pending { background: #fed7aa; color: #9a3412; }
-        .order-status.cancelled { background: #fee2e2; color: #991b1b; }
-        .order-total { font-weight: 700; font-size: 18px; color: var(--primary); }
 
-        .order-items { padding: 0 24px; background: var(--surface); }
-        .order-items table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .order-items th { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 600; }
-        .order-items td { padding: 12px 8px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+            .order-status.completed {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .order-status.pending {
+                background: #fed7aa;
+                color: #9a3412;
+            }
+
+            .order-status.cancelled {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+        .order-total {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .order-items {
+            padding: 0 24px;
+            background: var(--surface);
+        }
+
+            .order-items table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+
+            .order-items th {
+                text-align: left;
+                padding: 12px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-muted);
+                font-weight: 600;
+            }
+
+            .order-items td {
+                padding: 12px 8px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-secondary);
+            }
 
         .order-footer {
             padding: 12px 24px;
@@ -343,7 +501,12 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-        .payment-method { font-size: 13px; color: var(--text-muted); }
+
+        .payment-method {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
         .reorder-btn {
             background: none;
             border: 2px solid var(--border);
@@ -358,7 +521,12 @@
             align-items: center;
             gap: 8px;
         }
-        .reorder-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+
+            .reorder-btn:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                transform: translateY(-1px);
+            }
 
         .pagination {
             display: flex;
@@ -367,27 +535,47 @@
             margin-top: 40px;
             flex-wrap: wrap;
         }
-        .pagination a, .pagination span {
-            display: inline-block;
-            padding: 8px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface);
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: var(--transition);
-            font-weight: 500;
-        }
-        .pagination a:hover { background: var(--primary); color: white; border-color: var(--primary); }
-        .pagination .active { background: var(--primary); color: white; border-color: var(--primary); }
-        .pagination .disabled { opacity: 0.5; pointer-events: none; }
+
+            .pagination a, .pagination span {
+                display: inline-block;
+                padding: 8px 14px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: var(--transition);
+                font-weight: 500;
+            }
+
+                .pagination a:hover {
+                    background: var(--primary);
+                    color: white;
+                    border-color: var(--primary);
+                }
+
+            .pagination .active {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+            .pagination .disabled {
+                opacity: 0.5;
+                pointer-events: none;
+            }
 
         .empty-orders {
             text-align: center;
             padding: 60px 20px;
             color: var(--text-muted);
         }
-        .empty-orders i { font-size: 80px; margin-bottom: 20px; opacity: 0.5; }
+
+            .empty-orders i {
+                font-size: 80px;
+                margin-bottom: 20px;
+                opacity: 0.5;
+            }
 
         .guest-message-box {
             text-align: center;
@@ -398,18 +586,27 @@
             max-width: 500px;
             margin: 0 auto;
         }
-        .guest-message-box i { font-size: 64px; color: var(--primary); margin-bottom: 20px; }
-        .guest-message-box h2 { margin-bottom: 16px; }
-        .guest-message-box .btn-primary {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 28px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 40px;
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-        }
+
+            .guest-message-box i {
+                font-size: 64px;
+                color: var(--primary);
+                margin-bottom: 20px;
+            }
+
+            .guest-message-box h2 {
+                margin-bottom: 16px;
+            }
+
+            .guest-message-box .btn-primary {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 28px;
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                border-radius: 40px;
+                color: white;
+                text-decoration: none;
+                font-weight: 600;
+            }
 
         .footer {
             background: var(--surface);
@@ -420,31 +617,99 @@
             color: var(--text-muted);
             font-size: 13px;
         }
-        .footer a { color: var(--primary); text-decoration: none; }
+
+            .footer a {
+                color: var(--primary);
+                text-decoration: none;
+            }
 
         @@media (max-width: 1024px) {
-            .header-container { flex-wrap: wrap; justify-content: center; }
-            .nav-links { order: 3; width: 100%; justify-content: center; margin-top: 12px; gap: 20px; }
-            .filters-bar { flex-direction: column; align-items: stretch; }
-            .reset-filters { align-self: flex-start; }
+            .header-container {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-links {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 12px;
+                gap: 20px;
+            }
+
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .reset-filters {
+                align-self: flex-start;
+            }
         }
+
         @@media (max-width: 768px) {
-            .header-container { padding: 12px 16px; }
-            .logo { font-size: 22px; }
-            .logo i { font-size: 26px; }
-            .nav-link { font-size: 14px; }
-            .theme-toggle { width: 36px; height: 36px; font-size: 1rem; }
-            .customer-badge { padding: 6px 12px; }
-            .customer-name { font-size: 13px; }
-            .main { padding: 16px; }
-            .order-header { flex-direction: column; align-items: flex-start; }
-            .order-footer { flex-direction: column; align-items: flex-start; }
-            .order-items { overflow-x: auto; }
+            .header-container {
+                padding: 12px 16px;
+            }
+
+            .logo {
+                font-size: 22px;
+            }
+
+                .logo i {
+                    font-size: 26px;
+                }
+
+            .nav-link {
+                font-size: 14px;
+            }
+
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+
+            .customer-badge {
+                padding: 6px 12px;
+            }
+
+            .customer-name {
+                font-size: 13px;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .order-footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .order-items {
+                overflow-x: auto;
+            }
         }
+
         @@media (max-width: 480px) {
-            .customer-name { display: none; }
-            .nav-links { gap: 12px; font-size: 12px; }
-            .nav-link i { display: none; }
+            .customer-name {
+                display: none;
+            }
+
+            .nav-links {
+                gap: 12px;
+                font-size: 12px;
+            }
+
+            .nav-link i {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -474,7 +739,18 @@
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
                 <div class="customer-badge">
-                    <i class="fas fa-user-circle"></i>
+                    <a href="/Client/Profile" class="customer-avatar-link">
+                        <div class="customer-avatar">
+                            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                            {
+                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                    </a>
                     <span class="customer-name">@Model.CustomerName</span>
                     @if (!Model.IsGuest)
                     {
@@ -509,7 +785,6 @@
         }
         else
         {
-            <!-- Форма фильтров -->
             <form method="get" class="filters-bar">
                 <div class="filter-group">
                     <label><i class="fas fa-filter"></i> Статус</label>
@@ -547,9 +822,20 @@
                                 </div>
                                 <div>
                                     <span class="order-status @(order.Status.ToLower())">
-                                        @if (order.Status == "Completed") { <i class="fas fa-check-circle"></i> }
-                                        else if (order.Status == "Pending") { <i class="fas fa-clock"></i> }
-                                        else { <i class="fas fa-times-circle"></i> }
+                                        @if (order.Status == "Completed")
+                                        {
+                                            <i class="fas fa-check-circle"></i>
+                                        }
+                                        else if (order.Status == "Pending")
+                                        {
+
+                                            <i class="fas fa-clock"></i>
+                                        }
+                                        else
+                                        {
+
+                                            <i class="fas fa-times-circle"></i>
+                                        }
                                         @(order.Status switch { "Completed" => "Выполнен", "Pending" => "Ожидание", "Cancelled" => "Отменён", _ => order.Status })
                                     </span>
                                     <span class="order-total">@order.TotalAmount.ToString("N0") ₽</span>
@@ -560,22 +846,12 @@
                                 <div class="order-items">
                                     <table>
                                         <thead>
-                                            <tr>
-                                                <th>Товар</th>
-                                                <th>Кол-во</th>
-                                                <th>Цена</th>
-                                                <th>Сумма</th>
-                                            </tr>
+                                            <tr><th>Товар</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr>
                                         </thead>
                                         <tbody>
                                             @foreach (var item in order.Items)
                                             {
-                                                <tr>
-                                                    <td>@item.ProductName</td>
-                                                    <td>@item.Quantity @item.Unit</td>
-                                                    <td>@item.Price.ToString("N0") ₽</td>
-                                                    <td>@item.Total.ToString("N0") ₽</td>
-                                                </tr>
+                                                <tr><td>@item.ProductName</td><td>@item.Quantity @item.Unit</td><td>@item.Price.ToString("N0") ₽</td><td>@item.Total.ToString("N0") ₽</td></tr>
                                             }
                                         </tbody>
                                     </table>
@@ -585,9 +861,7 @@
                                 <div class="payment-method">
                                     <i class="fas fa-credit-card"></i> @(order.PaymentMethod switch { "Card" => "Оплата картой", "Cash" => "Наличными", "Credit" => "Кредит/Рассрочка", _ => order.PaymentMethod ?? "Способ не указан" })
                                 </div>
-                                <button class="reorder-btn" data-order-id="@order.Id">
-                                    <i class="fas fa-redo-alt"></i> Повторить заказ
-                                </button>
+                                <button class="reorder-btn" data-order-id="@order.Id"><i class="fas fa-redo-alt"></i> Повторить заказ</button>
                             </div>
                         </div>
                     }
@@ -602,9 +876,9 @@
                         }
                         else
                         {
+
                             <span class="disabled"><i class="fas fa-chevron-left"></i> Назад</span>
                         }
-
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
                             if (i == Model.PageNumber)
@@ -613,16 +887,17 @@
                             }
                             else
                             {
+
                                 <a href="?pageNumber=@i&statusFilter=@Model.StatusFilter&dateFrom=@Model.DateFrom&dateTo=@Model.DateTo">@i</a>
                             }
                         }
-
                         @if (Model.PageNumber < Model.TotalPages)
                         {
                             <a href="?pageNumber=@(Model.PageNumber + 1)&statusFilter=@Model.StatusFilter&dateFrom=@Model.DateFrom&dateTo=@Model.DateTo">Вперёд <i class="fas fa-chevron-right"></i></a>
                         }
                         else
                         {
+
                             <span class="disabled">Вперёд <i class="fas fa-chevron-right"></i></span>
                         }
                     </div>
@@ -648,43 +923,23 @@
         const themeToggle = document.getElementById('themeToggle');
         const icon = themeToggle.querySelector('i');
         const savedTheme = localStorage.getItem('clientTheme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark');
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        }
+        if (savedTheme === 'dark') { document.body.classList.add('dark'); icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark');
-            if (document.body.classList.contains('dark')) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-                localStorage.setItem('clientTheme', 'dark');
-            } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-                localStorage.setItem('clientTheme', 'light');
-            }
+            if (document.body.classList.contains('dark')) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); localStorage.setItem('clientTheme', 'dark'); }
+            else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); localStorage.setItem('clientTheme', 'light'); }
         });
 
-        function getAntiForgeryToken() {
-            return document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        }
+        function getAntiForgeryToken() { return document.querySelector('input[name="__RequestVerificationToken"]')?.value; }
 
         async function updateCartCount() {
             try {
                 const token = getAntiForgeryToken();
-                const response = await fetch('/Client/Cart?handler=Count', {
-                    method: 'GET',
-                    headers: { 'RequestVerificationToken': token }
-                });
+                const response = await fetch('/Client/Cart?handler=Count', { method: 'GET', headers: { 'RequestVerificationToken': token } });
                 const data = await response.json();
                 const countSpan = document.getElementById('cartCount');
-                if (data.count > 0) {
-                    countSpan.style.display = 'inline-block';
-                    countSpan.innerText = data.count;
-                } else {
-                    countSpan.style.display = 'none';
-                }
+                if (data.count > 0) { countSpan.style.display = 'inline-block'; countSpan.innerText = data.count; }
+                else { countSpan.style.display = 'none'; }
             } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
 
@@ -694,21 +949,10 @@
             formData.append('quantity', quantity);
             const token = getAntiForgeryToken();
             try {
-                const response = await fetch('/Client/Cart?handler=Add', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'RequestVerificationToken': token }
-                });
-                if (response.ok) {
-                    showNotification(`${productName} добавлен в корзину!`, 'success');
-                    updateCartCount();
-                } else {
-                    showNotification('Ошибка добавления в корзину', 'error');
-                }
-            } catch (error) {
-                console.error(error);
-                showNotification('Ошибка добавления в корзину', 'error');
-            }
+                const response = await fetch('/Client/Cart?handler=Add', { method: 'POST', body: formData, headers: { 'RequestVerificationToken': token } });
+                if (response.ok) { showNotification(`${productName} добавлен в корзину!`, 'success'); updateCartCount(); }
+                else { showNotification('Ошибка добавления в корзину', 'error'); }
+            } catch (error) { console.error(error); showNotification('Ошибка добавления в корзину', 'error'); }
         }
 
         function showNotification(message, type = 'info') {
@@ -726,40 +970,24 @@
             notif.style.fontWeight = '600';
             notif.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
             document.body.appendChild(notif);
-            setTimeout(() => {
-                notif.style.transition = 'opacity 0.5s';
-                notif.style.opacity = '0';
-                setTimeout(() => notif.remove(), 500);
-            }, 2000);
+            setTimeout(() => { notif.style.transition = 'opacity 0.5s'; notif.style.opacity = '0'; setTimeout(() => notif.remove(), 500); }, 2000);
         }
 
         @if (!Model.IsGuest)
         {
-            <text>
-            document.querySelectorAll('.reorder-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const orderId = btn.getAttribute('data-order-id');
-                    try {
-                        const response = await fetch(`/Client/Orders?handler=Reorder&orderId=${orderId}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgeryToken() }
-                        });
-                        const items = await response.json();
-                        if (items && items.length) {
-                            for (const item of items) {
-                                await addToCart(item.productId, item.productName, item.price, item.quantity);
-                            }
-                            showNotification('Товары добавлены в корзину', 'success');
-                        } else {
-                            showNotification('Не удалось повторить заказ', 'error');
-                        }
-                    } catch (error) {
-                        console.error(error);
-                        showNotification('Ошибка при повторении заказа', 'error');
-                    }
+                <text>
+                document.querySelectorAll('.reorder-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const orderId = btn.getAttribute('data-order-id');
+                        try {
+                            const response = await fetch(`/Client/Orders?handler=Reorder&orderId=${orderId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgeryToken() } });
+                            const items = await response.json();
+                            if (items && items.length) { for (const item of items) { await addToCart(item.productId, item.productName, item.price, item.quantity); } showNotification('Товары добавлены в корзину', 'success'); }
+                            else { showNotification('Не удалось повторить заказ', 'error'); }
+                        } catch (error) { console.error(error); showNotification('Ошибка при повторении заказа', 'error'); }
+                    });
                 });
-            });
-            </text>
+                </text>
         }
 
         updateCartCount();

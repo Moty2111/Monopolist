@@ -16,7 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ========== БАЗОВЫЕ ПЕРЕМЕННЫЕ ========== */
         :root {
             --primary: #FF6B00;
             --primary-dark: #E05E00;
@@ -43,8 +42,6 @@
             --text-secondary: #cbd5e1;
             --text-muted: #94a3b8;
             --border: #334155;
-            --shadow: 0 2px 4px -1px rgba(0,0,0,0.2);
-            --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.3);
         }
 
         * {
@@ -57,14 +54,10 @@
             font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text-primary);
-            line-height: 1.5;
             transition: background 0.3s, color 0.3s;
-            position: relative;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        /* Шестерёнки */
         .gear {
             position: fixed;
             font-size: 6rem;
@@ -117,7 +110,6 @@
             }
         }
 
-        /* Шапка */
         .header {
             background: rgba(var(--surface-rgb), 0.95);
             backdrop-filter: blur(10px);
@@ -173,7 +165,7 @@
             gap: 6px;
         }
 
-            .nav-link:hover {
+            .nav-link:hover, .nav-link.active {
                 color: var(--primary);
             }
 
@@ -238,6 +230,30 @@
             border: 1px solid var(--border);
         }
 
+        .customer-avatar-link {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .customer-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .customer-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
         .customer-name {
             font-weight: 500;
             font-size: 15px;
@@ -256,7 +272,6 @@
                 color: var(--primary);
             }
 
-        /* Основной контент */
         .main {
             max-width: 1200px;
             margin: 0 auto;
@@ -322,7 +337,6 @@
                 margin-bottom: 0.5rem;
             }
 
-        /* Футер */
         .footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -338,7 +352,6 @@
                 text-decoration: none;
             }
 
-        /* Адаптивность */
         @@media (max-width: 1024px) {
             .header-container {
                 flex-wrap: wrap;
@@ -415,7 +428,6 @@
     </style>
 </head>
 <body>
-    <!-- Шестерёнки -->
     <div class="gear gear1"><i class="fas fa-cog"></i></div>
     <div class="gear gear2"><i class="fas fa-cog"></i></div>
     <div class="gear gear3"><i class="fas fa-cog"></i></div>
@@ -440,7 +452,18 @@
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
                 <div class="customer-badge">
-                    <i class="fas fa-user-circle"></i>
+                    <a href="/Client/Profile" class="customer-avatar-link">
+                        <div class="customer-avatar">
+                            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                            {
+                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                    </a>
                     <span class="customer-name">@Model.CustomerName</span>
                     @if (!Model.IsGuest)
                     {
@@ -483,45 +506,24 @@
     </footer>
 
     <script>
-        // Тёмная тема
         const themeToggle = document.getElementById('themeToggle');
         const icon = themeToggle.querySelector('i');
         const savedTheme = localStorage.getItem('clientTheme');
-
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark');
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        }
-
+        if (savedTheme === 'dark') { document.body.classList.add('dark'); icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark');
-            if (document.body.classList.contains('dark')) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-                localStorage.setItem('clientTheme', 'dark');
-            } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-                localStorage.setItem('clientTheme', 'light');
-            }
+            if (document.body.classList.contains('dark')) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); localStorage.setItem('clientTheme', 'dark'); }
+            else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); localStorage.setItem('clientTheme', 'light'); }
         });
 
-        // Корзина (если гость – счётчик не нужен, но для единообразия оставим)
         async function updateCartCount() {
             try {
                 const response = await fetch('/Client/Cart?handler=Count');
                 const data = await response.json();
                 const countSpan = document.getElementById('cartCount');
-                if (data.count > 0) {
-                    countSpan.style.display = 'inline-block';
-                    countSpan.innerText = data.count;
-                } else {
-                    countSpan.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Ошибка получения количества товаров', error);
-            }
+                if (data.count > 0) { countSpan.style.display = 'inline-block'; countSpan.innerText = data.count; }
+                else { countSpan.style.display = 'none'; }
+            } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
         updateCartCount();
     </script>

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
-using Monoplist.ViewModels;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
@@ -13,27 +13,21 @@ namespace Monoplist.Pages.Products;
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _context;
-    private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(AppDbContext context, ILogger<IndexModel> logger)
+    public IndexModel(AppDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
-
-    public IList<ProductIndexViewModel> Products { get; set; } = new List<ProductIndexViewModel>();
 
     [BindProperty(SupportsGet = true)]
     public string? SearchString { get; set; }
 
-    // Параметры сортировки
     [BindProperty(SupportsGet = true)]
-    public string? SortField { get; set; }
+    public int? CategoryId { get; set; }   // <-- добавлено
 
-    [BindProperty(SupportsGet = true)]
-    public string? SortOrder { get; set; } // "asc" или "desc"
+    public IList<Product> Products { get; set; } = new List<Product>();
+    public SelectList Categories { get; set; } = default!;  // <-- добавлено
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -42,73 +36,33 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        try
+        await LoadUserSettings();
+        await LoadCategories();
+
+        var query = _context.Products
+            .Include(p => p.Category)
+            .Include(p => p.Supplier)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(SearchString))
         {
-            await LoadUserSettings();
-
-            // Устанавливаем значения по умолчанию для сортировки
-            SortField = string.IsNullOrEmpty(SortField) ? "Name" : SortField;
-            SortOrder = string.IsNullOrEmpty(SortOrder) ? "asc" : SortOrder;
-
-            var query = _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Supplier)
-                .AsQueryable();
-
-            // Фильтрация по поисковому запросу
-            if (!string.IsNullOrEmpty(SearchString))
-            {
-                query = query.Where(p =>
-                    EF.Functions.Like(p.Name, $"%{SearchString}%") ||
-                    (p.Article != null && EF.Functions.Like(p.Article, $"%{SearchString}%")));
-            }
-
-            // Сортировка в зависимости от выбранного поля и направления
-            IQueryable<Product> sortedQuery = SortField switch
-            {
-                "Article" => SortOrder == "asc"
-                    ? query.OrderBy(p => p.Article)
-                    : query.OrderByDescending(p => p.Article),
-                "PurchasePrice" => SortOrder == "asc"
-                    ? query.OrderBy(p => p.PurchasePrice)
-                    : query.OrderByDescending(p => p.PurchasePrice),
-                "SalePrice" => SortOrder == "asc"
-                    ? query.OrderBy(p => p.SalePrice)
-                    : query.OrderByDescending(p => p.SalePrice),
-                "CurrentStock" => SortOrder == "asc"
-                    ? query.OrderBy(p => p.CurrentStock)
-                    : query.OrderByDescending(p => p.CurrentStock),
-                "CategoryName" => SortOrder == "asc"
-                    ? query.OrderBy(p => p.Category.Name)
-                    : query.OrderByDescending(p => p.Category.Name),
-                "SupplierName" => SortOrder == "asc"
-                    ? query.OrderBy(p => p.Supplier.Name)
-                    : query.OrderByDescending(p => p.Supplier.Name),
-                _ => SortOrder == "asc"
-                    ? query.OrderBy(p => p.Name)
-                    : query.OrderByDescending(p => p.Name)
-            };
-
-            Products = await sortedQuery
-                .Select(p => new ProductIndexViewModel
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Article = p.Article,
-                    CategoryName = p.Category != null ? p.Category.Name : GetLocalizedMessage("Без категории", "Uncategorized", "Санатсыз"),
-                    Unit = p.Unit,
-                    PurchasePrice = p.PurchasePrice,
-                    SalePrice = p.SalePrice,
-                    CurrentStock = p.CurrentStock,
-                    SupplierName = p.Supplier != null ? p.Supplier.Name : GetLocalizedMessage("Не указан", "Not specified", "Көрсетілмеген")
-                })
-                .ToListAsync();
+            query = query.Where(p =>
+                EF.Functions.Like(p.Name, $"%{SearchString}%") ||
+                EF.Functions.Like(p.Article, $"%{SearchString}%"));
         }
-        catch (Exception ex)
+
+        if (CategoryId.HasValue)
         {
-            _logger.LogError(ex, "Ошибка при загрузке списка товаров");
-            TempData["Error"] = GetLocalizedMessage("Не удалось загрузить список товаров.", "Failed to load products.", "Тауарлар тізімін жүктеу мүмкін болмады.");
+            query = query.Where(p => p.CategoryId == CategoryId.Value);
         }
+
+        Products = await query.OrderBy(p => p.Name).ToListAsync();
+    }
+
+    private async Task LoadCategories()
+    {
+        var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+        Categories = new SelectList(categories, "Id", "Name");
     }
 
     private async Task LoadUserSettings()
@@ -123,15 +77,5 @@ public class IndexModel : PageModel
             Theme = user.Theme ?? "light";
             CustomColor = user.CustomColor ?? "#FF6B00";
         }
-    }
-
-    private string GetLocalizedMessage(string ru, string en, string kk)
-    {
-        return Language switch
-        {
-            "en" => en,
-            "kk" => kk,
-            _ => ru
-        };
     }
 }

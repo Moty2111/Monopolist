@@ -22,6 +22,7 @@ public class CartModel : PageModel
 
     public List<CartItemViewModel> CartItems { get; set; } = new();
     public string CustomerName { get; set; } = "Гость";
+    public string? AvatarUrl { get; set; }
     public decimal CustomerDiscount { get; set; }
     public bool IsGuest { get; private set; }
     public decimal TotalAmount { get; set; }
@@ -41,6 +42,7 @@ public class CartModel : PageModel
                 {
                     CustomerName = customer.FullName;
                     CustomerDiscount = customer.Discount;
+                    AvatarUrl = customer.AvatarUrl;
                 }
 
                 var cartItems = await _context.CartItems
@@ -202,7 +204,6 @@ public class CartModel : PageModel
 
         if (!cartItems.Any()) return BadRequest("Корзина пуста");
 
-        // Проверка остатков
         foreach (var item in cartItems)
         {
             if (item.Product.CurrentStock < item.Quantity)
@@ -215,7 +216,6 @@ public class CartModel : PageModel
 
         var orderNumber = await GenerateOrderNumberAsync();
 
-        // Уменьшаем остатки
         foreach (var item in cartItems)
         {
             item.Product.CurrentStock -= item.Quantity;

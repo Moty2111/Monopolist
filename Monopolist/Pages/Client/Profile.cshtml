@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ========== БАЗОВЫЕ ПЕРЕМЕННЫЕ ========== */
+        /* Все стили из предыдущей версии (оставляем без изменений) */
         :root {
             --primary: #FF6B00;
             --primary-dark: #E05E00;
@@ -30,6 +30,7 @@
             --text-muted: #64748b;
             --border: #e2e8f0;
             --shadow: 0 2px 4px -1px rgba(0,0,0,0.05);
+            --shadow-md: 0 8px 20px rgba(0,0,0,0.08);
             --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1);
             --radius: 16px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -44,7 +45,8 @@
             --text-muted: #94a3b8;
             --border: #334155;
             --shadow: 0 2px 4px -1px rgba(0,0,0,0.2);
-            --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 20px rgba(0,0,0,0.3);
+            --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.4);
         }
 
         * {
@@ -59,12 +61,10 @@
             color: var(--text-primary);
             line-height: 1.5;
             transition: background 0.3s, color 0.3s;
-            position: relative;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Шестерёнки */
         .gear {
             position: fixed;
             font-size: 6rem;
@@ -117,7 +117,6 @@
             }
         }
 
-        /* Шапка */
         .header {
             background: rgba(var(--surface-rgb), 0.95);
             backdrop-filter: blur(10px);
@@ -173,7 +172,7 @@
             gap: 6px;
         }
 
-            .nav-link:hover {
+            .nav-link:hover, .nav-link.active {
                 color: var(--primary);
             }
 
@@ -238,6 +237,24 @@
             border: 1px solid var(--border);
         }
 
+        .customer-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .customer-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
         .customer-name {
             font-weight: 500;
             font-size: 15px;
@@ -256,92 +273,169 @@
                 color: var(--primary);
             }
 
-        /* Основной контент */
         .main {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .profile-card {
+            background: var(--surface);
+            border-radius: 32px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 40px 32px 80px 32px;
+            text-align: center;
+            position: relative;
+        }
+
+            .profile-header h1 {
+                color: white;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            .profile-header p {
+                color: rgba(255,255,255,0.9);
+                font-size: 16px;
+            }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: -70px auto 20px auto;
+            cursor: pointer;
+        }
+
+        .avatar-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 4px solid var(--accent);
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+            .avatar-preview:hover {
+                transform: scale(1.02);
+            }
+
+            .avatar-preview img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .avatar-preview i {
+                font-size: 80px;
+                color: var(--primary);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                background: var(--surface-hover);
+            }
+
+        .avatar-upload-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: var(--primary);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            border: 2px solid var(--surface);
+            transition: all 0.2s;
+        }
+
+            .avatar-upload-btn:hover {
+                background: var(--primary-dark);
+                transform: scale(1.1);
+            }
+
+        .profile-body {
             padding: 32px;
         }
 
-        .welcome {
-            margin-bottom: 32px;
-            text-align: center;
-        }
-
-            .welcome h1 {
-                font-size: 42px;
-                font-weight: 800;
-                background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary-light));
-                background-size: 200% auto;
-                -webkit-background-clip: text;
-                background-clip: text;
-                color: transparent;
-                animation: gradientShift 6s infinite linear;
-            }
-
-        @@keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        .welcome p {
-            color: var(--text-muted);
-            margin-top: 8px;
-            font-size: 18px;
-        }
-
-        /* Форма профиля */
-        .profile-form {
-            max-width: 600px;
-            margin: 0 auto;
-            background: var(--surface);
-            border-radius: var(--radius);
+        .form-section {
+            background: var(--surface-hover);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 28px;
             border: 1px solid var(--border);
-            padding: 2rem;
-            box-shadow: var(--shadow);
+        }
+
+            .form-section h3 {
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 20px;
+                color: var(--primary);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            flex: 1;
+            min-width: 200px;
         }
 
             .form-group label {
                 display: block;
-                font-weight: 600;
-                margin-bottom: 0.5rem;
+                font-weight: 500;
+                margin-bottom: 6px;
                 color: var(--text-secondary);
+                font-size: 14px;
             }
 
-            .form-group input {
+            .form-group input, .form-group .url-input {
                 width: 100%;
                 padding: 12px 16px;
                 border: 2px solid var(--border);
-                border-radius: 12px;
+                border-radius: 14px;
                 background: var(--surface);
                 color: var(--text-primary);
                 font-family: inherit;
-                font-size: 16px;
+                font-size: 15px;
                 transition: var(--transition);
             }
 
-                .form-group input:focus {
+                .form-group input:focus, .form-group .url-input:focus {
                     outline: none;
                     border-color: var(--primary);
+                    box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
                 }
+
+        .avatar-url-field {
+            margin-top: 16px;
+        }
 
         .btn-save {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border: none;
-            padding: 12px 28px;
+            padding: 14px 28px;
             border-radius: 40px;
             color: white;
             font-weight: 600;
@@ -350,27 +444,50 @@
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
             .btn-save:hover {
                 transform: translateY(-2px);
-                background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+                box-shadow: 0 8px 20px rgba(255,107,0,0.3);
+            }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 40px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+            .btn-secondary:hover {
+                border-color: var(--primary);
+                color: var(--primary);
             }
 
         .alert-success {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            padding: 14px 24px;
-            border-radius: 12px;
+            padding: 14px 20px;
+            border-radius: 14px;
             margin-bottom: 24px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
         }
 
         .text-danger {
             color: #ef4444;
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
+            font-size: 12px;
+            margin-top: 4px;
             display: block;
         }
 
@@ -378,20 +495,14 @@
             text-align: center;
             padding: 60px 20px;
             background: var(--surface);
-            border-radius: var(--radius);
+            border-radius: 32px;
             border: 1px solid var(--border);
-            max-width: 500px;
-            margin: 0 auto;
         }
 
             .guest-message-box i {
                 font-size: 64px;
                 color: var(--primary);
                 margin-bottom: 20px;
-            }
-
-            .guest-message-box h2 {
-                margin-bottom: 16px;
             }
 
             .guest-message-box .btn-primary {
@@ -405,7 +516,6 @@
                 font-weight: 600;
             }
 
-        /* Футер */
         .footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -421,7 +531,18 @@
                 text-decoration: none;
             }
 
-        /* Адаптивность */
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @@media (max-width: 1024px) {
             .header-container {
                 flex-wrap: wrap;
@@ -469,15 +590,26 @@
             }
 
             .main {
-                padding: 16px;
+                padding: 20px 16px;
             }
 
-            .welcome h1 {
-                font-size: 32px;
+            .profile-header {
+                padding: 30px 20px 70px 20px;
             }
 
-            .profile-form {
-                padding: 1rem;
+            .avatar-wrapper {
+                width: 110px;
+                height: 110px;
+                margin-top: -55px;
+            }
+
+            .profile-body {
+                padding: 20px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 12px;
             }
         }
 
@@ -523,7 +655,18 @@
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
                 <div class="customer-badge">
-                    <i class="fas fa-user-circle"></i>
+                    <a href="/Client/Profile" class="customer-avatar-link">
+                        <div class="customer-avatar">
+                            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                            {
+                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                    </a>
                     <span class="customer-name">@Model.CustomerName</span>
                     @if (!Model.IsGuest)
                     {
@@ -541,11 +684,6 @@
     </header>
 
     <main class="main">
-        <div class="welcome">
-            <h1>Мой профиль</h1>
-            <p>Управление личными данными</p>
-        </div>
-
         @if (Model.IsGuest)
         {
             <div class="guest-message-box">
@@ -565,37 +703,87 @@
                 </div>
             }
 
-            <form method="post" class="profile-form">
-                @Html.AntiForgeryToken()
-                <div class="form-group">
-                    <label asp-for="Input.FullName">ФИО *</label>
-                    <input asp-for="Input.FullName" />
-                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+            <div class="profile-card">
+                <div class="profile-header">
+                    <h1>Мой профиль</h1>
+                    <p>Управление личными данными и аватаром</p>
                 </div>
-                <div class="form-group">
-                    <label asp-for="Input.Email">Email</label>
-                    <input asp-for="Input.Email" type="email" />
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="Input.Phone">Телефон</label>
-                    <input asp-for="Input.Phone" />
-                    <span asp-validation-for="Input.Phone" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="Input.NewPassword">Новый пароль (оставьте пустым, если не меняете)</label>
-                    <input asp-for="Input.NewPassword" type="password" />
-                    <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="Input.ConfirmPassword">Подтверждение пароля</label>
-                    <input asp-for="Input.ConfirmPassword" type="password" />
-                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn-save"><i class="fas fa-save"></i> Сохранить изменения</button>
-                </div>
-            </form>
+
+                <form method="post" enctype="multipart/form-data" id="profileForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="avatar-wrapper">
+                        <div class="avatar-preview" id="avatarPreview">
+                            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                            {
+                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user"></i>
+                            }
+                        </div>
+                        <label class="avatar-upload-btn" for="avatarFile" title="Загрузить аватар">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="avatarFile" name="AvatarFile" accept="image/*" style="display: none;" />
+                    </div>
+
+                    <div class="avatar-url-field" style="max-width: 400px; margin: 0 auto 20px auto;">
+                        <div class="form-group">
+                            <label for="AvatarUrlInput">URL аватара</label>
+                            <input type="text" id="AvatarUrlInput" name="AvatarUrl" class="url-input" placeholder="https://example.com/avatar.jpg" value="@Model.AvatarUrl" />
+                        </div>
+                    </div>
+
+                    <div class="profile-body">
+                        <div class="form-section">
+                            <h3><i class="fas fa-user-circle"></i> Основная информация</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label asp-for="Input.FullName">ФИО *</label>
+                                    <input asp-for="Input.FullName" />
+                                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="Input.Email">Email</label>
+                                    <input asp-for="Input.Email" type="email" />
+                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label asp-for="Input.Phone">Телефон</label>
+                                    <input asp-for="Input.Phone" />
+                                    <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3><i class="fas fa-lock"></i> Смена пароля</h3>
+                            <p style="margin-bottom: 16px; font-size: 14px; color: var(--text-muted);">Оставьте поля пустыми, если не хотите менять пароль</p>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label asp-for="Input.NewPassword">Новый пароль</label>
+                                    <input asp-for="Input.NewPassword" type="password" />
+                                    <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="Input.ConfirmPassword">Подтверждение пароля</label>
+                                    <input asp-for="Input.ConfirmPassword" type="password" />
+                                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 16px; justify-content: flex-end; margin-top: 24px;">
+                            <a href="/Client/Index" class="btn-secondary"><i class="fas fa-arrow-left"></i> На главную</a>
+                            <button type="submit" class="btn-save"><i class="fas fa-save"></i> Сохранить изменения</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         }
     </main>
 
@@ -626,12 +814,43 @@
             }
         });
 
+        const avatarFile = document.getElementById('avatarFile');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const avatarUrlInput = document.getElementById('AvatarUrlInput');
+
+        if (avatarFile) {
+            avatarFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Avatar" />`;
+                        if (avatarUrlInput) avatarUrlInput.value = '';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (avatarUrlInput) {
+            avatarUrlInput.addEventListener('input', function() {
+                const url = this.value.trim();
+                if (url) {
+                    avatarPreview.innerHTML = `<img src="${url}" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user\'></i>';" />`;
+                    if (avatarFile) avatarFile.value = '';
+                } else {
+                    if (!avatarFile.files.length) {
+                        avatarPreview.innerHTML = '<i class="fas fa-user"></i>';
+                    }
+                }
+            });
+        }
+
         async function updateCartCount() {
             try {
-                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                 const response = await fetch('/Client/Cart?handler=Count', {
                     method: 'GET',
-                    headers: { 'RequestVerificationToken': token }
+                    headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value }
                 });
                 const data = await response.json();
                 const countSpan = document.getElementById('cartCount');
@@ -641,9 +860,10 @@
                 } else {
                     countSpan.style.display = 'none';
                 }
-            } catch (error) { console.error('Ошибка получения количества товаров', error); }
+            } catch (error) {
+                console.error('Ошибка получения количества товаров', error);
+            }
         }
-
         updateCartCount();
     </script>
 </body>

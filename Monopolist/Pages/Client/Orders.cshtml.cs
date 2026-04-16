@@ -20,6 +20,7 @@ public class OrdersModel : PageModel
 
     public List<OrderViewModel> Orders { get; set; } = new();
     public string CustomerName { get; set; } = "Гость";
+    public string? AvatarUrl { get; set; }
     public decimal CustomerDiscount { get; set; }
     public bool IsGuest { get; private set; }
 
@@ -54,6 +55,7 @@ public class OrdersModel : PageModel
                 {
                     CustomerName = customer.FullName;
                     CustomerDiscount = customer.Discount;
+                    AvatarUrl = customer.AvatarUrl;
                 }
 
                 var query = _context.Orders
