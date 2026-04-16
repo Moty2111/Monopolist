@@ -576,6 +576,36 @@
                 background: rgba(255,107,0,0.05);
             }
 
+        .avatar-cell {
+            width: 60px;
+            text-align: center;
+        }
+
+        .avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+            .avatar-small i {
+                font-size: 28px;
+                color: var(--primary);
+            }
+
+            .avatar-small img {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
         .action-buttons {
             display: flex;
             gap: 4px;
@@ -666,7 +696,7 @@
         }
 
         @@media (max-width: 992px) {
-            .data-table th:nth-child(3), .data-table td:nth-child(3) {
+            .data-table th:nth-child(4), .data-table td:nth-child(4) {
                 display: none;
             }
         }
@@ -734,7 +764,10 @@
                 justify-content: center;
             }
 
-            .data-table th:nth-child(5), .data-table td:nth-child(5) {
+            .data-table th:nth-child(2), /* Аватар */
+            .data-table td:nth-child(2),
+            .data-table th:nth-child(6), /* Дата регистрации */
+            .data-table td:nth-child(6) {
                 display: none;
             }
         }
@@ -748,7 +781,8 @@
                 padding: 8px 12px;
             }
 
-            .data-table th:nth-child(2), .data-table td:nth-child(2) {
+            .data-table th:nth-child(3), /* Телефон */
+            .data-table td:nth-child(3) {
                 display: none;
             }
         }
@@ -863,6 +897,7 @@
                                 <thead>
                                     <tr>
                                         <th><i class="fas fa-user"></i> @(Model.Language == "ru" ? "ФИО / Название" : Model.Language == "en" ? "Full name" : "Аты-жөні / Атауы")</th>
+                                        <th style="width: 60px;"><i class="fas fa-image"></i></th>   <!-- Аватар -->
                                         <th><i class="fas fa-phone"></i> @(Model.Language == "ru" ? "Телефон" : Model.Language == "en" ? "Phone" : "Телефон")</th>
                                         <th><i class="fas fa-envelope"></i> Email</th>
                                         @if (canViewPassword)
@@ -879,6 +914,18 @@
                                     {
                                         <tr>
                                             <td>@customer.FullName</td>
+                                            <td class="avatar-cell">
+                                                <div class="avatar-small">
+                                                    @if (!string.IsNullOrEmpty(customer.AvatarUrl))
+                                                    {
+                                                        <img src="@customer.AvatarUrl" alt="@customer.FullName" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-user-circle"></i>
+                                                    }
+                                                </div>
+                                            </td>
                                             <td>@customer.Phone</td>
                                             <td>@customer.Email</td>
                                             @if (canViewPassword)

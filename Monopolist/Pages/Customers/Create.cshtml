@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Стили без изменений (как в предыдущей версии) */
+        /* Все стили как в предыдущей версии Create.cshtml, плюс добавлены стили для аватара */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -551,6 +551,47 @@
             display: block;
         }
 
+        /* Стили для аватара */
+        .avatar-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--surface-hover);
+            border: 2px dashed var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+            .avatar-preview img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .avatar-preview i {
+                font-size: 48px;
+                color: var(--text-muted);
+            }
+
+        .avatar-controls {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .avatar-url-input {
+            margin-top: 10px;
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -617,7 +658,6 @@
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню (локализованное) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -688,8 +728,24 @@
                     <p class="subtitle">@(Model.Language == "ru" ? "Заполните форму" : Model.Language == "en" ? "Fill the form" : "Пішінді толтырыңыз")</p>
 
                     <div class="form-container">
-                        <form method="post">
+                        <form method="post" enctype="multipart/form-data">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                            <!-- Аватар -->
+                            <div class="form-group">
+                                <label>@(Model.Language == "ru" ? "Аватар" : Model.Language == "en" ? "Avatar" : "Аватар")</label>
+                                <div class="avatar-upload-area">
+                                    <div class="avatar-preview" id="avatarPreview">
+                                        <i class="fas fa-user-circle"></i>
+                                    </div>
+                                    <div class="avatar-controls">
+                                        <input type="file" id="AvatarFile" name="AvatarFile" accept="image/*" class="form-control" style="padding: 8px;" />
+                                        <div class="avatar-url-input">
+                                            <input type="text" id="AvatarUrlInput" name="Customer.AvatarUrl" class="form-control" placeholder="@(Model.Language == "ru" ? "Или укажите URL аватара" : Model.Language == "en" ? "Or enter avatar URL" : "Немесе аватар сілтемесін енгізіңіз")" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="form-group">
                                 <label asp-for="Customer.FullName">@(Model.Language == "ru" ? "ФИО / Название" : Model.Language == "en" ? "Full name" : "Аты-жөні / Атауы")</label>
@@ -767,6 +823,45 @@
             });
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => { setTimeout(() => { alert.style.transition = 'opacity 0.5s'; alert.style.opacity = '0'; setTimeout(() => alert.style.display = 'none', 500); }, 5000); });
+
+            // Предпросмотр аватара
+            const avatarFile = document.getElementById('AvatarFile');
+            const avatarUrlInput = document.getElementById('AvatarUrlInput');
+            const preview = document.getElementById('avatarPreview');
+
+            function updatePreview(src) {
+                if (src) {
+                    preview.innerHTML = `<img src="${src}" alt="Avatar" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />`;
+                } else {
+                    preview.innerHTML = '<i class="fas fa-user-circle"></i>';
+                }
+            }
+
+            avatarFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        updatePreview(e.target.result);
+                        avatarUrlInput.value = '';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    updatePreview(null);
+                }
+            });
+
+            avatarUrlInput.addEventListener('input', function() {
+                const url = this.value.trim();
+                if (url) {
+                    updatePreview(url);
+                    avatarFile.value = '';
+                } else {
+                    if (!avatarFile.files.length) {
+                        updatePreview(null);
+                    }
+                }
+            });
         });
         function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
         window.addEventListener('click', function(event) {

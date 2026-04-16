@@ -13,15 +13,20 @@ public class EditModel : PageModel
 {
     private readonly AppDbContext _context;
     private readonly ILogger<EditModel> _logger;
+    private readonly IWebHostEnvironment _env;
 
-    public EditModel(AppDbContext context, ILogger<EditModel> logger)
+    public EditModel(AppDbContext context, ILogger<EditModel> logger, IWebHostEnvironment env)
     {
         _context = context;
         _logger = logger;
+        _env = env;
     }
 
     [BindProperty]
     public Customer Customer { get; set; } = new();
+
+    [BindProperty]
+    public IFormFile? AvatarFile { get; set; }
 
     [BindProperty]
     public string? NewPassword { get; set; }
@@ -56,7 +61,7 @@ public class EditModel : PageModel
         var customerToUpdate = await _context.Customers.FindAsync(Customer.Id);
         if (customerToUpdate == null) return NotFound();
 
-        // Проверка паролей, если указаны
+        // Проверка паролей
         if (!string.IsNullOrWhiteSpace(NewPassword))
         {
             if (NewPassword != ConfirmPassword)
@@ -76,6 +81,44 @@ public class EditModel : PageModel
 
         try
         {
+            // Обработка аватара
+            if (AvatarFile != null && AvatarFile.Length > 0)
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var ext = Path.GetExtension(AvatarFile.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(ext))
+                {
+                    ModelState.AddModelError("AvatarFile", "Разрешены только изображения (jpg, jpeg, png, gif)");
+                    await LoadUserSettings();
+                    return Page();
+                }
+
+                // Удаляем старый файл, если он локальный
+                if (!string.IsNullOrEmpty(customerToUpdate.AvatarUrl) && customerToUpdate.AvatarUrl.StartsWith("/uploads/"))
+                {
+                    var oldFilePath = Path.Combine(_env.WebRootPath, customerToUpdate.AvatarUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                        System.IO.File.Delete(oldFilePath);
+                }
+
+                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "avatars", "customers");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var fileName = $"customer_{customerToUpdate.Id}_{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await AvatarFile.CopyToAsync(stream);
+                }
+                customerToUpdate.AvatarUrl = $"/uploads/avatars/customers/{fileName}";
+            }
+            else if (!string.IsNullOrEmpty(Customer.AvatarUrl))
+            {
+                // Если указан URL (и файл не загружен)
+                customerToUpdate.AvatarUrl = Customer.AvatarUrl;
+            }
+
             customerToUpdate.FullName = Customer.FullName;
             customerToUpdate.Phone = Customer.Phone;
             customerToUpdate.Email = Customer.Email;
@@ -107,6 +150,25 @@ public class EditModel : PageModel
             await LoadUserSettings();
             return Page();
         }
+    }
+
+    public async Task<IActionResult> OnPostDeleteAvatarAsync(int id)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer == null) return NotFound();
+
+        if (!string.IsNullOrEmpty(customer.AvatarUrl) && customer.AvatarUrl.StartsWith("/uploads/"))
+        {
+            var filePath = Path.Combine(_env.WebRootPath, customer.AvatarUrl.TrimStart('/'));
+            if (System.IO.File.Exists(filePath))
+                System.IO.File.Delete(filePath);
+        }
+
+        customer.AvatarUrl = null;
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = GetLocalizedMessage("Аватар удалён.", "Avatar deleted.", "Аватар жойылды.");
+        return RedirectToPage(new { id });
     }
 
     private async Task LoadUserSettings()
