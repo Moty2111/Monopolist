@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
+using Monoplist.Services;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
@@ -54,10 +55,9 @@ public class CreateModel : PageModel
 
         try
         {
-            // Обработка загрузки изображения
+            // Обработка изображения
             if (imageFile != null && imageFile.Length > 0)
             {
-                // Проверка размера (5 МБ)
                 if (imageFile.Length > 5 * 1024 * 1024)
                 {
                     ModelState.AddModelError(string.Empty, GetLocalizedMessage(
@@ -69,7 +69,6 @@ public class CreateModel : PageModel
                     return Page();
                 }
 
-                // Проверка расширения
                 var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
                 var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
                 if (!allowedExtensions.Contains(extension))
@@ -83,7 +82,6 @@ public class CreateModel : PageModel
                     return Page();
                 }
 
-                // Сохранение файла
                 var fileName = $"{Guid.NewGuid()}{extension}";
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "products");
                 Directory.CreateDirectory(uploadsFolder);
@@ -100,6 +98,43 @@ public class CreateModel : PageModel
             Product.CreatedAt = DateTime.UtcNow;
             _context.Products.Add(Product);
             await _context.SaveChangesAsync();
+
+            // === УВЕДОМЛЕНИЯ ===
+            var currentUserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            var currentUserName = User.Identity?.Name ?? "Пользователь";
+
+            // 1. Администраторам о новом товаре
+            await NotificationService.CreateForAdminsAsync(_context,
+                GetLocalizedMessage("Новый товар", "New product", "Жаңа тауар"),
+                GetLocalizedMessage(
+                    $"Добавлен товар «{Product.Name}» (арт. {Product.Article}) пользователем {currentUserName}.",
+                    $"Product «{Product.Name}» (sku {Product.Article}) added by {currentUserName}.",
+                    $"«{Product.Name}» тауары ({Product.Article}) қолданушы {currentUserName} тарапынан қосылды."),
+                NotificationType.Info,
+                $"/Products/Details?id={Product.Id}");
+
+            // 2. Самому создателю
+            await NotificationService.CreateForUserAsync(_context, currentUserId,
+                GetLocalizedMessage("Товар добавлен", "Product added", "Тауар қосылды"),
+                GetLocalizedMessage(
+                    $"Вы добавили товар «{Product.Name}» в каталог.",
+                    $"You added product «{Product.Name}» to the catalog.",
+                    $"Сіз «{Product.Name}» тауарын каталогқа қостыңыз."),
+                NotificationType.Success,
+                $"/Products/Details?id={Product.Id}");
+
+            // 3. Если остаток меньше минимального – предупреждение
+            if (Product.CurrentStock <= Product.MinimumStock)
+            {
+                await NotificationService.CreateForAdminsAsync(_context,
+                    GetLocalizedMessage("Низкий остаток", "Low stock", "Аз қалдық"),
+                    GetLocalizedMessage(
+                        $"Товар «{Product.Name}»: остаток {Product.CurrentStock} {Product.Unit} (мин. {Product.MinimumStock}).",
+                        $"Product «{Product.Name}»: stock {Product.CurrentStock} {Product.Unit} (min. {Product.MinimumStock}).",
+                        $"«{Product.Name}» тауары: қалдық {Product.CurrentStock} {Product.Unit} (мин. {Product.MinimumStock})."),
+                    NotificationType.Stock,
+                    $"/Products/Details?id={Product.Id}");
+            }
 
             TempData["Success"] = GetLocalizedMessage(
                 "Товар успешно добавлен.",

@@ -921,37 +921,66 @@
                 }, 5000);
             });
 
+            // ---------- Исправленная логика "Выбрать все" ----------
+            const selectAllCheckbox = document.getElementById('selectAll');
             const searchInput = document.getElementById('productSearch');
+
+            function isRowVisible(row) {
+                if (!row) return false;
+                if (row.style.display === 'none') return false;
+                return row.offsetParent !== null;
+            }
+
+            function updateSelectAllState() {
+                if (!selectAllCheckbox) return;
+                const allRows = document.querySelectorAll('.product-row');
+                const visibleRows = Array.from(allRows).filter(row => isRowVisible(row));
+                const visibleCheckboxes = visibleRows.map(row => row.querySelector('.product-checkbox')).filter(cb => cb !== null);
+                const checkedCheckboxes = visibleCheckboxes.filter(cb => cb.checked);
+
+                if (visibleCheckboxes.length === 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                } else {
+                    selectAllCheckbox.checked = visibleCheckboxes.length === checkedCheckboxes.length;
+                    selectAllCheckbox.indeterminate = checkedCheckboxes.length > 0 && checkedCheckboxes.length < visibleCheckboxes.length;
+                }
+            }
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = selectAllCheckbox.checked;
+                    const allRows = document.querySelectorAll('.product-row');
+                    const visibleRows = Array.from(allRows).filter(row => isRowVisible(row));
+                    visibleRows.forEach(row => {
+                        const cb = row.querySelector('.product-checkbox');
+                        if (cb) {
+                            cb.checked = isChecked;
+                        }
+                    });
+                    updateSelectAllState();
+                });
+            }
+
+            document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectAllState);
+            });
+
             if (searchInput) {
                 searchInput.addEventListener('keyup', function() {
                     const term = this.value.toLowerCase();
                     document.querySelectorAll('.product-row').forEach(row => {
                         const name = row.getAttribute('data-name') || '';
                         const article = row.getAttribute('data-article') || '';
-                        row.style.display = (name.includes(term) || article.includes(term)) ? '' : 'none';
+                        const matches = name.includes(term) || article.includes(term);
+                        row.style.display = matches ? '' : 'none';
                     });
+                    updateSelectAllState();
                 });
             }
 
-            const selectAll = document.getElementById('selectAll');
-            if (selectAll) {
-                selectAll.addEventListener('change', function() {
-                    document.querySelectorAll('.product-checkbox:visible').forEach(cb => {
-                        if (cb.closest('tr').style.display !== 'none') {
-                            cb.checked = selectAll.checked;
-                        }
-                    });
-                });
-
-                document.querySelectorAll('.product-checkbox').forEach(cb => {
-                    cb.addEventListener('change', function() {
-                        const visible = document.querySelectorAll('.product-checkbox:visible');
-                        const checked = document.querySelectorAll('.product-checkbox:visible:checked');
-                        selectAll.checked = visible.length === checked.length;
-                        selectAll.indeterminate = checked.length > 0 && checked.length < visible.length;
-                    });
-                });
-            }
+            updateSelectAllState();
+            // -------------------------------------------------------
         });
 
         function toggleUserMenu() {

@@ -1,39 +1,44 @@
-﻿// Models/Notification.cs
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Monoplist.Models;
 
 public class Notification
 {
+    [Key]
     public int Id { get; set; }
 
     [Required]
     public int UserId { get; set; }
-    public User? User { get; set; }
 
-    [Required, StringLength(200)]
+    [Required]
+    [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
 
-    [Required, StringLength(500)]
+    [Required]
+    [MaxLength(1000)]
     public string Message { get; set; } = string.Empty;
-
-    public string? Link { get; set; }          // Ссылка для перехода (например, на заказ)
 
     public NotificationType Type { get; set; } = NotificationType.Info;
 
-    public bool IsRead { get; set; }
+    public string? Link { get; set; }
+
+    public bool IsRead { get; set; } = false;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [ForeignKey("UserId")]
+    public virtual User? User { get; set; }
 }
 
 public enum NotificationType
 {
-    Info,
+    Order,
+    Stock,
+    Customer,
     Success,
     Warning,
     Error,
-    Order,
-    Stock,
-    Customer
+    Info
 }

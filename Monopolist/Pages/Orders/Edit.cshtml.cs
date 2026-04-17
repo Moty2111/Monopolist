@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
+using Monoplist.Models;
+using Monoplist.Services;
 using Monoplist.ViewModels;
 using System.Security.Claims;
 
@@ -28,7 +30,6 @@ public class EditModel : PageModel
     public List<SelectListItem> Statuses { get; set; } = new();
     public List<SelectListItem> PaymentMethods { get; set; } = new();
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -37,9 +38,7 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
-        if (id == null)
-            return NotFound();
-
+        if (id == null) return NotFound();
         await LoadUserSettings();
 
         var order = await _context.Orders
@@ -47,8 +46,7 @@ public class EditModel : PageModel
                 .ThenInclude(oi => oi.Product)
             .FirstOrDefaultAsync(o => o.Id == id);
 
-        if (order == null)
-            return NotFound();
+        if (order == null) return NotFound();
 
         Order.Id = order.Id;
         Order.CustomerId = order.CustomerId;
@@ -99,12 +97,16 @@ public class EditModel : PageModel
                 .Include(o => o.OrderItems)
                 .FirstOrDefaultAsync(o => o.Id == Order.Id);
 
-            if (order == null)
-                return NotFound();
+            if (order == null) return NotFound();
+
+            var oldStatus = order.Status;
+            var newStatus = Order.Status;
+            var customer = await _context.Customers.FindAsync(order.CustomerId);
+            var customerName = customer?.FullName ?? "Клиент";
 
             // Обновляем основные поля
             order.CustomerId = Order.CustomerId;
-            order.Status = Order.Status;
+            order.Status = newStatus;
             order.PaymentMethod = Order.PaymentMethod;
             order.UpdatedAt = DateTime.Now;
 
@@ -118,7 +120,6 @@ public class EditModel : PageModel
             foreach (var item in removedItems)
             {
                 _context.OrderItems.Remove(item);
-                // Возвращаем товар на склад (опционально)
                 var product = await _context.Products.FindAsync(item.ProductId);
                 if (product != null)
                 {
@@ -142,7 +143,7 @@ public class EditModel : PageModel
                     return Page();
                 }
 
-                order.OrderItems.Add(new Models.OrderItem
+                order.OrderItems.Add(new OrderItem
                 {
                     ProductId = item.ProductId,
                     Quantity = item.Quantity,
@@ -152,25 +153,48 @@ public class EditModel : PageModel
                 product.CurrentStock -= item.Quantity;
             }
 
-            // Обновляем существующие (количество и цена могут измениться)
+            // Обновляем существующие
             foreach (var item in updatedItems)
             {
                 var newItem = Order.Items.First(i => i.ProductId == item.ProductId);
                 var product = await _context.Products.FindAsync(item.ProductId);
                 if (product == null) continue;
 
-                // Корректируем остаток
                 var delta = newItem.Quantity - item.Quantity;
                 product.CurrentStock -= delta;
 
                 item.Quantity = newItem.Quantity;
-                item.PriceAtSale = product.SalePrice; // цена может измениться со временем
+                item.PriceAtSale = product.SalePrice;
             }
 
-            // Пересчитываем общую сумму
             order.TotalAmount = Order.Items.Sum(i => i.Quantity * i.Price);
-
             await _context.SaveChangesAsync();
+
+            // === УВЕДОМЛЕНИЯ ===
+            // 1. Если статус изменился на "Completed"
+            if (oldStatus != "Completed" && newStatus == "Completed")
+            {
+                await NotificationService.CreateForAdminsAsync(_context,
+                    GetLocalizedMessage("Заказ выполнен", "Order completed", "Тапсырыс орындалды"),
+                    GetLocalizedMessage(
+                        $"Заказ №{order.OrderNumber} для {customerName} выполнен. Сумма: {order.TotalAmount:N0} ₽",
+                        $"Order #{order.OrderNumber} for {customerName} completed. Amount: {order.TotalAmount:N0} ₽",
+                        $"{order.OrderNumber} тапсырысы {customerName} үшін орындалды. Сомасы: {order.TotalAmount:N0} ₽"),
+                    NotificationType.Success,
+                    $"/Orders/Details?id={order.Id}");
+            }
+            // Если статус изменился на "Cancelled"
+            else if (oldStatus != "Cancelled" && newStatus == "Cancelled")
+            {
+                await NotificationService.CreateForAdminsAsync(_context,
+                    GetLocalizedMessage("Заказ отменён", "Order cancelled", "Тапсырыс бас тартылды"),
+                    GetLocalizedMessage(
+                        $"Заказ №{order.OrderNumber} для {customerName} был отменён.",
+                        $"Order #{order.OrderNumber} for {customerName} was cancelled.",
+                        $"{order.OrderNumber} тапсырысы {customerName} үшін бас тартылды."),
+                    NotificationType.Warning,
+                    $"/Orders/Details?id={order.Id}");
+            }
 
             TempData["Success"] = GetLocalizedMessage(
                 $"Заказ {order.OrderNumber} обновлён.",

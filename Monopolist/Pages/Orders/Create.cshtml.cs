@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
+using Monoplist.Services;
 using Monoplist.ViewModels;
 using System.Security.Claims;
 
@@ -29,7 +30,6 @@ public class CreateModel : PageModel
     public List<SelectListItem> Statuses { get; set; } = new();
     public List<SelectListItem> PaymentMethods { get; set; } = new();
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -53,7 +53,6 @@ public class CreateModel : PageModel
             return Page();
         }
 
-        // Удаляем пустые позиции
         Order.Items = Order.Items.Where(i => i.ProductId > 0 && i.Quantity > 0).ToList();
 
         if (!Order.Items.Any())
@@ -71,6 +70,8 @@ public class CreateModel : PageModel
         try
         {
             var orderNumber = await GenerateOrderNumberAsync();
+            var currentUserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            var currentUserName = User.Identity?.Name ?? "Пользователь";
 
             var order = new Order
             {
@@ -82,6 +83,10 @@ public class CreateModel : PageModel
                 PaymentMethod = Order.PaymentMethod,
                 OrderItems = new List<OrderItem>()
             };
+
+            // Получаем информацию о клиенте для уведомления
+            var customer = await _context.Customers.FindAsync(Order.CustomerId);
+            var customerName = customer?.FullName ?? "Клиент";
 
             foreach (var item in Order.Items)
             {
@@ -105,12 +110,36 @@ public class CreateModel : PageModel
                     PriceAtSale = product.SalePrice
                 });
 
-                // Уменьшаем остаток товара (опционально)
+                // Уменьшаем остаток товара
                 product.CurrentStock -= item.Quantity;
             }
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
+
+            // === УВЕДОМЛЕНИЯ ===
+            // 1. Администраторам о новом заказе
+            await NotificationService.CreateForAdminsAsync(_context,
+                GetLocalizedMessage("Новый заказ", "New order", "Жаңа тапсырыс"),
+                GetLocalizedMessage(
+                    $"Заказ №{orderNumber} от {customerName} на сумму {order.TotalAmount:N0} ₽",
+                    $"Order #{orderNumber} from {customerName} for {order.TotalAmount:N0} ₽",
+                    $"{orderNumber} тапсырысы {customerName}-дан {order.TotalAmount:N0} ₽ сомасына"),
+                NotificationType.Order,
+                $"/Orders/Details?id={order.Id}");
+
+            // 2. Самому создателю заказа (текущему менеджеру/админу) – опционально
+            await NotificationService.CreateForUserAsync(_context, currentUserId,
+                GetLocalizedMessage("Заказ создан", "Order created", "Тапсырыс құрылды"),
+                GetLocalizedMessage(
+                    $"Вы успешно создали заказ №{orderNumber} для {customerName}.",
+                    $"You successfully created order #{orderNumber} for {customerName}.",
+                    $"Сіз {customerName} үшін {orderNumber} тапсырысын сәтті құрдыңыз."),
+                NotificationType.Success,
+                $"/Orders/Details?id={order.Id}");
+
+            // 3. Если статус "Completed" – уведомление клиенту (если есть CustomerId и система клиентских уведомлений)
+            //    Это можно добавить позже, если есть отдельная таблица клиентов и их уведомлений.
 
             TempData["Success"] = GetLocalizedMessage(
                 $"Заказ {orderNumber} успешно создан.",

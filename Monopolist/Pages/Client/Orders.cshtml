@@ -30,7 +30,8 @@
             --border: #e2e8f0;
             --shadow: 0 2px 4px -1px rgba(0,0,0,0.05);
             --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --radius: 16px;
+            --radius: 20px;
+            --radius-sm: 12px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -63,6 +64,7 @@
             overflow-x: hidden;
         }
 
+        /* Анимированные шестерёнки (оставлены) */
         .gear {
             position: fixed;
             font-size: 6rem;
@@ -115,6 +117,7 @@
             }
         }
 
+        /* Хедер (улучшенный) */
         .header {
             background: rgba(var(--surface-rgb), 0.95);
             backdrop-filter: blur(10px);
@@ -271,12 +274,14 @@
             font-size: 20px;
             color: var(--text-muted);
             cursor: pointer;
+            transition: var(--transition);
         }
 
             .logout-btn:hover {
                 color: var(--primary);
             }
 
+        /* Основной контент */
         .main {
             max-width: 1400px;
             margin: 0 auto;
@@ -284,7 +289,7 @@
         }
 
         .welcome {
-            margin-bottom: 32px;
+            margin-bottom: 40px;
             text-align: center;
         }
 
@@ -319,10 +324,21 @@
             font-size: 18px;
         }
 
+        .order-stats {
+            display: inline-block;
+            background: var(--surface);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 14px;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+        }
+
+        /* Фильтры — улучшенный вид */
         .filters-bar {
             background: var(--surface);
             border-radius: var(--radius);
-            padding: 20px 24px;
+            padding: 24px;
             margin-bottom: 32px;
             display: flex;
             flex-wrap: wrap;
@@ -334,13 +350,13 @@
 
         .filter-group {
             flex: 1;
-            min-width: 160px;
+            min-width: 180px;
         }
 
             .filter-group label {
                 display: block;
                 font-size: 12px;
-                font-weight: 600;
+                font-weight: 700;
                 text-transform: uppercase;
                 color: var(--text-muted);
                 margin-bottom: 6px;
@@ -349,9 +365,9 @@
 
             .filter-group select, .filter-group input {
                 width: 100%;
-                padding: 10px 12px;
+                padding: 12px 14px;
                 border: 2px solid var(--border);
-                border-radius: 12px;
+                border-radius: var(--radius-sm);
                 background: var(--surface);
                 color: var(--text-primary);
                 font-family: inherit;
@@ -362,18 +378,19 @@
                 .filter-group select:focus, .filter-group input:focus {
                     outline: none;
                     border-color: var(--primary);
+                    box-shadow: 0 0 0 3px rgba(255,107,0,0.1);
                 }
 
         .reset-filters {
             background: none;
             border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            padding: 12px 24px;
             font-weight: 600;
             color: var(--text-secondary);
             cursor: pointer;
             transition: var(--transition);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             white-space: nowrap;
@@ -384,12 +401,14 @@
                 border-color: var(--primary);
                 color: var(--primary);
                 transform: translateY(-2px);
+                background: rgba(255,107,0,0.05);
             }
 
+        /* Карточки заказов с анимацией */
         .orders-list {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 28px;
         }
 
         .order-card {
@@ -399,22 +418,37 @@
             overflow: hidden;
             transition: var(--transition);
             box-shadow: var(--shadow);
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
         }
 
-            .order-card:hover {
-                transform: translateY(-2px);
-                box-shadow: var(--shadow-hover);
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
 
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .order-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-light);
+        }
+
         .order-header {
-            padding: 20px 24px;
+            padding: 20px 28px;
             background: var(--surface-hover);
             border-bottom: 1px solid var(--border);
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
         }
 
         .order-number {
@@ -423,7 +457,7 @@
             color: var(--primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .order-date {
@@ -435,15 +469,15 @@
         }
 
         .order-status {
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 6px 14px;
+            border-radius: 40px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             background: #f1f5f9;
             color: #334155;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
             .order-status.completed {
@@ -462,13 +496,15 @@
             }
 
         .order-total {
-            font-weight: 700;
-            font-size: 18px;
+            font-weight: 800;
+            font-size: 20px;
             color: var(--primary);
+            margin-left: 16px;
         }
 
+        /* Таблица товаров */
         .order-items {
-            padding: 0 24px;
+            padding: 0;
             background: var(--surface);
         }
 
@@ -480,40 +516,53 @@
 
             .order-items th {
                 text-align: left;
-                padding: 12px 8px;
-                border-bottom: 1px solid var(--border);
+                padding: 16px 20px;
+                background: var(--surface-hover);
                 color: var(--text-muted);
                 font-weight: 600;
+                border-bottom: 1px solid var(--border);
             }
 
             .order-items td {
-                padding: 12px 8px;
+                padding: 14px 20px;
                 border-bottom: 1px solid var(--border);
                 color: var(--text-secondary);
             }
 
+            .order-items tbody tr:hover td {
+                background: rgba(255,107,0,0.03);
+            }
+
+            .order-items tbody tr:last-child td {
+                border-bottom: none;
+            }
+
         .order-footer {
-            padding: 12px 24px;
+            padding: 16px 28px;
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 16px;
+            background: var(--surface);
         }
 
         .payment-method {
             font-size: 13px;
             color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .reorder-btn {
             background: none;
             border: 2px solid var(--border);
-            border-radius: 30px;
-            padding: 6px 16px;
+            border-radius: 40px;
+            padding: 8px 20px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-secondary);
             cursor: pointer;
             transition: var(--transition);
@@ -525,33 +574,47 @@
             .reorder-btn:hover {
                 border-color: var(--primary);
                 color: var(--primary);
-                transform: translateY(-1px);
+                transform: translateY(-2px);
+                background: rgba(255,107,0,0.05);
             }
 
+            .reorder-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        /* Пагинация */
         .pagination {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            margin-top: 40px;
+            gap: 10px;
+            margin-top: 48px;
             flex-wrap: wrap;
         }
 
             .pagination a, .pagination span {
-                display: inline-block;
-                padding: 8px 14px;
-                border: 1px solid var(--border);
-                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 44px;
+                height: 44px;
+                padding: 0 8px;
+                border: 2px solid var(--border);
+                border-radius: 44px;
                 background: var(--surface);
                 color: var(--text-primary);
                 text-decoration: none;
                 transition: var(--transition);
-                font-weight: 500;
+                font-weight: 600;
+                font-size: 14px;
             }
 
                 .pagination a:hover {
                     background: var(--primary);
                     color: white;
                     border-color: var(--primary);
+                    transform: translateY(-2px);
                 }
 
             .pagination .active {
@@ -565,9 +628,10 @@
                 pointer-events: none;
             }
 
+        /* Пустое состояние */
         .empty-orders {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
             color: var(--text-muted);
         }
 
@@ -577,18 +641,19 @@
                 opacity: 0.5;
             }
 
+        /* Гостевое сообщение */
         .guest-message-box {
             text-align: center;
             padding: 60px 20px;
             background: var(--surface);
             border-radius: var(--radius);
             border: 1px solid var(--border);
-            max-width: 500px;
-            margin: 0 auto;
+            max-width: 550px;
+            margin: 40px auto;
         }
 
             .guest-message-box i {
-                font-size: 64px;
+                font-size: 70px;
                 color: var(--primary);
                 margin-bottom: 20px;
             }
@@ -599,20 +664,27 @@
 
             .guest-message-box .btn-primary {
                 display: inline-block;
-                margin-top: 20px;
+                margin: 8px 6px;
                 padding: 12px 28px;
                 background: linear-gradient(135deg, var(--primary), var(--primary-dark));
                 border-radius: 40px;
                 color: white;
                 text-decoration: none;
                 font-weight: 600;
+                transition: var(--transition);
             }
 
+                .guest-message-box .btn-primary:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(255,107,0,0.3);
+                }
+
+        /* Footer */
         .footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
             margin-top: 48px;
-            padding: 24px;
+            padding: 28px 24px;
             text-align: center;
             color: var(--text-muted);
             font-size: 13px;
@@ -623,6 +695,7 @@
                 text-decoration: none;
             }
 
+        /* Адаптивность */
         @@media (max-width: 1024px) {
             .header-container {
                 flex-wrap: wrap;
@@ -664,20 +737,6 @@
                 font-size: 14px;
             }
 
-            .theme-toggle {
-                width: 36px;
-                height: 36px;
-                font-size: 1rem;
-            }
-
-            .customer-badge {
-                padding: 6px 12px;
-            }
-
-            .customer-name {
-                font-size: 13px;
-            }
-
             .main {
                 padding: 16px;
             }
@@ -685,15 +744,25 @@
             .order-header {
                 flex-direction: column;
                 align-items: flex-start;
+                padding: 16px;
             }
 
             .order-footer {
                 flex-direction: column;
                 align-items: flex-start;
+                padding: 16px;
             }
 
             .order-items {
                 overflow-x: auto;
+            }
+
+                .order-items th, .order-items td {
+                    padding: 10px 12px;
+                }
+
+            .order-total {
+                margin-left: 0;
             }
         }
 
@@ -704,11 +773,54 @@
 
             .nav-links {
                 gap: 12px;
-                font-size: 12px;
             }
 
             .nav-link i {
                 display: none;
+            }
+
+            .welcome h1 {
+                font-size: 28px;
+            }
+        }
+
+        /* Уведомления (тосты) */
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            max-width: 320px;
+            background: var(--surface);
+            border-left: 5px solid var(--primary);
+            border-radius: 12px;
+            padding: 14px 20px;
+            box-shadow: var(--shadow-hover);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+            .toast-notification.success {
+                border-left-color: #10b981;
+            }
+
+            .toast-notification.error {
+                border-left-color: #ef4444;
+            }
+
+        @@keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
             }
         }
     </style>
@@ -771,6 +883,12 @@
         <div class="welcome">
             <h1>Мои заказы</h1>
             <p>История ваших покупок</p>
+            @if (!Model.IsGuest && Model.TotalItems > 0)
+            {
+                <div class="order-stats">
+                    <i class="fas fa-shopping-bag"></i> Всего заказов: @Model.TotalItems
+                </div>
+            }
         </div>
 
         @if (Model.IsGuest)
@@ -780,7 +898,7 @@
                 <h2>История заказов доступна только авторизованным пользователям</h2>
                 <p>Войдите или зарегистрируйтесь, чтобы просматривать свои заказы.</p>
                 <a href="/Account/Login" class="btn-primary">Войти</a>
-                <a href="/Account/CustomerRegister" class="btn-primary" style="margin-left: 12px;">Зарегистрироваться</a>
+                <a href="/Account/CustomerRegister" class="btn-primary" style="margin-left: 8px;">Зарегистрироваться</a>
             </div>
         }
         else
@@ -809,7 +927,7 @@
                 }
             </form>
 
-            if (Model.Orders.Any())
+            @if (Model.Orders.Any())
             {
                 <div class="orders-list">
                     @foreach (var order in Model.Orders)
@@ -828,12 +946,10 @@
                                         }
                                         else if (order.Status == "Pending")
                                         {
-
                                             <i class="fas fa-clock"></i>
                                         }
                                         else
                                         {
-
                                             <i class="fas fa-times-circle"></i>
                                         }
                                         @(order.Status switch { "Completed" => "Выполнен", "Pending" => "Ожидание", "Cancelled" => "Отменён", _ => order.Status })
@@ -846,12 +962,22 @@
                                 <div class="order-items">
                                     <table>
                                         <thead>
-                                            <tr><th>Товар</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr>
+                                            <tr>
+                                                <th>Товар</th>
+                                                <th>Кол-во</th>
+                                                <th>Цена</th>
+                                                <th>Сумма</th>
+                                            </tr>
                                         </thead>
                                         <tbody>
                                             @foreach (var item in order.Items)
                                             {
-                                                <tr><td>@item.ProductName</td><td>@item.Quantity @item.Unit</td><td>@item.Price.ToString("N0") ₽</td><td>@item.Total.ToString("N0") ₽</td></tr>
+                                                <tr>
+                                                    <td>@item.ProductName</td>
+                                                    <td>@item.Quantity @item.Unit</td>
+                                                    <td>@item.Price.ToString("N0") ₽</td>
+                                                    <td>@item.Total.ToString("N0") ₽</td>
+                                                </tr>
                                             }
                                         </tbody>
                                     </table>
@@ -861,23 +987,25 @@
                                 <div class="payment-method">
                                     <i class="fas fa-credit-card"></i> @(order.PaymentMethod switch { "Card" => "Оплата картой", "Cash" => "Наличными", "Credit" => "Кредит/Рассрочка", _ => order.PaymentMethod ?? "Способ не указан" })
                                 </div>
-                                <button class="reorder-btn" data-order-id="@order.Id"><i class="fas fa-redo-alt"></i> Повторить заказ</button>
+                                <button class="reorder-btn" data-order-id="@order.Id">
+                                    <i class="fas fa-redo-alt"></i> Повторить заказ
+                                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-pulse"></i></span>
+                                </button>
                             </div>
                         </div>
                     }
                 </div>
 
-                if (Model.TotalPages > 1)
+                @if (Model.TotalPages > 1)
                 {
                     <div class="pagination">
                         @if (Model.PageNumber > 1)
                         {
-                            <a href="?pageNumber=@(Model.PageNumber - 1)&statusFilter=@Model.StatusFilter&dateFrom=@Model.DateFrom&dateTo=@Model.DateTo"><i class="fas fa-chevron-left"></i> Назад</a>
+                            <a href="?pageNumber=@(Model.PageNumber - 1)&statusFilter=@Model.StatusFilter&dateFrom=@Model.DateFrom&dateTo=@Model.DateTo"><i class="fas fa-chevron-left"></i></a>
                         }
                         else
                         {
-
-                            <span class="disabled"><i class="fas fa-chevron-left"></i> Назад</span>
+                            <span class="disabled"><i class="fas fa-chevron-left"></i></span>
                         }
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
@@ -887,18 +1015,16 @@
                             }
                             else
                             {
-
                                 <a href="?pageNumber=@i&statusFilter=@Model.StatusFilter&dateFrom=@Model.DateFrom&dateTo=@Model.DateTo">@i</a>
                             }
                         }
                         @if (Model.PageNumber < Model.TotalPages)
                         {
-                            <a href="?pageNumber=@(Model.PageNumber + 1)&statusFilter=@Model.StatusFilter&dateFrom=@Model.DateFrom&dateTo=@Model.DateTo">Вперёд <i class="fas fa-chevron-right"></i></a>
+                            <a href="?pageNumber=@(Model.PageNumber + 1)&statusFilter=@Model.StatusFilter&dateFrom=@Model.DateFrom&dateTo=@Model.DateTo"><i class="fas fa-chevron-right"></i></a>
                         }
                         else
                         {
-
-                            <span class="disabled">Вперёд <i class="fas fa-chevron-right"></i></span>
+                            <span class="disabled"><i class="fas fa-chevron-right"></i></span>
                         }
                     </div>
                 }
@@ -920,6 +1046,7 @@
     </footer>
 
     <script>
+        // Тёмная тема
         const themeToggle = document.getElementById('themeToggle');
         const icon = themeToggle.querySelector('i');
         const savedTheme = localStorage.getItem('clientTheme');
@@ -930,8 +1057,10 @@
             else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); localStorage.setItem('clientTheme', 'light'); }
         });
 
+        // Получение токена
         function getAntiForgeryToken() { return document.querySelector('input[name="__RequestVerificationToken"]')?.value; }
 
+        // Обновление счётчика корзины
         async function updateCartCount() {
             try {
                 const token = getAntiForgeryToken();
@@ -943,6 +1072,21 @@
             } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
 
+        // Универсальное уведомление (тост)
+        function showNotification(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            const iconType = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+            toast.innerHTML = `<i class="fas ${iconType}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Добавление в корзину
         async function addToCart(productId, productName, price, quantity = 1) {
             const formData = new FormData();
             formData.append('productId', productId);
@@ -955,42 +1099,51 @@
             } catch (error) { console.error(error); showNotification('Ошибка добавления в корзину', 'error'); }
         }
 
-        function showNotification(message, type = 'info') {
-            const notif = document.createElement('div');
-            notif.className = 'alert';
-            notif.style.position = 'fixed';
-            notif.style.bottom = '20px';
-            notif.style.right = '20px';
-            notif.style.maxWidth = '300px';
-            notif.style.zIndex = '1000';
-            notif.style.background = type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #f59e0b, #d97706)';
-            notif.style.color = 'white';
-            notif.style.padding = '12px 20px';
-            notif.style.borderRadius = '12px';
-            notif.style.fontWeight = '600';
-            notif.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
-            document.body.appendChild(notif);
-            setTimeout(() => { notif.style.transition = 'opacity 0.5s'; notif.style.opacity = '0'; setTimeout(() => notif.remove(), 500); }, 2000);
-        }
-
         @if (!Model.IsGuest)
         {
                 <text>
+                // Повтор заказа со спиннером
                 document.querySelectorAll('.reorder-btn').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
-                        const orderId = btn.getAttribute('data-order-id');
+                        const btnEl = e.currentTarget;
+                        const originalHtml = btnEl.innerHTML;
+                        btnEl.disabled = true;
+                        btnEl.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Добавляем...';
+
+                        const orderId = btnEl.getAttribute('data-order-id');
                         try {
-                            const response = await fetch(`/Client/Orders?handler=Reorder&orderId=${orderId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgeryToken() } });
+                            const response = await fetch(`/Client/Orders?handler=Reorder&orderId=${orderId}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgeryToken() }
+                            });
                             const items = await response.json();
-                            if (items && items.length) { for (const item of items) { await addToCart(item.productId, item.productName, item.price, item.quantity); } showNotification('Товары добавлены в корзину', 'success'); }
-                            else { showNotification('Не удалось повторить заказ', 'error'); }
-                        } catch (error) { console.error(error); showNotification('Ошибка при повторении заказа', 'error'); }
+                            if (items && items.length) {
+                                for (const item of items) {
+                                    await addToCart(item.productId, item.productName, item.price, item.quantity);
+                                }
+                                showNotification('Товары добавлены в корзину', 'success');
+                            } else {
+                                showNotification('Не удалось повторить заказ', 'error');
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            showNotification('Ошибка при повторении заказа', 'error');
+                        } finally {
+                            btnEl.disabled = false;
+                            btnEl.innerHTML = originalHtml;
+                        }
                     });
                 });
                 </text>
         }
 
         updateCartCount();
+
+        // Анимация появления карточек (stagger)
+        const cards = document.querySelectorAll('.order-card');
+        cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.05}s`;
+        });
     </script>
 </body>
 </html>

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
+using Monoplist.Services;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Products;
@@ -61,10 +62,13 @@ public class EditModel : PageModel
 
         try
         {
+            var oldStock = productToUpdate.CurrentStock;
+            var oldMinimum = productToUpdate.MinimumStock;
+            var oldName = productToUpdate.Name;
+
             // Обработка нового изображения
             if (imageFile != null && imageFile.Length > 0)
             {
-                // Проверка размера
                 if (imageFile.Length > 5 * 1024 * 1024)
                 {
                     ModelState.AddModelError(string.Empty, GetLocalizedMessage(
@@ -89,17 +93,14 @@ public class EditModel : PageModel
                     return Page();
                 }
 
-                // Удаление старого файла (если есть)
+                // Удаление старого файла
                 if (!string.IsNullOrEmpty(productToUpdate.ImageUrl))
                 {
                     var oldFilePath = Path.Combine(_environment.WebRootPath, productToUpdate.ImageUrl.TrimStart('/'));
                     if (System.IO.File.Exists(oldFilePath))
-                    {
                         System.IO.File.Delete(oldFilePath);
-                    }
                 }
 
-                // Сохранение нового файла
                 var fileName = $"{Guid.NewGuid()}{extension}";
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "products");
                 Directory.CreateDirectory(uploadsFolder);
@@ -113,7 +114,7 @@ public class EditModel : PageModel
                 productToUpdate.ImageUrl = $"/uploads/products/{fileName}";
             }
 
-            // Обновление остальных полей
+            // Обновление полей
             productToUpdate.Name = Product.Name;
             productToUpdate.Article = Product.Article;
             productToUpdate.Description = Product.Description;
@@ -128,6 +129,33 @@ public class EditModel : PageModel
             productToUpdate.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // === УВЕДОМЛЕНИЯ ===
+            var currentUserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            var currentUserName = User.Identity?.Name ?? "Пользователь";
+
+            // 1. Уведомление об изменении товара (админам)
+            await NotificationService.CreateForAdminsAsync(_context,
+                GetLocalizedMessage("Товар изменён", "Product updated", "Тауар өзгертілді"),
+                GetLocalizedMessage(
+                    $"Пользователь {currentUserName} изменил товар «{oldName}».",
+                    $"User {currentUserName} updated product «{oldName}».",
+                    $"Қолданушы {currentUserName} «{oldName}» тауарын өзгертті."),
+                NotificationType.Info,
+                $"/Products/Details?id={productToUpdate.Id}");
+
+            // 2. Если остаток упал ниже минимального (и ранее не был ниже)
+            if (productToUpdate.CurrentStock <= productToUpdate.MinimumStock && oldStock > productToUpdate.MinimumStock)
+            {
+                await NotificationService.CreateForAdminsAsync(_context,
+                    GetLocalizedMessage("Низкий остаток", "Low stock", "Аз қалдық"),
+                    GetLocalizedMessage(
+                        $"Товар «{productToUpdate.Name}»: остаток {productToUpdate.CurrentStock} {productToUpdate.Unit} (мин. {productToUpdate.MinimumStock}).",
+                        $"Product «{productToUpdate.Name}»: stock {productToUpdate.CurrentStock} {productToUpdate.Unit} (min. {productToUpdate.MinimumStock}).",
+                        $"«{productToUpdate.Name}» тауары: қалдық {productToUpdate.CurrentStock} {productToUpdate.Unit} (мин. {productToUpdate.MinimumStock})."),
+                    NotificationType.Stock,
+                    $"/Products/Details?id={productToUpdate.Id}");
+            }
 
             TempData["Success"] = GetLocalizedMessage(
                 "Товар успешно обновлён.",

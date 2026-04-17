@@ -18,7 +18,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Все стили сохранены из исходного файла */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -86,6 +85,10 @@
             padding: 12px 24px;
         }
 
+        body.compact-mode .content {
+            padding: 16px;
+        }
+
         body.compact-mode .dashboard {
             padding: 16px;
         }
@@ -97,18 +100,6 @@
         body.compact-mode .subtitle {
             font-size: 0.9rem;
             margin-bottom: 16px;
-        }
-
-        body.compact-mode .form-group {
-            margin-bottom: 1rem;
-        }
-
-        body.compact-mode .form-control {
-            padding: 8px 12px;
-        }
-
-        body.compact-mode .btn-primary, body.compact-mode .btn-secondary {
-            padding: 8px 18px;
         }
 
         body.no-animations * {
@@ -160,8 +151,8 @@
                 font-size: 40px;
                 background: linear-gradient(145deg, var(--primary), var(--accent));
                 -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
                 background-clip: text;
+                color: transparent;
                 filter: drop-shadow(0 0 5px rgba(255,107,0,0.5));
             }
 
@@ -170,8 +161,8 @@
                 font-weight: 700;
                 background: linear-gradient(135deg, var(--accent), var(--primary));
                 -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
                 background-clip: text;
+                color: transparent;
                 margin: 0;
             }
 
@@ -404,7 +395,7 @@
             }
 
         .content {
-            padding: 24px;
+            padding: 32px;
             flex: 1;
         }
 
@@ -428,7 +419,29 @@
             margin-bottom: 24px;
             border-bottom: 2px solid var(--accent);
             padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
+
+        .mark-all-btn {
+            background: none;
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+            .mark-all-btn:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+            }
 
         .alert {
             padding: 16px;
@@ -464,106 +477,119 @@
             border-left: 4px solid var(--danger);
         }
 
-        .form-container {
-            max-width: 600px;
-            margin: 0 auto;
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .notifications-group {
+        .notification-card {
             background: var(--surface-hover);
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
+            padding: 16px 20px;
+            transition: var(--transition);
+            border-left: 4px solid;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
         }
 
-            .notifications-group h3 {
-                color: var(--primary);
-                font-size: 1.2rem;
-                margin-bottom: 15px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                border-bottom: 2px solid var(--accent);
-                padding-bottom: 10px;
+            .notification-card.unread {
+                background: rgba(255, 107, 0, 0.05);
+                border-left-color: var(--primary);
             }
 
-        .notification-item {
+            .notification-card.read {
+                border-left-color: transparent;
+                opacity: 0.8;
+            }
+
+            .notification-card:hover {
+                transform: translateX(4px);
+                box-shadow: var(--shadow-sm);
+            }
+
+        .notification-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.4rem;
         }
 
-            .notification-item:last-child {
-                border-bottom: none;
+            .notification-icon.order {
+                background: rgba(255,107,0,0.1);
+                color: var(--primary);
             }
 
-            .notification-item input[type="checkbox"] {
-                width: 20px;
-                height: 20px;
-                cursor: pointer;
-                accent-color: var(--primary);
+            .notification-icon.stock {
+                background: var(--warning-bg);
+                color: var(--warning);
             }
 
-        .notification-info {
+            .notification-icon.customer {
+                background: var(--info-bg);
+                color: var(--info);
+            }
+
+            .notification-icon.success {
+                background: var(--success-bg);
+                color: var(--success);
+            }
+
+            .notification-icon.warning {
+                background: var(--warning-bg);
+                color: var(--warning);
+            }
+
+            .notification-icon.error {
+                background: var(--danger-bg);
+                color: var(--danger);
+            }
+
+            .notification-icon.info {
+                background: var(--info-bg);
+                color: var(--info);
+            }
+
+        .notification-content {
             flex: 1;
         }
 
         .notification-title {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 4px;
         }
 
-        .notification-description {
-            font-size: 0.85rem;
+        .notification-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .empty-notifications {
+            text-align: center;
+            padding: 60px 20px;
             color: var(--text-muted);
         }
 
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-primary, .btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-        }
-
-            .btn-primary:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 15px rgba(255,107,0,0.4);
-            }
-
-        .btn-secondary {
-            background: var(--surface);
-            color: var(--text-secondary);
-            border: 2px solid var(--border);
-        }
-
-            .btn-secondary:hover {
-                background: var(--surface-hover);
-                border-color: var(--text-muted);
-                transform: translateY(-2px);
+            .empty-notifications i {
+                font-size: 64px;
+                margin-bottom: 20px;
+                opacity: 0.5;
             }
 
         @@media (max-width: 768px) {
@@ -601,13 +627,19 @@
                 padding: 16px;
             }
 
-            .form-actions {
-                flex-direction: column;
+            .dashboard {
+                padding: 16px;
             }
 
-            .btn-primary, .btn-secondary {
-                width: 100%;
-                justify-content: center;
+            .notification-card {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .notification-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
             }
         }
 
@@ -624,7 +656,6 @@
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню (локализованное) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -645,14 +676,13 @@
         </aside>
 
         <main class="main-content">
-            <!-- Верхняя панель (локализованная) -->
             <header class="top-bar">
                 <button class="menu-toggle" id="menuToggle">
                     <i class="fas fa-bars"></i>
                 </button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
+                    <div class="theme-toggle" id="themeToggle">
                         <i class="fas fa-sun"></i>
                     </div>
                     <div class="user-profile" onclick="toggleUserMenu()">
@@ -697,78 +727,70 @@
                     }
 
                     <h1>@ViewData["Title"]</h1>
-                    <p class="subtitle">@(Model.Language == "ru" ? "Настройка способов и типов уведомлений" : Model.Language == "en" ? "Notification settings" : "Хабарландыру түрлерін баптау")</p>
-
-                    <div class="form-container">
-                        <form method="post">
-                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                            <!-- Уведомления о новых заказах -->
-                            <div class="notifications-group">
-                                <h3><i class="fas fa-shopping-cart"></i> @(Model.Language == "ru" ? "Продажи" : Model.Language == "en" ? "Orders" : "Сатулар")</h3>
-                                <div class="notification-item">
-                                    <input asp-for="Input.OrderNotifications" />
-                                    <div class="notification-info">
-                                        <div class="notification-title">@(Model.Language == "ru" ? "Новые заказы" : Model.Language == "en" ? "New orders" : "Жаңа тапсырыстар")</div>
-                                        <div class="notification-description">@(Model.Language == "ru" ? "Уведомления о поступлении новых заказов" : Model.Language == "en" ? "Notifications about new orders" : "Жаңа тапсырыстар туралы хабарландырулар")</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Уведомления о низком остатке -->
-                            <div class="notifications-group">
-                                <h3><i class="fas fa-box"></i> @(Model.Language == "ru" ? "Склад" : Model.Language == "en" ? "Warehouse" : "Қойма")</h3>
-                                <div class="notification-item">
-                                    <input asp-for="Input.StockNotifications" />
-                                    <div class="notification-info">
-                                        <div class="notification-title">@(Model.Language == "ru" ? "Низкий остаток" : Model.Language == "en" ? "Low stock" : "Аз қалдық")</div>
-                                        <div class="notification-description">@(Model.Language == "ru" ? "Уведомления о товарах с низким остатком" : Model.Language == "en" ? "Low stock alerts" : "Аз қалдық туралы ескертулер")</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Уведомления о новых клиентах -->
-                            <div class="notifications-group">
-                                <h3><i class="fas fa-users"></i> @(Model.Language == "ru" ? "Клиенты" : Model.Language == "en" ? "Customers" : "Клиенттер")</h3>
-                                <div class="notification-item">
-                                    <input asp-for="Input.CustomerNotifications" />
-                                    <div class="notification-info">
-                                        <div class="notification-title">@(Model.Language == "ru" ? "Новые клиенты" : Model.Language == "en" ? "New customers" : "Жаңа клиенттер")</div>
-                                        <div class="notification-description">@(Model.Language == "ru" ? "Уведомления о регистрации новых клиентов" : Model.Language == "en" ? "New customer registrations" : "Жаңа клиенттердің тіркелуі туралы хабарландырулар")</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Ежедневный отчёт -->
-                            <div class="notifications-group">
-                                <h3><i class="fas fa-chart-line"></i> @(Model.Language == "ru" ? "Отчеты" : Model.Language == "en" ? "Reports" : "Есептер")</h3>
-                                <div class="notification-item">
-                                    <input asp-for="Input.DailyReport" />
-                                    <div class="notification-info">
-                                        <div class="notification-title">@(Model.Language == "ru" ? "Ежедневный отчет" : Model.Language == "en" ? "Daily report" : "Күнделікті есеп")</div>
-                                        <div class="notification-description">@(Model.Language == "ru" ? "Получать сводку по продажам каждый день" : Model.Language == "en" ? "Receive daily sales summary" : "Күнделікті сату туралы есеп алу")</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> @(Model.Language == "ru" ? "Сохранить настройки" : Model.Language == "en" ? "Save settings" : "Баптауларды сақтау")</button>
-                                <a asp-page="Index" class="btn-secondary"><i class="fas fa-times"></i> @(Model.Language == "ru" ? "Отмена" : Model.Language == "en" ? "Cancel" : "Бас тарту")</a>
-                            </div>
-                        </form>
+                    <div class="subtitle">
+                        <span>@(Model.Language == "ru" ? "Все уведомления" : Model.Language == "en" ? "All notifications" : "Барлық хабарландырулар")</span>
+                        @if (Model.Notifications.Any())
+                        {
+                            <button class="mark-all-btn" id="markAllBtn">
+                                <i class="fas fa-check-double"></i> @(Model.Language == "ru" ? "Прочитать все" : Model.Language == "en" ? "Mark all read" : "Барлығын оқылды деп белгілеу")
+                            </button>
+                        }
                     </div>
+
+                    @if (Model.Notifications.Any())
+                    {
+                        <div class="notifications-list">
+                            @foreach (var n in Model.Notifications)
+                            {
+                                <div class="notification-card @(n.IsRead ? "read" : "unread")" data-id="@n.Id" onclick="markAsRead(@n.Id, this)">
+                                    <div class="notification-icon @n.Type">
+                                        @{
+                                            string icon = n.Type switch
+                                            {
+                                                "order" => "fa-shopping-cart",
+                                                "stock" => "fa-box",
+                                                "customer" => "fa-user",
+                                                "success" => "fa-check-circle",
+                                                "warning" => "fa-exclamation-triangle",
+                                                "error" => "fa-times-circle",
+                                                _ => "fa-info-circle"
+                                            };
+                                        }
+                                        <i class="fas @icon"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-title">@n.Title</div>
+                                        <div class="notification-message">@n.Message</div>
+                                        <div class="notification-time">
+                                            <i class="far fa-clock"></i> @n.TimeAgo
+                                        </div>
+                                    </div>
+                                    @if (!n.IsRead)
+                                    {
+                                        <i class="fas fa-circle" style="font-size: 10px; color: var(--primary); align-self: center;"></i>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-notifications">
+                            <i class="far fa-bell-slash"></i>
+                            <p>@(Model.Language == "ru" ? "У вас пока нет уведомлений" : Model.Language == "en" ? "You have no notifications yet" : "Сізде әлі хабарландырулар жоқ")</p>
+                        </div>
+                    }
                 </div>
             </div>
         </main>
     </div>
 
-    <partial name="_ValidationScriptsPartial" />
+    @Html.AntiForgeryToken()
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
-
             if (menuToggle) {
                 menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
                 document.addEventListener('click', (e) => {
@@ -790,7 +812,6 @@
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
                 }
-
                 themeToggle.addEventListener('click', () => {
                     body.classList.toggle('dark-theme');
                     if (body.classList.contains('dark-theme')) {
@@ -805,6 +826,69 @@
                 });
             }
 
+            window.toggleUserMenu = function() {
+                document.getElementById('userMenu').classList.toggle('show');
+            };
+            document.addEventListener('click', function(event) {
+                const userInfo = document.querySelector('.user-info');
+                const userMenu = document.getElementById('userMenu');
+                if (userInfo && !userInfo.contains(event.target) && userMenu && userMenu.classList.contains('show')) {
+                    userMenu.classList.remove('show');
+                }
+            });
+
+            // Функция для отметки одного уведомления прочитанным
+            window.markAsRead = async function(id, element) {
+                try {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    const response = await fetch(`/Settings/Notifications?handler=MarkAsRead&id=${id}`, {
+                        method: 'POST',
+                        headers: { 'RequestVerificationToken': token }
+                    });
+                    if (response.ok) {
+                        element.classList.remove('unread');
+                        element.classList.add('read');
+                        const dot = element.querySelector('.fa-circle');
+                        if (dot) dot.remove();
+                        // Обновляем счётчик в хедере (если есть)
+                        const badge = document.querySelector('.notification-badge');
+                        if (badge) {
+                            let count = parseInt(badge.textContent) - 1;
+                            if (count > 0) badge.textContent = count;
+                            else badge.remove();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка при отметке прочитанным', error);
+                }
+            };
+
+            // Отметить все как прочитанные
+            const markAllBtn = document.getElementById('markAllBtn');
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', async () => {
+                    try {
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                        const response = await fetch(`/Settings/Notifications?handler=MarkAllAsRead`, {
+                            method: 'POST',
+                            headers: { 'RequestVerificationToken': token }
+                        });
+                        if (response.ok) {
+                            document.querySelectorAll('.notification-card.unread').forEach(card => {
+                                card.classList.remove('unread');
+                                card.classList.add('read');
+                                const dot = card.querySelector('.fa-circle');
+                                if (dot) dot.remove();
+                            });
+                            const badge = document.querySelector('.notification-badge');
+                            if (badge) badge.remove();
+                        }
+                    } catch (error) {
+                        console.error('Ошибка при отметке всех', error);
+                    }
+                });
+            }
+
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -813,18 +897,6 @@
                     setTimeout(() => alert.style.display = 'none', 500);
                 }, 5000);
             });
-        });
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('show');
-        }
-
-        window.addEventListener('click', function(event) {
-            const userInfo = document.querySelector('.user-info');
-            const userMenu = document.getElementById('userMenu');
-            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
         });
     </script>
 </body>
