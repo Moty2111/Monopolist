@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<CustomerPasswordResetToken> CustomerPasswordResetTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
