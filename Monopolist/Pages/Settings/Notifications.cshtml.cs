@@ -22,7 +22,6 @@ public class NotificationsModel : PageModel
 
     public List<NotificationViewModel> Notifications { get; set; } = new();
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -93,7 +92,6 @@ public class NotificationsModel : PageModel
         };
     }
 
-    // Обработчик для отметки одного уведомления
     public async Task<IActionResult> OnPostMarkAsReadAsync(int id)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -107,7 +105,6 @@ public class NotificationsModel : PageModel
         return new OkResult();
     }
 
-    // Обработчик для отметки всех уведомлений
     public async Task<IActionResult> OnPostMarkAllAsReadAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");

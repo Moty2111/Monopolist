@@ -2,7 +2,7 @@
 @model Monoplist.Pages.Settings.NotificationsModel
 @{
     Layout = null;
-    ViewData["Title"] = Model.Language == "ru" ? "Уведомления" : (Model.Language == "en" ? "Notifications" : "Хабарландырулар");
+    ViewData["Title"] = Model.Language == "ru" ? "Центр уведомлений" : (Model.Language == "en" ? "Notification center" : "Хабарландыру орталығы");
     var userId = User.FindFirst("UserId")?.Value;
     var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
 }
@@ -18,12 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
+        /* Полные стили для центра уведомлений (как в предыдущем ответе) */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
             --primary-light: #FF9500;
             --accent: #FFD700;
-            --accent-dark: #CC5500;
             --bg: #f5f7fa;
             --surface: #ffffff;
             --surface-hover: #f8fafc;
@@ -677,14 +677,10 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle">
-                        <i class="fas fa-sun"></i>
-                    </div>
+                    <div class="theme-toggle" id="themeToggle"><i class="fas fa-sun"></i></div>
                     <div class="user-profile" onclick="toggleUserMenu()">
                         <div class="user-avatar">
                             @if (!string.IsNullOrEmpty(avatarUrl))
@@ -761,9 +757,7 @@
                                     <div class="notification-content">
                                         <div class="notification-title">@n.Title</div>
                                         <div class="notification-message">@n.Message</div>
-                                        <div class="notification-time">
-                                            <i class="far fa-clock"></i> @n.TimeAgo
-                                        </div>
+                                        <div class="notification-time"><i class="far fa-clock"></i> @n.TimeAgo</div>
                                     </div>
                                     @if (!n.IsRead)
                                     {
@@ -802,33 +796,29 @@
                     }
                 });
             }
-
             const themeToggle = document.getElementById('themeToggle');
             if (themeToggle) {
                 const themeIcon = themeToggle.querySelector('i');
                 const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
                 if (savedTheme === 'dark') {
                     body.classList.add('dark-theme');
-                    themeIcon.classList.remove('fa-sun');
-                    themeIcon.classList.add('fa-moon');
+                    themeIcon?.classList.remove('fa-sun');
+                    themeIcon?.classList.add('fa-moon');
                 }
                 themeToggle.addEventListener('click', () => {
                     body.classList.toggle('dark-theme');
                     if (body.classList.contains('dark-theme')) {
-                        themeIcon.classList.remove('fa-sun');
-                        themeIcon.classList.add('fa-moon');
+                        themeIcon?.classList.remove('fa-sun');
+                        themeIcon?.classList.add('fa-moon');
                         localStorage.setItem('theme', 'dark');
                     } else {
-                        themeIcon.classList.remove('fa-moon');
-                        themeIcon.classList.add('fa-sun');
+                        themeIcon?.classList.remove('fa-moon');
+                        themeIcon?.classList.add('fa-sun');
                         localStorage.setItem('theme', 'light');
                     }
                 });
             }
-
-            window.toggleUserMenu = function() {
-                document.getElementById('userMenu').classList.toggle('show');
-            };
+            window.toggleUserMenu = function() { document.getElementById('userMenu').classList.toggle('show'); };
             document.addEventListener('click', function(event) {
                 const userInfo = document.querySelector('.user-info');
                 const userMenu = document.getElementById('userMenu');
@@ -837,7 +827,6 @@
                 }
             });
 
-            // Функция для отметки одного уведомления прочитанным
             window.markAsRead = async function(id, element) {
                 try {
                     const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
@@ -850,7 +839,6 @@
                         element.classList.add('read');
                         const dot = element.querySelector('.fa-circle');
                         if (dot) dot.remove();
-                        // Обновляем счётчик в хедере (если есть)
                         const badge = document.querySelector('.notification-badge');
                         if (badge) {
                             let count = parseInt(badge.textContent) - 1;
@@ -858,12 +846,9 @@
                             else badge.remove();
                         }
                     }
-                } catch (error) {
-                    console.error('Ошибка при отметке прочитанным', error);
-                }
+                } catch (error) { console.error(error); }
             };
 
-            // Отметить все как прочитанные
             const markAllBtn = document.getElementById('markAllBtn');
             if (markAllBtn) {
                 markAllBtn.addEventListener('click', async () => {
@@ -883,9 +868,7 @@
                             const badge = document.querySelector('.notification-badge');
                             if (badge) badge.remove();
                         }
-                    } catch (error) {
-                        console.error('Ошибка при отметке всех', error);
-                    }
+                    } catch (error) { console.error(error); }
                 });
             }
 
