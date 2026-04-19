@@ -51,12 +51,15 @@ public class CartModel : PageModel
                     .Where(ci => ci.CustomerId == customerId)
                     .ToListAsync();
 
+                var discountFactor = 1 - (CustomerDiscount / 100m);
+
                 CartItems = cartItems.Select(ci => new CartItemViewModel
                 {
                     Id = ci.Id,
                     ProductId = ci.ProductId,
                     Name = ci.Product.Name,
-                    Price = ci.Product.SalePrice,
+                    OriginalPrice = ci.Product.SalePrice,
+                    Price = ci.Product.SalePrice * discountFactor,
                     Quantity = ci.Quantity,
                     Unit = ci.Product.Unit,
                     CurrentStock = ci.Product.CurrentStock,
@@ -204,6 +207,9 @@ public class CartModel : PageModel
 
         if (!cartItems.Any()) return BadRequest("Корзина пуста");
 
+        var customer = await _context.Customers.FindAsync(customerId);
+        var discountFactor = 1 - (customer?.Discount ?? 0) / 100m;
+
         foreach (var item in cartItems)
         {
             if (item.Product.CurrentStock < item.Quantity)
@@ -226,14 +232,14 @@ public class CartModel : PageModel
             OrderNumber = orderNumber,
             CustomerId = customerId.Value,
             OrderDate = DateTime.UtcNow,
-            TotalAmount = cartItems.Sum(ci => ci.Product.SalePrice * ci.Quantity),
+            TotalAmount = cartItems.Sum(ci => ci.Product.SalePrice * ci.Quantity * discountFactor),
             Status = "Pending",
             PaymentMethod = request.PaymentMethod,
             OrderItems = cartItems.Select(ci => new OrderItem
             {
                 ProductId = ci.ProductId,
                 Quantity = ci.Quantity,
-                PriceAtSale = ci.Product.SalePrice
+                PriceAtSale = ci.Product.SalePrice * discountFactor
             }).ToList()
         };
 
@@ -276,6 +282,7 @@ public class CartItemViewModel
     public int Id { get; set; }
     public int ProductId { get; set; }
     public string Name { get; set; } = string.Empty;
+    public decimal OriginalPrice { get; set; }
     public decimal Price { get; set; }
     public int Quantity { get; set; }
     public string Unit { get; set; } = "шт";

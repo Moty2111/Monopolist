@@ -3,6 +3,8 @@
 @{
     Layout = null;
     ViewData["Title"] = "Избранное";
+    string avatarSrc = Model.AvatarUrl;
+    bool isDataUrl = !string.IsNullOrEmpty(avatarSrc) && avatarSrc.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
 }
 
 <!DOCTYPE html>
@@ -623,7 +625,7 @@
                         <div class="customer-avatar">
                             @if (!string.IsNullOrEmpty(Model.AvatarUrl))
                             {
-                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                                <img src="@(isDataUrl? Model.AvatarUrl: Model.AvatarUrl + "?t=" + DateTime.Now.Ticks)" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
                             }
                             else
                             {

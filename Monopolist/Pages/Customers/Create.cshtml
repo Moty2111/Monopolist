@@ -18,7 +18,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Все стили как в предыдущей версии Create.cshtml, плюс добавлены стили для аватара */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -551,7 +550,7 @@
             display: block;
         }
 
-        /* Стили для аватара */
+        /* Стили аватара */
         .avatar-upload-area {
             display: flex;
             align-items: center;
@@ -644,16 +643,6 @@
                 justify-content: center;
             }
         }
-
-        @@media (max-width: 480px) {
-            .btn-logout span {
-                display: none;
-            }
-
-            .btn-logout {
-                padding: 8px 12px;
-            }
-        }
     </style>
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
@@ -728,7 +717,7 @@
                     <p class="subtitle">@(Model.Language == "ru" ? "Заполните форму" : Model.Language == "en" ? "Fill the form" : "Пішінді толтырыңыз")</p>
 
                     <div class="form-container">
-                        <form method="post" enctype="multipart/form-data">
+                        <form method="post">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                             <!-- Аватар -->
@@ -739,9 +728,9 @@
                                         <i class="fas fa-user-circle"></i>
                                     </div>
                                     <div class="avatar-controls">
-                                        <input type="file" id="AvatarFile" name="AvatarFile" accept="image/*" class="form-control" style="padding: 8px;" />
+                                        <input type="file" id="AvatarFile" accept="image/*" class="form-control" style="padding: 8px;" />
                                         <div class="avatar-url-input">
-                                            <input type="text" id="AvatarUrlInput" name="Customer.AvatarUrl" class="form-control" placeholder="@(Model.Language == "ru" ? "Или укажите URL аватара" : Model.Language == "en" ? "Or enter avatar URL" : "Немесе аватар сілтемесін енгізіңіз")" />
+                                            <input type="text" id="AvatarUrlInput" asp-for="Customer.AvatarUrl" class="form-control" placeholder="@(Model.Language == "ru" ? "Или укажите URL аватара" : Model.Language == "en" ? "Or enter avatar URL" : "Немесе аватар сілтемесін енгізіңіз")" />
                                         </div>
                                     </div>
                                 </div>
@@ -831,7 +820,7 @@
 
             function updatePreview(src) {
                 if (src) {
-                    preview.innerHTML = `<img src="${src}" alt="Avatar" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />`;
+                    preview.innerHTML = `<img src="${src}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />`;
                 } else {
                     preview.innerHTML = '<i class="fas fa-user-circle"></i>';
                 }
@@ -843,7 +832,7 @@
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         updatePreview(e.target.result);
-                        avatarUrlInput.value = '';
+                        avatarUrlInput.value = e.target.result;
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -857,9 +846,7 @@
                     updatePreview(url);
                     avatarFile.value = '';
                 } else {
-                    if (!avatarFile.files.length) {
-                        updatePreview(null);
-                    }
+                    updatePreview(null);
                 }
             });
         });

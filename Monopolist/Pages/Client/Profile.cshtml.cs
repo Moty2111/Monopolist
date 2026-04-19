@@ -14,12 +14,12 @@ namespace Monoplist.Pages.Client;
 public class ProfileModel : PageModel
 {
     private readonly AppDbContext _context;
-    private readonly IWebHostEnvironment _env;
+    private readonly ILogger<ProfileModel> _logger;
 
-    public ProfileModel(AppDbContext context, IWebHostEnvironment env)
+    public ProfileModel(AppDbContext context, ILogger<ProfileModel> logger)
     {
         _context = context;
-        _env = env;
+        _logger = logger;
     }
 
     [BindProperty]
@@ -29,7 +29,7 @@ public class ProfileModel : PageModel
     public string? AvatarUrl { get; set; }
 
     [BindProperty]
-    public IFormFile? AvatarFile { get; set; }
+    public string? AvatarDataUrl { get; set; }
 
     public string CustomerName { get; set; } = "Гость";
     public decimal CustomerDiscount { get; set; }
@@ -98,37 +98,19 @@ public class ProfileModel : PageModel
         var customer = await _context.Customers.FindAsync(customerId);
         if (customer == null) return RedirectToPage("/Account/CustomerLogin");
 
-        // Обработка аватара
-        if (AvatarFile != null && AvatarFile.Length > 0)
+        // Определяем, что сохранять: Data URL (приоритетнее) или обычный URL
+        if (!string.IsNullOrWhiteSpace(AvatarDataUrl))
         {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var ext = Path.GetExtension(AvatarFile.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(ext))
-            {
-                ModelState.AddModelError("AvatarFile", "Разрешены только изображения (jpg, jpeg, png, gif)");
-                return Page();
-            }
-
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "avatars");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var fileName = $"customer_{customerId}_{Guid.NewGuid()}{ext}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await AvatarFile.CopyToAsync(stream);
-            }
-            customer.AvatarUrl = $"/uploads/avatars/{fileName}";
+            customer.AvatarUrl = AvatarDataUrl;
         }
-        else if (!string.IsNullOrEmpty(AvatarUrl))
+        else if (!string.IsNullOrWhiteSpace(AvatarUrl))
         {
-            if (AvatarUrl.Length > 500)
-            {
-                ModelState.AddModelError("AvatarUrl", "Слишком длинный URL аватара (максимум 500 символов)");
-                return Page();
-            }
             customer.AvatarUrl = AvatarUrl;
+        }
+        else
+        {
+            // Если оба поля пусты, удаляем аватар
+            customer.AvatarUrl = null;
         }
 
         // Обновляем данные
@@ -138,9 +120,10 @@ public class ProfileModel : PageModel
         if (!string.IsNullOrEmpty(Input.NewPassword))
             customer.Password = Input.NewPassword;
         customer.UpdatedAt = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
 
-        // Обновляем cookie аватара (для быстрого отображения, но основной источник – БД)
+        // Обновляем cookie аватара для быстрого отображения
         if (!string.IsNullOrEmpty(customer.AvatarUrl))
         {
             var cookieOptions = new CookieOptions
@@ -149,8 +132,11 @@ public class ProfileModel : PageModel
                 HttpOnly = false,
                 SameSite = SameSiteMode.Lax
             };
-            var avatarWithTimestamp = customer.AvatarUrl + "?v=" + DateTime.Now.Ticks;
-            Response.Cookies.Append($"customer_avatar_{customerId}", avatarWithTimestamp, cookieOptions);
+            // Для Data URL не добавляем временную метку
+            string avatarValue = customer.AvatarUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
+                ? customer.AvatarUrl
+                : customer.AvatarUrl + "?v=" + DateTime.Now.Ticks;
+            Response.Cookies.Append($"customer_avatar_{customerId}", avatarValue, cookieOptions);
         }
         else
         {

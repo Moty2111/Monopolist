@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using Monoplist.Data;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
@@ -7,11 +9,18 @@ namespace Monoplist.Pages.Client;
 [Authorize(AuthenticationSchemes = "CustomerCookie, GuestCookie")]
 public class AboutModel : PageModel
 {
+    private readonly AppDbContext _context;
+
+    public AboutModel(AppDbContext context)
+    {
+        _context = context;
+    }
+
     public string CustomerName { get; set; } = "Гость";
     public string? AvatarUrl { get; set; }
     public bool IsGuest { get; private set; }
 
-    public void OnGet()
+    public async Task OnGetAsync()
     {
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
         IsGuest = role != "Customer";
@@ -21,11 +30,12 @@ public class AboutModel : PageModel
             var customerIdClaim = User.FindFirst("CustomerId")?.Value;
             if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId) && customerId > 0)
             {
-                // Загружать из БД не обязательно – имя и аватар можно взять из claims, но для аватара лучше из БД.
-                // Для простоты оставляем имя из claims.
-                var name = User.FindFirst(ClaimTypes.Name)?.Value;
-                if (!string.IsNullOrEmpty(name)) CustomerName = name;
-                // AvatarUrl можно загрузить из БД, но для статических страниц это не критично.
+                var customer = await _context.Customers.FindAsync(customerId);
+                if (customer != null)
+                {
+                    CustomerName = customer.FullName;
+                    AvatarUrl = customer.AvatarUrl;
+                }
             }
         }
     }

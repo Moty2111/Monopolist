@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Оригинальные стили Edit.cshtml (без изменений) */
+        /* Оригинальные стили (без изменений) */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -34,8 +34,7 @@
             --border: #e2e8f0;
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(255,107,0,0.15);
-            --shadow-hover: 0 12px 28px rgba(255,215,0,0.25);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
             --success: #10b981;
             --success-bg: #d1fae5;
             --danger: #ef4444;
@@ -113,8 +112,7 @@
             padding: 8px 12px;
         }
 
-        body.compact-mode .btn-primary,
-        body.compact-mode .btn-secondary {
+        body.compact-mode .btn-primary, body.compact-mode .btn-secondary {
             padding: 8px 18px;
         }
 
@@ -167,8 +165,8 @@
                 font-size: 40px;
                 background: linear-gradient(145deg, var(--primary), var(--accent));
                 -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
                 background-clip: text;
+                color: transparent;
                 filter: drop-shadow(0 0 5px rgba(255,107,0,0.5));
             }
 
@@ -177,8 +175,8 @@
                 font-weight: 700;
                 background: linear-gradient(135deg, var(--accent), var(--primary));
                 -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
                 background-clip: text;
+                color: transparent;
                 margin: 0;
             }
 
@@ -728,7 +726,6 @@
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню (локализованное) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -749,7 +746,6 @@
         </aside>
 
         <main class="main-content">
-            <!-- Верхняя панель (локализованная) -->
             <header class="top-bar">
                 <button class="menu-toggle" id="menuToggle">
                     <i class="fas fa-bars"></i>
@@ -913,7 +909,6 @@
 
             if (menuToggle) {
                 menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
-
                 document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
@@ -928,13 +923,11 @@
             if (themeToggle) {
                 const themeIcon = themeToggle.querySelector('i');
                 const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
-
                 if (savedTheme === 'dark') {
                     body.classList.add('dark-theme');
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
                 }
-
                 themeToggle.addEventListener('click', () => {
                     body.classList.toggle('dark-theme');
                     if (body.classList.contains('dark-theme')) {
@@ -958,7 +951,48 @@
                 }, 5000);
             });
 
+            // ---------- Исправленная логика "Выбрать все" ----------
+            const selectAllCheckbox = document.getElementById('selectAll');
             const searchInput = document.getElementById('productSearch');
+
+            function isRowVisible(row) {
+                if (!row) return false;
+                if (row.style.display === 'none') return false;
+                return row.offsetParent !== null;
+            }
+
+            function updateSelectAllState() {
+                if (!selectAllCheckbox) return;
+                const allRows = document.querySelectorAll('.product-row');
+                const visibleRows = Array.from(allRows).filter(row => isRowVisible(row));
+                const visibleCheckboxes = visibleRows.map(row => row.querySelector('.product-checkbox')).filter(cb => cb !== null);
+                const checkedCheckboxes = visibleCheckboxes.filter(cb => cb.checked);
+                if (visibleCheckboxes.length === 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                } else {
+                    selectAllCheckbox.checked = visibleCheckboxes.length === checkedCheckboxes.length;
+                    selectAllCheckbox.indeterminate = checkedCheckboxes.length > 0 && checkedCheckboxes.length < visibleCheckboxes.length;
+                }
+            }
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = selectAllCheckbox.checked;
+                    const allRows = document.querySelectorAll('.product-row');
+                    const visibleRows = Array.from(allRows).filter(row => isRowVisible(row));
+                    visibleRows.forEach(row => {
+                        const cb = row.querySelector('.product-checkbox');
+                        if (cb) cb.checked = isChecked;
+                    });
+                    updateSelectAllState();
+                });
+            }
+
+            document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectAllState);
+            });
+
             if (searchInput) {
                 searchInput.addEventListener('keyup', function() {
                     const term = this.value.toLowerCase();
@@ -967,28 +1001,12 @@
                         const article = row.getAttribute('data-article') || '';
                         row.style.display = (name.includes(term) || article.includes(term)) ? '' : 'none';
                     });
+                    updateSelectAllState();
                 });
             }
 
-            const selectAll = document.getElementById('selectAll');
-            if (selectAll) {
-                selectAll.addEventListener('change', function() {
-                    document.querySelectorAll('.product-checkbox:visible').forEach(cb => {
-                        if (cb.closest('tr').style.display !== 'none') {
-                            cb.checked = selectAll.checked;
-                        }
-                    });
-                });
-
-                document.querySelectorAll('.product-checkbox').forEach(cb => {
-                    cb.addEventListener('change', function() {
-                        const visible = document.querySelectorAll('.product-checkbox:visible');
-                        const checked = document.querySelectorAll('.product-checkbox:visible:checked');
-                        selectAll.checked = visible.length === checked.length;
-                        selectAll.indeterminate = checked.length > 0 && checked.length < visible.length;
-                    });
-                });
-            }
+            updateSelectAllState();
+            // -------------------------------------------------------
         });
 
         function toggleUserMenu() {

@@ -1,5 +1,4 @@
-﻿// Pages/Customers/Index.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -24,16 +23,14 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? SearchString { get; set; }
 
-    // Параметры сортировки
     [BindProperty(SupportsGet = true)]
     public string? SortField { get; set; }
 
     [BindProperty(SupportsGet = true)]
-    public string? SortOrder { get; set; } // "asc" или "desc"
+    public string? SortOrder { get; set; }
 
     public IList<Customer> Customers { get; set; } = new List<Customer>();
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -44,7 +41,6 @@ public class IndexModel : PageModel
     {
         try
         {
-            // Загружаем настройки текущего пользователя
             var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
@@ -56,13 +52,11 @@ public class IndexModel : PageModel
                 CustomColor = user.CustomColor ?? "#FF6B00";
             }
 
-            // Устанавливаем значения по умолчанию для сортировки
             SortField = string.IsNullOrEmpty(SortField) ? "FullName" : SortField;
             SortOrder = string.IsNullOrEmpty(SortOrder) ? "asc" : SortOrder;
 
             var query = _context.Customers.AsQueryable();
 
-            // Фильтрация
             if (!string.IsNullOrEmpty(SearchString))
             {
                 query = query.Where(c =>
@@ -71,7 +65,6 @@ public class IndexModel : PageModel
                     EF.Functions.Like(c.Email, $"%{SearchString}%"));
             }
 
-            // Сортировка
             query = SortField switch
             {
                 "Phone" => SortOrder == "asc" ? query.OrderBy(c => c.Phone) : query.OrderByDescending(c => c.Phone),

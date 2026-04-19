@@ -1,37 +1,54 @@
-﻿// Models/Customer.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
-namespace Monoplist.Models;
-
-[Index(nameof(Email), IsUnique = true)]
-[Index(nameof(Phone))]
-public class Customer
+namespace Monoplist.Models
 {
-    public int Id { get; set; }
+    public class Customer
+    {
+        [Key]
+        public int Id { get; set; }
 
-    [Required, StringLength(200, MinimumLength = 2)]
-    public string FullName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Поле ФИО обязательно для заполнения")]
+        [Display(Name = "ФИО / Название")]
+        [StringLength(200, MinimumLength = 2, ErrorMessage = "Длина строки должна быть от 2 до 200 символов")]
+        public string FullName { get; set; } = string.Empty;
 
-    [StringLength(20)]
-    public string? Phone { get; set; }
+        [Phone(ErrorMessage = "Некорректный формат телефона")]
+        [Display(Name = "Телефон")]
+        [StringLength(20)]
+        public string? Phone { get; set; }
 
-    [StringLength(100), EmailAddress]
-    public string? Email { get; set; }
+        [EmailAddress(ErrorMessage = "Некорректный формат Email")]
+        [Display(Name = "Email")]
+        [StringLength(100)]
+        public string? Email { get; set; }
 
-    [Required, StringLength(100, MinimumLength = 4)]
-    public string Password { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Пароль обязателен")]
+        [DataType(DataType.Password)]
+        [StringLength(100, MinimumLength = 4, ErrorMessage = "Пароль должен содержать минимум 4 символа")]
+        public string Password { get; set; } = string.Empty;
 
-    [Column(TypeName = "decimal(5,2)")]
-    public decimal Discount { get; set; } = 0;
+        [Range(0, 100, ErrorMessage = "Скидка должна быть от 0 до 100")]
+        [Display(Name = "Скидка (%)")]
+        public int Discount { get; set; }
 
-    public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
+        [DataType(DataType.DateTime)]
+        [Display(Name = "Дата регистрации")]
+        public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
 
-    // Новое поле – URL аватара
-    [StringLength(500)]
-    public string? AvatarUrl { get; set; }
+        [DataType(DataType.DateTime)]
+        [Display(Name = "Дата обновления")]
+        public DateTime? UpdatedAt { get; set; }
 
-    public ICollection<Order> Orders { get; set; } = new List<Order>();
+        // Аватар – может быть URL или data URL (base64). Тип nvarchar(max) позволяет хранить длинные строки.
+        [Column(TypeName = "nvarchar(max)")]
+        [Display(Name = "Аватар")]
+        [StringLength(int.MaxValue)] // Отключает валидацию длины на клиенте, но база данных примет любое значение.
+        public string? AvatarUrl { get; set; }
+
+        // Навигационные свойства
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+        public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+    }
 }

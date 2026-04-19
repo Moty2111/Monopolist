@@ -3,6 +3,8 @@
 @{
     Layout = null;
     ViewData["Title"] = "Корзина";
+    string avatarSrc = Model.AvatarUrl;
+    bool isDataUrl = !string.IsNullOrEmpty(avatarSrc) && avatarSrc.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
 }
 
 <!DOCTYPE html>
@@ -665,7 +667,7 @@
                         <div class="customer-avatar">
                             @if (!string.IsNullOrEmpty(Model.AvatarUrl))
                             {
-                                <img src="@Model.AvatarUrl?t=@DateTime.Now.Ticks" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                                <img src="@(isDataUrl? Model.AvatarUrl: Model.AvatarUrl + "?t=" + DateTime.Now.Ticks)" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
                             }
                             else
                             {
@@ -734,7 +736,20 @@
                                     }
                                 </td>
                                 <td class="cart-product-name">@item.Name</td>
-                                <td>@item.Price.ToString("N0") ₽</td>
+                                <td>
+                                    @if (Model.CustomerDiscount > 0)
+                                    {
+                                        <span style="text-decoration: line-through; color: var(--text-muted);">@item.OriginalPrice.ToString("N0") ₽</span>
+                            
+                                        <br />
+                                        <span style="color: var(--primary); font-weight: bold;">@item.Price.ToString("N0") ₽</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@item.Price.ToString("N0") ₽</span>
+                                    }
+                                </td>
+                                <td class="cart-item-total">@item.Total.ToString("N0") ₽</td>
                                 <td class="cart-quantity">
                                     <input type="number" value="@item.Quantity" min="1" max="@item.CurrentStock" data-id="@item.Id">
                                 </td>

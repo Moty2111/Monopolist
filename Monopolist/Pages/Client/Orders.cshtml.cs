@@ -122,6 +122,9 @@ public class OrdersModel : PageModel
         if (customerIdClaim == null || !int.TryParse(customerIdClaim, out int customerId))
             return Unauthorized();
 
+        var customer = await _context.Customers.FindAsync(customerId);
+        var discountFactor = 1 - (customer?.Discount ?? 0) / 100m;
+
         var order = await _context.Orders
             .Include(o => o.OrderItems)
             .ThenInclude(oi => oi.Product)
@@ -134,12 +137,11 @@ public class OrdersModel : PageModel
             productId = oi.ProductId,
             productName = oi.Product?.Name ?? "Товар",
             quantity = oi.Quantity,
-            price = oi.PriceAtSale
+            price = (oi.Product?.SalePrice ?? 0) * discountFactor
         }).ToList();
 
         return new JsonResult(items);
     }
-
     public class OrderViewModel
     {
         public int Id { get; set; }

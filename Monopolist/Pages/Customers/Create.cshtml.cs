@@ -12,20 +12,15 @@ public class CreateModel : PageModel
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CreateModel> _logger;
-    private readonly IWebHostEnvironment _env;
 
-    public CreateModel(AppDbContext context, ILogger<CreateModel> logger, IWebHostEnvironment env)
+    public CreateModel(AppDbContext context, ILogger<CreateModel> logger)
     {
         _context = context;
         _logger = logger;
-        _env = env;
     }
 
     [BindProperty]
     public Customer Customer { get; set; } = new();
-
-    [BindProperty]
-    public IFormFile? AvatarFile { get; set; }
 
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
@@ -49,32 +44,6 @@ public class CreateModel : PageModel
 
         try
         {
-            // Обработка аватара
-            if (AvatarFile != null && AvatarFile.Length > 0)
-            {
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                var ext = Path.GetExtension(AvatarFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(ext))
-                {
-                    ModelState.AddModelError("AvatarFile", "Разрешены только изображения (jpg, jpeg, png, gif)");
-                    await LoadUserSettings();
-                    return Page();
-                }
-
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "avatars", "customers");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                var fileName = $"customer_{Guid.NewGuid()}{ext}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await AvatarFile.CopyToAsync(stream);
-                }
-                Customer.AvatarUrl = $"/uploads/avatars/customers/{fileName}";
-            }
-            // Если файл не загружен, но указан URL, оставляем его (валидация на длину по желанию)
-
             if (string.IsNullOrWhiteSpace(Customer.Password))
             {
                 Customer.Password = GenerateTemporaryPassword();

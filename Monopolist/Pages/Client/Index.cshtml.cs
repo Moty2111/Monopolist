@@ -88,6 +88,8 @@ public class IndexModel : PageModel
             _ => query.OrderBy(p => p.Name)
         };
 
+        var discountFactor = 1 - (CustomerDiscount / 100m);
+
         Products = await query
             .Skip((PageNumber - 1) * PageSize)
             .Take(PageSize)
@@ -99,6 +101,7 @@ public class IndexModel : PageModel
                 CategoryName = p.Category != null ? p.Category.Name : "Без категории",
                 Unit = p.Unit,
                 SalePrice = p.SalePrice,
+                DiscountedPrice = p.SalePrice * discountFactor,
                 CurrentStock = p.CurrentStock,
                 ImageUrl = p.ImageUrl ?? (p.Warehouse != null ? p.Warehouse.ImageUrl : null),
                 Description = p.Warehouse != null ? p.Warehouse.Description : null
