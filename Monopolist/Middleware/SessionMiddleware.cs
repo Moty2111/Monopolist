@@ -51,8 +51,7 @@ namespace Monoplist.Middleware
                 }
             }
 
-            // Если аутентифицирован клиент (схема CustomerCookie), ничего не делаем,
-            // так как для клиентов сессии не отслеживаются в этой версии.
+
 
             await _next(context);
         }

@@ -34,8 +34,6 @@ public class CustomerLoginModel : PageModel
         [Required(ErrorMessage = "Пароль обязателен")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
-
-        public bool RememberMe { get; set; }
     }
 
     public void OnGet(string? returnUrl = null)
@@ -73,8 +71,8 @@ public class CustomerLoginModel : PageModel
 
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = Input.RememberMe,
-            ExpiresUtc = Input.RememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
+            IsPersistent = false,
+            ExpiresUtc = null
         };
 
         await HttpContext.SignInAsync("CustomerCookie", principal, authProperties);

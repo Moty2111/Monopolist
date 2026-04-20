@@ -581,6 +581,8 @@
                 .data-table td:last-child {
                     text-align: center;
                     min-width: 120px;
+                    padding-top: 25px; /* Дополнительный отступ сверху (≈0.7 см) */
+                    padding-bottom: 50px; /* Дополнительный отступ снизу */
                 }
 
         .product-thumbnail {
@@ -597,8 +599,9 @@
             flex-wrap: nowrap;
             gap: 6px;
             align-items: center;
-            justify-content: center; /* Центрируем кнопки внутри контейнера действий */
+            justify-content: center;
             white-space: nowrap;
+            /* Высота не фиксируется, пусть растягивается по контенту */
         }
 
         .btn-sm {

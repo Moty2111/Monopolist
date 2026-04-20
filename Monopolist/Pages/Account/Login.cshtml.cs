@@ -34,8 +34,6 @@ public class LoginModel : PageModel
         [Required(ErrorMessage = "Пароль или одноразовый ключ обязателен.")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
-
-        public bool RememberMe { get; set; }
     }
 
     public void OnGet(string? returnUrl = null)
@@ -84,16 +82,15 @@ public class LoginModel : PageModel
         if (user.TwoFactorEnabled && !string.IsNullOrEmpty(user.TwoFactorSecret))
         {
             TempData["UserId"] = user.Id;
-            TempData["RememberMe"] = Input.RememberMe;
             TempData["ReturnUrl"] = returnUrl;
             return RedirectToPage("./Verify2fa");
         }
 
-        await SignInUser(user, Input.RememberMe);
+        await SignInUser(user);
         return LocalRedirect(returnUrl);
     }
 
-    public async Task SignInUser(User user, bool rememberMe)
+    public async Task SignInUser(User user)
     {
         user.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -107,8 +104,8 @@ public class LoginModel : PageModel
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var props = new AuthenticationProperties
         {
-            IsPersistent = rememberMe,
-            ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
+            IsPersistent = false,
+            ExpiresUtc = null
         };
         await HttpContext.SignInAsync("EmployeeCookie", new ClaimsPrincipal(identity), props);
 
@@ -116,7 +113,7 @@ public class LoginModel : PageModel
         {
             Response.Cookies.Append($"user_avatar_{user.Id}", user.AvatarUrl, new CookieOptions
             {
-                Expires = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null,
+                Expires = null,
                 HttpOnly = false,
                 Secure = true,
                 SameSite = SameSiteMode.Lax
@@ -140,7 +137,7 @@ public class LoginModel : PageModel
 
         Response.Cookies.Append("session_id", sessionId, new CookieOptions
         {
-            Expires = rememberMe ? DateTime.UtcNow.AddDays(30) : null,
+            Expires = null,
             HttpOnly = true,
             SameSite = SameSiteMode.Lax,
             Secure = true
