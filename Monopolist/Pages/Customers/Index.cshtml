@@ -569,15 +569,22 @@
                 padding: 10px 8px;
                 border-bottom: 1px solid var(--border);
                 color: var(--text-secondary);
+                vertical-align: middle;
             }
 
             .data-table tbody tr:hover {
                 background: rgba(255,107,0,0.05);
             }
 
+            /* Центрирование заголовка колонки с иконкой изображения */
+            .data-table th:nth-child(2) {
+                text-align: center;
+            }
+
         .avatar-cell {
             width: 60px;
             text-align: center;
+            vertical-align: middle;
         }
 
         .avatar-small {
@@ -596,6 +603,7 @@
             .avatar-small i {
                 font-size: 28px;
                 color: var(--primary);
+                line-height: 1;
             }
 
             .avatar-small img {
@@ -603,6 +611,7 @@
                 height: 100%;
                 border-radius: 50%;
                 object-fit: cover;
+                display: block;
             }
 
         .action-buttons {
