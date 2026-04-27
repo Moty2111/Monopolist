@@ -34,7 +34,7 @@
 |-------------------------|-----------------------------------------------------|
 | Backend                 | ASP.NET Core 9.0 Razor Pages                        |
 | ORM                     | Entity Framework Core                               |
-| База данных             | SQL Management                                      |
+| База данных             | SQL Server (SQL Management Studio)                  |
 | Аутентификация          | ASP.NET Core Identity (Cookie-based)                |
 | Двухфакторная           | OTP.NET (TOTP)                                      |
 | Визуальный интерфейс   | HTML5, CSS3, JavaScript, Font Awesome 6              |
@@ -46,27 +46,9 @@
 ## ⚙️ Установка и запуск
 
 ### Требования
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [SQL Management ]([https://www.postgresql.org/](https://learn.microsoft.com/ru-ru/ssms/install/install)) (версия 22 и выше)
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [SQL Server](https://www.microsoft.com/sql-server) (рекомендуется Express Edition) и [SQL Server Management Studio (SSMS)](https://learn.microsoft.com/ru-ru/ssms/install/install) версии 22 или выше
 
-Структура проекта
-Monoplist/
-├── Pages/
-│   ├── Account/           # Страницы аутентификации и восстановления пароля
-│   ├── Products/          # Каталог товаров (CRUD)
-│   ├── Customers/         # Управление клиентами
-│   ├── Orders/            # Заказы
-│   ├── Warehouse/         # Склад
-│   ├── Suppliers/         # Поставщики
-│   ├── Reports/           # Отчёты
-│   ├── Settings/          # Настройки профиля, безопасности, внешнего вида, уведомлений
-│   └── Shared/            # Общие части (боковая панель, заголовок)
-├── Models/                # Entity-модели базы данных
-├── Data/                  # Контекст базы данных и миграции
-├── ViewModels/            # View-модели для страниц
-├── wwwroot/               # Статические файлы (изображения, CSS, JS)
-├── appsettings.json       # Конфигурация приложения
-└── Monoplist.csproj       # Файл проекта
 ### 1. Клонирование репозитория
 ```bash
 git clone https://github.com/Moty2111/monoplist.git
