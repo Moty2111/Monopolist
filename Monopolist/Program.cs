@@ -57,7 +57,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddRazorPages();
 
 var app = builder.Build();

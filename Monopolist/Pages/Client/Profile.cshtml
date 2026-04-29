@@ -521,6 +521,120 @@
                 font-weight: 600;
             }
 
+        /* ---- ИГРОВОЙ БЛОК ЛОЯЛЬНОСТИ ---- */
+        .loyalty-card {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .loyalty-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .loyalty-level {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .level-icon {
+            font-size: 32px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #c0c0c0, #e0e0e0);
+            color: #555;
+        }
+
+        .level-bronze .level-icon {
+            background: linear-gradient(135deg, #cd7f32, #f5a623);
+            color: white;
+        }
+
+        .level-silver .level-icon {
+            background: linear-gradient(135deg, #a0a0a0, #d0d0d0);
+            color: white;
+        }
+
+        .level-gold .level-icon {
+            background: linear-gradient(135deg, #ffd700, #ffb300);
+            color: #4d3e00;
+        }
+
+        .level-newbie .level-icon {
+            background: linear-gradient(135deg, #aaa, #ccc);
+            color: #555;
+        }
+
+        .level-name {
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+
+        .level-discount {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+            background: rgba(255,107,0,0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .progress-bar {
+            height: 18px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 12px 0 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary-light), var(--primary));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .next-level-info {
+            margin-top: 12px;
+            font-size: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: var(--text-secondary);
+        }
+
+            .next-level-info i {
+                margin-right: 4px;
+                color: var(--primary);
+            }
+
+        @@media (max-width: 768px) {
+            .loyalty-header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+
         .footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -707,9 +821,7 @@
         {
             @if (TempData["Success"] != null)
             {
-                <div class="alert-success">
-                    <i class="fas fa-check-circle"></i> @TempData["Success"]
-                </div>
+                <div class="alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
             }
 
             <div class="profile-card">
@@ -720,7 +832,6 @@
 
                 <form method="post" id="profileForm">
                     @Html.AntiForgeryToken()
-                    <!-- Скрытое поле для хранения Data URL -->
                     <input type="hidden" id="AvatarDataUrl" name="AvatarDataUrl" />
 
                     <div class="avatar-wrapper">
@@ -746,6 +857,61 @@
                             <label for="AvatarUrlInput">URL аватара</label>
                             <input type="text" id="AvatarUrlInput" name="AvatarUrl" class="url-input" placeholder="https://example.com/avatar.jpg" value="@Model.AvatarUrl" />
                         </div>
+                    </div>
+
+                    <!-- ИГРОВОЙ БЛОК ЛОЯЛЬНОСТИ -->
+                    <div class="loyalty-card @GetLevelClass(Model.LoyaltyLevelName)">
+                        <div class="loyalty-header">
+                            <div class="loyalty-level">
+                                <div class="level-icon">
+                                    @switch (Model.LoyaltyLevelName)
+                                    {
+                                        case "Бронза":
+                                            <i class="fas fa-medal"></i>
+                                            break;
+                                        case "Серебро":
+
+                                            <i class="fas fa-trophy"></i>
+                                            break;
+                                        case "Золото":
+
+                                            <i class="fas fa-crown"></i>
+                                            break;
+                                        default:
+
+                                            <i class="fas fa-user"></i>
+                                            break;
+                                    }
+                                </div>
+                                <div>
+                                    <div class="level-name">@Model.LoyaltyLevelName</div>
+                                    <div style="font-size:13px; color: var(--text-muted);">Завершено заказов: @Model.TotalCompletedOrders | Потрачено: @Model.TotalSpent.ToString("N0") ₽</div>
+                                </div>
+                            </div>
+                            <div class="level-discount">
+                                <i class="fas fa-tag"></i> Скидка @Model.CustomerDiscount%
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @Model.LoyaltyPercent%;"></div>
+                        </div>
+                        <div class="progress-stats">
+                            <span>@Model.LoyaltyLevelName</span>
+                            <span>@Model.NextLevelName</span>
+                        </div>
+                        @if (!Model.IsMaxLevel)
+                        {
+                            <div class="next-level-info">
+                                <span><i class="fas fa-shopping-cart"></i> До @Model.NextLevelName: ещё @Model.OrdersToNextLevel заказ(ов)</span>
+                                <span><i class="fas fa-ruble-sign"></i> или @Model.SumToNextLevel.ToString("N0") ₽</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="next-level-info" style="font-weight: 600; color: var(--primary);">
+                                <i class="fas fa-star"></i> Максимальный уровень достигнут!
+                            </div>
+                        }
                     </div>
 
                     <div class="profile-body">
@@ -826,7 +992,6 @@
             }
         });
 
-        // Работа с аватаром
         const avatarFile = document.getElementById('avatarFile');
         const avatarPreview = document.getElementById('avatarPreview');
         const avatarUrlInput = document.getElementById('AvatarUrlInput');
@@ -848,8 +1013,8 @@
                     reader.onload = function(e) {
                         const dataUrl = e.target.result;
                         updatePreview(dataUrl);
-                        avatarUrlInput.value = '';          // очищаем поле URL
-                        avatarDataUrl.value = dataUrl;       // сохраняем Data URL в скрытое поле
+                        avatarUrlInput.value = '';
+                        avatarDataUrl.value = dataUrl;
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -863,10 +1028,9 @@
                 const url = this.value.trim();
                 if (url) {
                     updatePreview(url);
-                    avatarFile.value = '';       // очищаем выбор файла
-                    avatarDataUrl.value = '';    // не используем Data URL
+                    avatarFile.value = '';
+                    avatarDataUrl.value = '';
                 } else {
-                    // Если поле очистили, показываем текущий аватар (из модели)
                     updatePreview('@Model.AvatarUrl');
                     avatarDataUrl.value = '';
                 }
@@ -888,11 +1052,19 @@
                 } else {
                     countSpan.style.display = 'none';
                 }
-            } catch (error) {
-                console.error('Ошибка получения количества товаров', error);
-            }
+            } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
         updateCartCount();
     </script>
 </body>
 </html>
+
+@functions {
+    string GetLevelClass(string levelName) => levelName switch
+    {
+        "Бронза" => "level-bronze",
+        "Серебро" => "level-silver",
+        "Золото" => "level-gold",
+        _ => "level-newbie"
+    };
+}

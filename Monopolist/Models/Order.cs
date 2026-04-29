@@ -1,35 +1,30 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-namespace Monoplist.Models;
-
-[Index(nameof(OrderNumber), IsUnique = true)]
-[Index(nameof(OrderDate))]
-[Index(nameof(Status))]
-public class Order
+namespace Monoplist.Models
 {
-    public int Id { get; set; }
+    public class Order
+    {
+        public int Id { get; set; }
 
-    [Required, StringLength(20, MinimumLength = 5)]
-    public string OrderNumber { get; set; } = string.Empty;
+        [Required, MaxLength(50)]
+        public string OrderNumber { get; set; } = string.Empty;
 
-    public int CustomerId { get; set; }
-    public Customer? Customer { get; set; }
+        public int CustomerId { get; set; }
+        public Customer Customer { get; set; } = null!;
 
-    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal TotalAmount { get; set; }
+        public decimal TotalAmount { get; set; }
 
-    [Required, StringLength(20)]
-    public string Status { get; set; } = "Pending";
+        [StringLength(20)]
+        public string Status { get; set; } = "Pending";
 
-    [StringLength(50)]
-    public string? PaymentMethod { get; set; }
+        [StringLength(20)]
+        public string? PaymentMethod { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-
-    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public DateTime UpdatedAt { get; internal set; }
+    }
 }

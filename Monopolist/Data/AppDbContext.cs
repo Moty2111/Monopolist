@@ -17,7 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<Warehouse> Warehouses { get; set; }
     public DbSet<UserSession> UserSessions { get; set; }
 
-    // Новые таблицы для корзины и избранного
+    // Таблицы для клиентской части
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Notification> Notifications { get; set; }
@@ -70,10 +70,10 @@ public class AppDbContext : DbContext
             .HasForeignKey(us => us.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ===== Новые настройки для корзины =====
+        // ===== Настройки для корзины =====
         modelBuilder.Entity<CartItem>()
             .HasIndex(ci => new { ci.CustomerId, ci.ProductId })
-            .IsUnique(); // один клиент – один товар в корзине
+            .IsUnique();
 
         modelBuilder.Entity<CartItem>()
             .HasOne(ci => ci.Customer)
@@ -87,10 +87,10 @@ public class AppDbContext : DbContext
             .HasForeignKey(ci => ci.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ===== Новые настройки для избранного =====
+        // ===== Настройки для избранного =====
         modelBuilder.Entity<Favorite>()
             .HasIndex(f => new { f.CustomerId, f.ProductId })
-            .IsUnique(); // один клиент может добавить товар в избранное только один раз
+            .IsUnique();
 
         modelBuilder.Entity<Favorite>()
             .HasOne(f => f.Customer)

@@ -18,7 +18,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Все стили из оригинального Delete.cshtml */
         :root {
             --primary: @Model.CustomColor;
             --primary-dark: #E05E00;
@@ -201,15 +200,13 @@
                         transition: var(--transition);
                     }
 
-                    .sidebar-nav li a:hover,
-                    .sidebar-nav li a.active {
+                    .sidebar-nav li a:hover, .sidebar-nav li a.active {
                         background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
                         color: var(--primary);
                         transform: translateX(4px);
                     }
 
-                        .sidebar-nav li a:hover i,
-                        .sidebar-nav li a.active i {
+                        .sidebar-nav li a:hover i, .sidebar-nav li a.active i {
                             color: var(--primary);
                         }
 
@@ -395,32 +392,6 @@
                 border-color: var(--primary);
             }
 
-        .btn-logout {
-            background: none;
-            border: 2px solid var(--accent);
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-            .btn-logout:hover {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                border-color: transparent;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
-            }
-
-                .btn-logout:hover i {
-                    color: white;
-                }
-
         .content {
             padding: 24px;
             flex: 1;
@@ -605,21 +576,10 @@
                 justify-content: center;
             }
         }
-
-        @@media (max-width: 480px) {
-            .btn-logout span {
-                display: none;
-            }
-
-            .btn-logout {
-                padding: 8px 12px;
-            }
-        }
     </style>
 </head>
 <body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
     <div class="app">
-        <!-- Боковое меню (локализованное) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-helmet-safety"></i>
@@ -640,16 +600,11 @@
         </aside>
 
         <main class="main-content">
-            <!-- Верхняя панель (локализованная) -->
             <header class="top-bar">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
                 <div class="user-info">
-                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")">
-                        <i class="fas fa-sun"></i>
-                    </div>
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : Model.Language == "en" ? "Toggle theme" : "Тақырыпты ауыстыру")"><i class="fas fa-sun"></i></div>
                     <div class="user-profile" onclick="toggleUserMenu()">
                         <div class="user-avatar">
                             @if (!string.IsNullOrEmpty(avatarUrl))
@@ -706,6 +661,10 @@
                             <dd>@Model.Customer.Discount%</dd>
                             <dt>@(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</dt>
                             <dd>@Model.Customer.RegistrationDate.ToString("dd.MM.yyyy")</dd>
+                            <dt>@(Model.Language == "ru" ? "Завершено заказов" : "Completed orders")</dt>
+                            <dd>@Model.Customer.TotalCompletedOrders</dd>
+                            <dt>@(Model.Language == "ru" ? "Общая сумма покупок" : "Total spent")</dt>
+                            <dd>@Model.Customer.TotalSpent.ToString("N0") ₽</dd>
                         </dl>
 
                         <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Customer.Id">
@@ -720,68 +679,39 @@
     </div>
 
     <script>
-        // JavaScript без изменений
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
-
             if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    body.classList.toggle('sidebar-open');
-                });
-
+                menuToggle.addEventListener('click', function() { body.classList.toggle('sidebar-open'); });
                 document.addEventListener('click', function(event) {
                     if (window.innerWidth <= 768) {
                         const sidebar = document.querySelector('.sidebar');
-                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open')) {
+                        if (!sidebar.contains(event.target) && !menuToggle.contains(event.target) && body.classList.contains('sidebar-open'))
                             body.classList.remove('sidebar-open');
-                        }
                     }
                 });
             }
-
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = themeToggle.querySelector('i');
             const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-
+            if (savedTheme === 'dark') { body.classList.add('dark-theme'); themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon'); }
             themeToggle.addEventListener('click', function() {
                 body.classList.toggle('dark-theme');
                 if (body.classList.contains('dark-theme')) {
-                    themeIcon.classList.remove('fa-sun');
-                    themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon'); localStorage.setItem('theme', 'dark');
                 } else {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.remove('fa-moon'); themeIcon.classList.add('fa-sun'); localStorage.setItem('theme', 'light');
                 }
             });
-
             const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.style.display = 'none', 500);
-                }, 5000);
-            });
+            alerts.forEach(alert => { setTimeout(() => { alert.style.transition = 'opacity 0.5s'; alert.style.opacity = '0'; setTimeout(() => alert.style.display = 'none', 500); }, 5000); });
         });
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('show');
-        }
-
+        function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
         window.addEventListener('click', function(event) {
             const userInfo = document.querySelector('.user-info');
             const userMenu = document.getElementById('userMenu');
-            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) userMenu.classList.remove('show');
         });
     </script>
 </body>

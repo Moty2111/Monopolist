@@ -35,6 +35,16 @@ public class ProfileModel : PageModel
     public decimal CustomerDiscount { get; set; }
     public bool IsGuest { get; private set; }
 
+    // Данные для уровня лояльности
+    public int TotalCompletedOrders { get; set; }
+    public decimal TotalSpent { get; set; }
+    public string LoyaltyLevelName { get; set; } = "Новичок";
+    public int LoyaltyPercent { get; set; }        // 0-100 заполнение шкалы прогресса
+    public string NextLevelName { get; set; } = "Бронза";
+    public int OrdersToNextLevel { get; set; }
+    public decimal SumToNextLevel { get; set; }
+    public bool IsMaxLevel { get; set; }
+
     public class InputModel
     {
         [Required(ErrorMessage = "ФИО обязательно")]
@@ -70,11 +80,16 @@ public class ProfileModel : PageModel
                 if (customer != null)
                 {
                     CustomerName = customer.FullName;
-                    CustomerDiscount = customer.Discount;
+                    CustomerDiscount = customer.EffectiveDiscount; // эффективная скидка
                     AvatarUrl = customer.AvatarUrl;
                     Input.FullName = customer.FullName;
                     Input.Email = customer.Email;
                     Input.Phone = customer.Phone;
+
+                    // Загружаем статистику для лояльности
+                    TotalCompletedOrders = customer.TotalCompletedOrders;
+                    TotalSpent = customer.TotalSpent;
+                    CalculateLoyaltyLevel(customer);
                 }
             }
             else
@@ -84,6 +99,64 @@ public class ProfileModel : PageModel
             }
         }
         return Page();
+    }
+
+    private void CalculateLoyaltyLevel(Customer customer)
+    {
+        int orders = TotalCompletedOrders;
+        decimal sum = TotalSpent;
+
+        if (orders >= 20 && sum >= 200000)
+        {
+            LoyaltyLevelName = "Золото";
+            LoyaltyPercent = 100;
+            IsMaxLevel = true;
+            NextLevelName = "Максимум";
+            OrdersToNextLevel = 0;
+            SumToNextLevel = 0;
+        }
+        else if (orders >= 10 && sum >= 50000)
+        {
+            LoyaltyLevelName = "Серебро";
+            // Прогресс до золота: цель – 20 заказов и 200 000
+            int ordersProgress = Math.Min(orders, 20);
+            decimal sumProgress = Math.Min(sum, 200000);
+            int ordersPercent = (int)((double)ordersProgress / 20 * 50);
+            int sumPercent = (int)((double)sumProgress / 200000 * 50);
+            LoyaltyPercent = Math.Min(ordersPercent + sumPercent, 100);
+            NextLevelName = "Золото";
+            OrdersToNextLevel = Math.Max(0, 20 - orders);
+            SumToNextLevel = Math.Max(0, 200000 - sum);
+            IsMaxLevel = false;
+        }
+        else if (orders >= 5 && sum >= 10000)
+        {
+            LoyaltyLevelName = "Бронза";
+            // Прогресс до серебра: 10 заказов и 50 000
+            int ordersProgress = Math.Min(orders, 10);
+            decimal sumProgress = Math.Min(sum, 50000);
+            int ordersPercent = (int)((double)ordersProgress / 10 * 50);
+            int sumPercent = (int)((double)sumProgress / 50000 * 50);
+            LoyaltyPercent = Math.Min(ordersPercent + sumPercent, 100);
+            NextLevelName = "Серебро";
+            OrdersToNextLevel = Math.Max(0, 10 - orders);
+            SumToNextLevel = Math.Max(0, 50000 - sum);
+            IsMaxLevel = false;
+        }
+        else
+        {
+            LoyaltyLevelName = "Новичок";
+            // Прогресс до бронзы: 5 заказов и 10 000
+            int ordersProgress = Math.Min(orders, 5);
+            decimal sumProgress = Math.Min(sum, 10000);
+            int ordersPercent = (int)((double)ordersProgress / 5 * 50);
+            int sumPercent = (int)((double)sumProgress / 10000 * 50);
+            LoyaltyPercent = Math.Min(ordersPercent + sumPercent, 100);
+            NextLevelName = "Бронза";
+            OrdersToNextLevel = Math.Max(0, 5 - orders);
+            SumToNextLevel = Math.Max(0, 10000 - sum);
+            IsMaxLevel = false;
+        }
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -98,7 +171,7 @@ public class ProfileModel : PageModel
         var customer = await _context.Customers.FindAsync(customerId);
         if (customer == null) return RedirectToPage("/Account/CustomerLogin");
 
-        // Определяем, что сохранять: Data URL (приоритетнее) или обычный URL
+        // Аватар
         if (!string.IsNullOrWhiteSpace(AvatarDataUrl))
         {
             customer.AvatarUrl = AvatarDataUrl;
@@ -109,11 +182,9 @@ public class ProfileModel : PageModel
         }
         else
         {
-            // Если оба поля пусты, удаляем аватар
             customer.AvatarUrl = null;
         }
 
-        // Обновляем данные
         customer.FullName = Input.FullName;
         customer.Email = Input.Email;
         customer.Phone = Input.Phone;
@@ -123,7 +194,7 @@ public class ProfileModel : PageModel
 
         await _context.SaveChangesAsync();
 
-        // Обновляем cookie аватара для быстрого отображения
+        // Обновляем аватар в cookie
         if (!string.IsNullOrEmpty(customer.AvatarUrl))
         {
             var cookieOptions = new CookieOptions
@@ -132,7 +203,6 @@ public class ProfileModel : PageModel
                 HttpOnly = false,
                 SameSite = SameSiteMode.Lax
             };
-            // Для Data URL не добавляем временную метку
             string avatarValue = customer.AvatarUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
                 ? customer.AvatarUrl
                 : customer.AvatarUrl + "?v=" + DateTime.Now.Ticks;
@@ -143,7 +213,6 @@ public class ProfileModel : PageModel
             Response.Cookies.Delete($"customer_avatar_{customerId}");
         }
 
-        // Принудительно обновляем аутентификацию
         await RefreshCustomerAuthentication(customer);
 
         TempData["Success"] = "Профиль успешно обновлён!";

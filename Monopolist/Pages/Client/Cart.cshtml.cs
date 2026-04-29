@@ -41,8 +41,11 @@ public class CartModel : PageModel
                 if (customer != null)
                 {
                     CustomerName = customer.FullName;
-                    CustomerDiscount = customer.Discount;
                     AvatarUrl = customer.AvatarUrl;
+
+                    // Обновить накопительную скидку и взять эффективную
+                    await UpdateLoyaltyDiscount(customer);
+                    CustomerDiscount = customer.EffectiveDiscount;
                 }
 
                 var cartItems = await _context.CartItems
@@ -200,6 +203,9 @@ public class CartModel : PageModel
         var customerId = GetCustomerId();
         if (customerId == null || customerId <= 0) return Unauthorized();
 
+        var customer = await _context.Customers.FindAsync(customerId);
+        if (customer == null) return Unauthorized();
+
         var cartItems = await _context.CartItems
             .Include(ci => ci.Product)
             .Where(ci => ci.CustomerId == customerId)
@@ -207,8 +213,10 @@ public class CartModel : PageModel
 
         if (!cartItems.Any()) return BadRequest("Корзина пуста");
 
-        var customer = await _context.Customers.FindAsync(customerId);
-        var discountFactor = 1 - (customer?.Discount ?? 0) / 100m;
+        // Обновляем накопительную скидку перед заказом
+        await UpdateLoyaltyDiscount(customer);
+
+        var discountFactor = 1 - (customer.EffectiveDiscount / 100m);
 
         foreach (var item in cartItems)
         {
@@ -222,30 +230,38 @@ public class CartModel : PageModel
 
         var orderNumber = await GenerateOrderNumberAsync();
 
+        // Списание остатков
         foreach (var item in cartItems)
         {
             item.Product.CurrentStock -= item.Quantity;
         }
+
+        var orderItems = cartItems.Select(ci => new OrderItem
+        {
+            ProductId = ci.ProductId,
+            Quantity = ci.Quantity,
+            PriceAtSale = ci.Product.SalePrice * discountFactor
+        }).ToList();
+
+        decimal total = orderItems.Sum(oi => oi.Quantity * oi.PriceAtSale);
 
         var order = new Order
         {
             OrderNumber = orderNumber,
             CustomerId = customerId.Value,
             OrderDate = DateTime.UtcNow,
-            TotalAmount = cartItems.Sum(ci => ci.Product.SalePrice * ci.Quantity * discountFactor),
-            Status = "Pending",
+            TotalAmount = total,
+            Status = "Completed",                   // <-- заказ сразу завершён
             PaymentMethod = request.PaymentMethod,
-            OrderItems = cartItems.Select(ci => new OrderItem
-            {
-                ProductId = ci.ProductId,
-                Quantity = ci.Quantity,
-                PriceAtSale = ci.Product.SalePrice * discountFactor
-            }).ToList()
+            OrderItems = orderItems
         };
 
         _context.Orders.Add(order);
         _context.CartItems.RemoveRange(cartItems);
         await _context.SaveChangesAsync();
+
+        // После создания завершённого заказа немедленно пересчитываем лояльность
+        await UpdateLoyaltyDiscount(customer);
 
         return new JsonResult(new { success = true, orderId = order.Id });
     }
@@ -274,6 +290,37 @@ public class CartModel : PageModel
             if (int.TryParse(numStr, out int num)) nextNumber = num + 1;
         }
         return $"{prefix}{nextNumber:D3}";
+    }
+
+    /// <summary>
+    /// Обновляет накопительную скидку клиента на основе количества завершённых заказов и их суммы.
+    /// Пороги:
+    ///   Бронза: >= 5 заказов и сумма >= 10 000  → 3%
+    ///   Серебро: >= 10 заказов и сумма >= 50 000 → 5%
+    ///   Золото: >= 20 заказов и сумма >= 200 000 → 7%
+    /// </summary>
+    private async Task UpdateLoyaltyDiscount(Customer customer)
+    {
+        var completedOrders = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .ToListAsync();
+
+        int count = completedOrders.Count;
+        decimal sum = completedOrders.Sum(o => o.TotalAmount);
+
+        customer.TotalCompletedOrders = count;
+        customer.TotalSpent = sum;
+
+        customer.LoyaltyDiscount = (count, sum) switch
+        {
+            ( >= 20, >= 200000) => 7m,
+            ( >= 10, >= 50000) => 5m,
+            ( >= 5, >= 10000) => 3m,
+            _ => 0m
+        };
+
+        customer.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
     }
 }
 
