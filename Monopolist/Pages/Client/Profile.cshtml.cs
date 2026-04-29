@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+п»їusing Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -31,23 +31,23 @@ public class ProfileModel : PageModel
     [BindProperty]
     public string? AvatarDataUrl { get; set; }
 
-    public string CustomerName { get; set; } = "Гость";
+    public string CustomerName { get; set; } = "Р“РѕСЃС‚СЊ";
     public decimal CustomerDiscount { get; set; }
     public bool IsGuest { get; private set; }
 
-    // Данные для уровня лояльности
+    // Р”Р°РЅРЅС‹Рµ РґР»СЏ СѓСЂРѕРІРЅСЏ Р»РѕСЏР»СЊРЅРѕСЃС‚Рё
     public int TotalCompletedOrders { get; set; }
     public decimal TotalSpent { get; set; }
-    public string LoyaltyLevelName { get; set; } = "Новичок";
-    public int LoyaltyPercent { get; set; }        // 0-100 заполнение шкалы прогресса
-    public string NextLevelName { get; set; } = "Бронза";
+    public string LoyaltyLevelName { get; set; } = "РќРѕРІРёС‡РѕРє";
+    public int LoyaltyPercent { get; set; }
+    public string NextLevelName { get; set; } = "Р‘СЂРѕРЅР·Р°";
     public int OrdersToNextLevel { get; set; }
     public decimal SumToNextLevel { get; set; }
     public bool IsMaxLevel { get; set; }
 
     public class InputModel
     {
-        [Required(ErrorMessage = "ФИО обязательно")]
+        [Required(ErrorMessage = "Р¤РРћ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ")]
         [StringLength(200, MinimumLength = 2)]
         public string FullName { get; set; } = string.Empty;
 
@@ -62,7 +62,7 @@ public class ProfileModel : PageModel
         public string? NewPassword { get; set; }
 
         [DataType(DataType.Password)]
-        [Compare("NewPassword", ErrorMessage = "Пароли не совпадают")]
+        [Compare("NewPassword", ErrorMessage = "РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚")]
         public string? ConfirmPassword { get; set; }
     }
 
@@ -80,13 +80,15 @@ public class ProfileModel : PageModel
                 if (customer != null)
                 {
                     CustomerName = customer.FullName;
-                    CustomerDiscount = customer.EffectiveDiscount; // эффективная скидка
                     AvatarUrl = customer.AvatarUrl;
                     Input.FullName = customer.FullName;
                     Input.Email = customer.Email;
                     Input.Phone = customer.Phone;
 
-                    // Загружаем статистику для лояльности
+                    // РђРєС‚СѓР°Р»РёР·РёСЂСѓРµРј Р»РѕСЏР»СЊРЅРѕСЃС‚СЊ РїРµСЂРµРґ РїРѕРєР°Р·РѕРј
+                    await UpdateLoyaltyDiscount(customer);
+                    CustomerDiscount = customer.EffectiveDiscount;
+
                     TotalCompletedOrders = customer.TotalCompletedOrders;
                     TotalSpent = customer.TotalSpent;
                     CalculateLoyaltyLevel(customer);
@@ -95,10 +97,34 @@ public class ProfileModel : PageModel
             else
             {
                 IsGuest = true;
-                CustomerName = "Гость";
+                CustomerName = "Р“РѕСЃС‚СЊ";
             }
         }
         return Page();
+    }
+
+    private async Task UpdateLoyaltyDiscount(Customer customer)
+    {
+        var completedOrders = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .ToListAsync();
+
+        int count = completedOrders.Count;
+        decimal sum = completedOrders.Sum(o => o.TotalAmount);
+
+        customer.TotalCompletedOrders = count;
+        customer.TotalSpent = sum;
+
+        customer.LoyaltyDiscount = (count, sum) switch
+        {
+            ( >= 20, >= 200000) => 7m,
+            ( >= 10, >= 50000) => 5m,
+            ( >= 5, >= 10000) => 3m,
+            _ => 0m
+        };
+
+        customer.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
     }
 
     private void CalculateLoyaltyLevel(Customer customer)
@@ -108,51 +134,48 @@ public class ProfileModel : PageModel
 
         if (orders >= 20 && sum >= 200000)
         {
-            LoyaltyLevelName = "Золото";
+            LoyaltyLevelName = "Р—РѕР»РѕС‚Рѕ";
             LoyaltyPercent = 100;
             IsMaxLevel = true;
-            NextLevelName = "Максимум";
+            NextLevelName = "РњР°РєСЃРёРјСѓРј";
             OrdersToNextLevel = 0;
             SumToNextLevel = 0;
         }
         else if (orders >= 10 && sum >= 50000)
         {
-            LoyaltyLevelName = "Серебро";
-            // Прогресс до золота: цель – 20 заказов и 200 000
+            LoyaltyLevelName = "РЎРµСЂРµР±СЂРѕ";
             int ordersProgress = Math.Min(orders, 20);
             decimal sumProgress = Math.Min(sum, 200000);
             int ordersPercent = (int)((double)ordersProgress / 20 * 50);
             int sumPercent = (int)((double)sumProgress / 200000 * 50);
             LoyaltyPercent = Math.Min(ordersPercent + sumPercent, 100);
-            NextLevelName = "Золото";
+            NextLevelName = "Р—РѕР»РѕС‚Рѕ";
             OrdersToNextLevel = Math.Max(0, 20 - orders);
             SumToNextLevel = Math.Max(0, 200000 - sum);
             IsMaxLevel = false;
         }
         else if (orders >= 5 && sum >= 10000)
         {
-            LoyaltyLevelName = "Бронза";
-            // Прогресс до серебра: 10 заказов и 50 000
+            LoyaltyLevelName = "Р‘СЂРѕРЅР·Р°";
             int ordersProgress = Math.Min(orders, 10);
             decimal sumProgress = Math.Min(sum, 50000);
             int ordersPercent = (int)((double)ordersProgress / 10 * 50);
             int sumPercent = (int)((double)sumProgress / 50000 * 50);
             LoyaltyPercent = Math.Min(ordersPercent + sumPercent, 100);
-            NextLevelName = "Серебро";
+            NextLevelName = "РЎРµСЂРµР±СЂРѕ";
             OrdersToNextLevel = Math.Max(0, 10 - orders);
             SumToNextLevel = Math.Max(0, 50000 - sum);
             IsMaxLevel = false;
         }
         else
         {
-            LoyaltyLevelName = "Новичок";
-            // Прогресс до бронзы: 5 заказов и 10 000
+            LoyaltyLevelName = "РќРѕРІРёС‡РѕРє";
             int ordersProgress = Math.Min(orders, 5);
             decimal sumProgress = Math.Min(sum, 10000);
             int ordersPercent = (int)((double)ordersProgress / 5 * 50);
             int sumPercent = (int)((double)sumProgress / 10000 * 50);
             LoyaltyPercent = Math.Min(ordersPercent + sumPercent, 100);
-            NextLevelName = "Бронза";
+            NextLevelName = "Р‘СЂРѕРЅР·Р°";
             OrdersToNextLevel = Math.Max(0, 5 - orders);
             SumToNextLevel = Math.Max(0, 10000 - sum);
             IsMaxLevel = false;
@@ -171,7 +194,7 @@ public class ProfileModel : PageModel
         var customer = await _context.Customers.FindAsync(customerId);
         if (customer == null) return RedirectToPage("/Account/CustomerLogin");
 
-        // Аватар
+        // РђРІР°С‚Р°СЂ
         if (!string.IsNullOrWhiteSpace(AvatarDataUrl))
         {
             customer.AvatarUrl = AvatarDataUrl;
@@ -194,7 +217,7 @@ public class ProfileModel : PageModel
 
         await _context.SaveChangesAsync();
 
-        // Обновляем аватар в cookie
+        // РћР±РЅРѕРІР»СЏРµРј Р°РІР°С‚Р°СЂ РІ cookie
         if (!string.IsNullOrEmpty(customer.AvatarUrl))
         {
             var cookieOptions = new CookieOptions
@@ -215,7 +238,7 @@ public class ProfileModel : PageModel
 
         await RefreshCustomerAuthentication(customer);
 
-        TempData["Success"] = "Профиль успешно обновлён!";
+        TempData["Success"] = "РџСЂРѕС„РёР»СЊ СѓСЃРїРµС€РЅРѕ РѕР±РЅРѕРІР»С‘РЅ!";
         return RedirectToPage();
     }
 

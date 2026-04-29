@@ -704,7 +704,12 @@
         }
 
         @@media (max-width: 992px) {
-            .data-table th:nth-child(4), .data-table td:nth-child(4) {
+            .data-table th:nth-child(4), .data-table td:nth-child(4) { /* Email */
+                display: none;
+            }
+
+            .data-table th:nth-child(9), .data-table td:nth-child(9), /* Потрачено */
+            .data-table th:nth-child(11), .data-table td:nth-child(11) /* Авто‑скидка */ {
                 display: none;
             }
         }
@@ -774,8 +779,12 @@
 
             .data-table th:nth-child(2), /* Аватар */
             .data-table td:nth-child(2),
-            .data-table th:nth-child(6), /* Дата регистрации */
-            .data-table td:nth-child(6) {
+            .data-table th:nth-child(6), /* Пароль */
+            .data-table td:nth-child(6),
+            .data-table th:nth-child(7), /* Дата рег. */
+            .data-table td:nth-child(7),
+            .data-table th:nth-child(10), /* Ручная скидка */
+            .data-table td:nth-child(10) {
                 display: none;
             }
         }
@@ -875,6 +884,7 @@
                                 <option value="Phone" selected="@(Model.SortField == "Phone")">@(Model.Language == "ru" ? "Телефон" : "Phone")</option>
                                 <option value="Email" selected="@(Model.SortField == "Email")">Email</option>
                                 <option value="Discount" selected="@(Model.SortField == "Discount")">@(Model.Language == "ru" ? "Скидка" : "Discount")</option>
+                                <option value="TotalCompletedOrders" selected="@(Model.SortField == "TotalCompletedOrders")">@(Model.Language == "ru" ? "Заказов" : "Orders")</option>
                                 <option value="RegistrationDate" selected="@(Model.SortField == "RegistrationDate")">@(Model.Language == "ru" ? "Дата регистрации" : "Registration date")</option>
                             </select>
 
@@ -904,17 +914,21 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th><i class="fas fa-user"></i> @(Model.Language == "ru" ? "ФИО / Название" : Model.Language == "en" ? "Full name" : "Аты-жөні / Атауы")</th>
-                                        <th style="width: 60px;"><i class="fas fa-image"></i></th>   <!-- Аватар -->
-                                        <th><i class="fas fa-phone"></i> @(Model.Language == "ru" ? "Телефон" : Model.Language == "en" ? "Phone" : "Телефон")</th>
+                                        <th><i class="fas fa-user"></i> @(Model.Language == "ru" ? "ФИО / Название" : "Full name")</th>
+                                        <th style="width: 60px;"><i class="fas fa-image"></i></th>
+                                        <th><i class="fas fa-phone"></i> @(Model.Language == "ru" ? "Телефон" : "Phone")</th>
                                         <th><i class="fas fa-envelope"></i> Email</th>
                                         @if (canViewPassword)
                                         {
-                                            <th><i class="fas fa-key"></i> @(Model.Language == "ru" ? "Пароль" : Model.Language == "en" ? "Password" : "Құпиясөз")</th>
+                                            <th><i class="fas fa-key"></i> @(Model.Language == "ru" ? "Пароль" : "Password")</th>
                                         }
-                                        <th><i class="fas fa-percent"></i> @(Model.Language == "ru" ? "Скидка" : Model.Language == "en" ? "Discount" : "Жеңілдік")</th>
-                                        <th><i class="fas fa-calendar"></i> @(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</th>
-                                        <th><i class="fas fa-cogs"></i> @(Model.Language == "ru" ? "Действия" : Model.Language == "en" ? "Actions" : "Әрекеттер")</th>
+                                        <th><i class="fas fa-calendar"></i> @(Model.Language == "ru" ? "Дата рег." : "Reg. date")</th>
+                                        <th><i class="fas fa-shopping-cart"></i> @(Model.Language == "ru" ? "Заказов" : "Orders")</th>
+                                        <th><i class="fas fa-ruble-sign"></i> @(Model.Language == "ru" ? "Потрачено" : "Spent")</th>
+                                        <th><i class="fas fa-percent"></i> @(Model.Language == "ru" ? "Ручная" : "Manual")</th>
+                                        <th><i class="fas fa-star"></i> @(Model.Language == "ru" ? "Авто" : "Auto")</th>
+                                        <th><i class="fas fa-tag"></i> @(Model.Language == "ru" ? "Итог" : "Total")</th>
+                                        <th><i class="fas fa-cogs"></i> @(Model.Language == "ru" ? "Действия" : "Actions")</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -926,8 +940,7 @@
                                                 <div class="avatar-small">
                                                     @if (!string.IsNullOrEmpty(customer.AvatarUrl))
                                                     {
-                                                        <img src="@customer.AvatarUrl" alt="@customer.FullName" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"
-                                                             onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                                                        <img src="@customer.AvatarUrl" alt="@customer.FullName" />
                                                     }
                                                     else
                                                     {
@@ -941,21 +954,19 @@
                                             {
                                                 <td>@customer.Password</td>
                                             }
-                                            <td>@customer.Discount%</td>
                                             <td>@customer.RegistrationDate.ToString("dd.MM.yyyy")</td>
+                                            <td>@customer.TotalCompletedOrders</td>
+                                            <td>@customer.TotalSpent.ToString("N0") ₽</td>
+                                            <td>@customer.Discount%</td>
+                                            <td>@customer.LoyaltyDiscount%</td>
+                                            <td>@customer.EffectiveDiscount%</td>
                                             <td>
                                                 <div class="action-buttons">
-                                                    <a asp-page="Details" asp-route-id="@customer.Id" class="btn-sm btn-info" title="@(Model.Language == "ru" ? "Просмотр" : Model.Language == "en" ? "View" : "Қарау")">
-                                                        <i class="fas fa-info-circle"></i>
-                                                    </a>
+                                                    <a asp-page="Details" asp-route-id="@customer.Id" class="btn-sm btn-info" title="@(Model.Language == "ru" ? "Просмотр" : "View")"><i class="fas fa-info-circle"></i></a>
                                                     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                                                     {
-                                                        <a asp-page="Edit" asp-route-id="@customer.Id" class="btn-sm btn-primary" title="@(Model.Language == "ru" ? "Редактировать" : Model.Language == "en" ? "Edit" : "Өңдеу")">
-                                                            <i class="fas fa-pencil-alt"></i>
-                                                        </a>
-                                                        <a asp-page="Delete" asp-route-id="@customer.Id" class="btn-sm btn-danger" title="@(Model.Language == "ru" ? "Удалить" : Model.Language == "en" ? "Delete" : "Жою")">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
+                                                        <a asp-page="Edit" asp-route-id="@customer.Id" class="btn-sm btn-primary" title="@(Model.Language == "ru" ? "Редактировать" : "Edit")"><i class="fas fa-pencil-alt"></i></a>
+                                                        <a asp-page="Delete" asp-route-id="@customer.Id" class="btn-sm btn-danger" title="@(Model.Language == "ru" ? "Удалить" : "Delete")"><i class="fas fa-trash"></i></a>
                                                     }
                                                 </div>
                                             </td>

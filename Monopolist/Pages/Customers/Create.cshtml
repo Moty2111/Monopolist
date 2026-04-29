@@ -208,13 +208,15 @@
                         transition: var(--transition);
                     }
 
-                    .sidebar-nav li a:hover, .sidebar-nav li a.active {
+                    .sidebar-nav li a:hover,
+                    .sidebar-nav li a.active {
                         background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
                         color: var(--primary);
                         transform: translateX(4px);
                     }
 
-                        .sidebar-nav li a:hover i, .sidebar-nav li a.active i {
+                        .sidebar-nav li a:hover i,
+                        .sidebar-nav li a.active i {
                             color: var(--primary);
                         }
 
@@ -548,6 +550,7 @@
             display: block;
         }
 
+        /* Стили аватара */
         .avatar-upload-area {
             display: flex;
             align-items: center;
@@ -717,6 +720,7 @@
                         <form method="post">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+                            <!-- Аватар -->
                             <div class="form-group">
                                 <label>@(Model.Language == "ru" ? "Аватар" : Model.Language == "en" ? "Avatar" : "Аватар")</label>
                                 <div class="avatar-upload-area">
@@ -809,6 +813,7 @@
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => { setTimeout(() => { alert.style.transition = 'opacity 0.5s'; alert.style.opacity = '0'; setTimeout(() => alert.style.display = 'none', 500); }, 5000); });
 
+            // Предпросмотр аватара
             const avatarFile = document.getElementById('AvatarFile');
             const avatarUrlInput = document.getElementById('AvatarUrlInput');
             const preview = document.getElementById('avatarPreview');

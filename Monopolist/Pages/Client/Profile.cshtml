@@ -33,6 +33,9 @@
             --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1);
             --radius: 16px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Переменные для прогресс-бара */
+            --progress-bg: #e2e8f0; /* светлый фон */
+            --progress-glow: none; /* без свечения */
         }
 
         body.dark {
@@ -46,6 +49,9 @@
             --shadow: 0 2px 4px -1px rgba(0,0,0,0.2);
             --shadow-md: 0 8px 20px rgba(0,0,0,0.3);
             --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.4);
+            /* Прогресс-бар в тёмной теме */
+            --progress-bg: rgba(255,255,255,0.2);
+            --progress-glow: 0 0 10px rgba(255,215,0,0.7);
         }
 
         * {
@@ -117,13 +123,17 @@
         }
 
         .header {
-            background: rgba(var(--surface-rgb), 0.95);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
             z-index: 100;
             border-bottom: 1px solid var(--border);
+        }
+
+        body.dark .header {
+            background: rgba(30,41,59,0.95);
         }
 
         .header-container {
@@ -171,7 +181,7 @@
             gap: 6px;
         }
 
-            .nav-link:hover, .nav-link.active {
+            .nav-link.active, .nav-link:hover {
                 color: var(--primary);
             }
 
@@ -373,6 +383,10 @@
                 transform: scale(1.1);
             }
 
+        .avatar-url-field {
+            margin-top: 16px;
+        }
+
         .profile-body {
             padding: 32px;
         }
@@ -427,15 +441,11 @@
                 transition: var(--transition);
             }
 
-                .form-group input:focus, .form-group .url-input:focus {
+                .form-group input:focus {
                     outline: none;
                     border-color: var(--primary);
                     box-shadow: 0 0 0 3px rgba(255,107,0,0.2);
                 }
-
-        .avatar-url-field {
-            margin-top: 16px;
-        }
 
         .btn-save {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -521,118 +531,175 @@
                 font-weight: 600;
             }
 
-        /* ---- ИГРОВОЙ БЛОК ЛОЯЛЬНОСТИ ---- */
+        /* ========== КАРТОЧКА ЛОЯЛЬНОСТИ ========== */
         .loyalty-card {
             background: var(--surface-hover);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px 24px;
+            border-radius: 24px;
+            padding: 28px;
             margin-bottom: 28px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s, border-color 0.3s;
         }
 
-        .loyalty-header {
+            .loyalty-card::before {
+                content: '';
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                width: 140px;
+                height: 140px;
+                background: radial-gradient(circle, rgba(255,107,0,0.1) 0%, transparent 70%);
+                border-radius: 50%;
+                z-index: 0;
+            }
+
+            .loyalty-card::after {
+                content: '';
+                position: absolute;
+                bottom: -30px;
+                left: -30px;
+                width: 120px;
+                height: 120px;
+                background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+                border-radius: 50%;
+                z-index: 0;
+            }
+
+        .loyalty-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
-        .loyalty-level {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .level-icon {
-            font-size: 32px;
-            width: 48px;
-            height: 48px;
+        .rank-icon {
+            font-size: 42px;
+            width: 78px;
+            height: 78px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #c0c0c0, #e0e0e0);
-            color: #555;
+            background: var(--surface);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+            transition: background 0.3s, color 0.3s;
         }
 
-        .level-bronze .level-icon {
+        .rank-bronze .rank-icon {
             background: linear-gradient(135deg, #cd7f32, #f5a623);
             color: white;
         }
 
-        .level-silver .level-icon {
-            background: linear-gradient(135deg, #a0a0a0, #d0d0d0);
+        .rank-silver .rank-icon {
+            background: linear-gradient(135deg, #b0b0b0, #d8d8d8);
+            color: #2d2d2d;
+        }
+
+        .rank-gold .rank-icon {
+            background: linear-gradient(135deg, #ffd700, #ffb300);
+            color: #3a2e00;
+        }
+
+        .rank-newbie .rank-icon {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
             color: white;
         }
 
-        .level-gold .level-icon {
-            background: linear-gradient(135deg, #ffd700, #ffb300);
-            color: #4d3e00;
+        .rank-info {
+            margin-left: 16px;
+            flex: 1;
+            min-width: 150px;
+            z-index: 1;
         }
 
-        .level-newbie .level-icon {
-            background: linear-gradient(135deg, #aaa, #ccc);
-            color: #555;
-        }
-
-        .level-name {
+        .rank-title {
+            font-size: 24px;
             font-weight: 700;
-            font-size: 20px;
             color: var(--text-primary);
+            line-height: 1.2;
         }
 
-        .level-discount {
+        .rank-stats {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .discount-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 700;
             font-size: 18px;
-            font-weight: 800;
-            color: var(--primary);
-            background: rgba(255,107,0,0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
+            box-shadow: 0 6px 15px rgba(255,107,0,0.3);
+            white-space: nowrap;
+            z-index: 1;
         }
 
+            .discount-badge i {
+                margin-right: 6px;
+            }
+
+        .progress-section {
+            margin-top: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Полоска прогресса (улучшенная) */
         .progress-bar {
-            height: 18px;
-            background: var(--border);
-            border-radius: 10px;
+            height: 12px;
+            background: var(--progress-bg);
+            border-radius: 6px;
             overflow: hidden;
-            margin: 12px 0 6px;
+            margin: 14px 0 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .progress-fill {
             height: 100%;
-            border-radius: 10px;
-            background: linear-gradient(90deg, var(--primary-light), var(--primary));
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--primary-light), var(--accent));
+            box-shadow: var(--progress-glow);
             width: 0%;
-            transition: width 0.5s ease;
+            transition: width 0.6s ease;
         }
 
-        .progress-stats {
+        .progress-labels {
             display: flex;
             justify-content: space-between;
             font-size: 13px;
-            color: var(--text-muted);
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
-        .next-level-info {
-            margin-top: 12px;
-            font-size: 14px;
+        .next-level-hint {
+            margin-top: 16px;
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 20px;
+            font-size: 14px;
             color: var(--text-secondary);
+            align-items: center;
         }
 
-            .next-level-info i {
-                margin-right: 4px;
+            .next-level-hint i {
                 color: var(--primary);
+                margin-right: 6px;
             }
 
-        @@media (max-width: 768px) {
-            .loyalty-header {
-                flex-wrap: wrap;
-                gap: 10px;
-            }
+        .max-level-message {
+            font-weight: 600;
+            color: var(--primary);
         }
 
         .footer {
@@ -659,21 +726,6 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
-            }
-        }
-
-        @@media (max-width: 1024px) {
-            .header-container {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .nav-links {
-                order: 3;
-                width: 100%;
-                justify-content: center;
-                margin-top: 12px;
-                gap: 20px;
             }
         }
 
@@ -730,6 +782,30 @@
                 flex-direction: column;
                 gap: 12px;
             }
+
+            .loyalty-card {
+                padding: 20px;
+            }
+
+            .rank-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+
+            .rank-title {
+                font-size: 20px;
+            }
+
+            .discount-badge {
+                font-size: 16px;
+                padding: 8px 16px;
+            }
+
+            .next-level-hint {
+                flex-direction: column;
+                gap: 8px;
+            }
         }
 
         @@media (max-width: 480px) {
@@ -745,6 +821,10 @@
             .nav-link i {
                 display: none;
             }
+
+            .discount-badge {
+                font-size: 15px;
+            }
         }
     </style>
 </head>
@@ -756,10 +836,7 @@
 
     <header class="header">
         <div class="header-container">
-            <a href="/Client/Index" class="logo">
-                <i class="fas fa-helmet-safety"></i>
-                <span>Моноплист</span>
-            </a>
+            <a href="/Client/Index" class="logo"><i class="fas fa-helmet-safety"></i><span>Моноплист</span></a>
             <div class="nav-links">
                 <a href="/Client/Index" class="nav-link"><i class="fas fa-home"></i> Главная</a>
                 <a href="/Client/Orders" class="nav-link"><i class="fas fa-truck"></i> Заказы</a>
@@ -769,16 +846,12 @@
             </div>
             <div class="user-actions">
                 <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-                <a href="/Client/Cart" class="cart-icon" id="cartIcon">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cartCount">0</span>
-                </a>
+                <a href="/Client/Cart" class="cart-icon" id="cartIcon"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a>
                 <div class="customer-badge">
                     <a href="/Client/Profile" class="customer-avatar-link">
                         <div class="customer-avatar">
                             @{
-                                string avatarSrc = Model.AvatarUrl;
-                                bool isDataUrl = !string.IsNullOrEmpty(avatarSrc) && avatarSrc.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
+                                string avatarSrc = Model.AvatarUrl; bool isDataUrl = !string.IsNullOrEmpty(avatarSrc) && avatarSrc.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
                             }
                             @if (!string.IsNullOrEmpty(Model.AvatarUrl))
                             {
@@ -786,6 +859,7 @@
                             }
                             else
                             {
+
                                 <i class="fas fa-user-circle"></i>
                             }
                         </div>
@@ -793,12 +867,11 @@
                     <span class="customer-name">@Model.CustomerName</span>
                     @if (!Model.IsGuest)
                     {
-                        <form method="post" asp-page="/Account/CustomerLogout">
-                            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
-                        </form>
+                        <form method="post" asp-page="/Account/CustomerLogout"><button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button></form>
                     }
                     else
                     {
+
                         <a href="/Account/Login" class="logout-btn" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i></a>
                     }
                 </div>
@@ -809,13 +882,7 @@
     <main class="main">
         @if (Model.IsGuest)
         {
-            <div class="guest-message-box">
-                <i class="fas fa-user-circle"></i>
-                <h2>Личный кабинет доступен только авторизованным пользователям</h2>
-                <p>Войдите или зарегистрируйтесь, чтобы управлять профилем.</p>
-                <a href="/Account/Login" class="btn-primary">Войти</a>
-                <a href="/Account/CustomerRegister" class="btn-primary" style="margin-left: 12px;">Зарегистрироваться</a>
-            </div>
+            <div class="guest-message-box"><i class="fas fa-user-circle"></i><h2>Личный кабинет доступен только авторизованным пользователям</h2><p>Войдите или зарегистрируйтесь, чтобы управлять профилем.</p><a href="/Account/Login" class="btn-primary">Войти</a><a href="/Account/CustomerRegister" class="btn-primary" style="margin-left: 12px;">Зарегистрироваться</a></div>
         }
         else
         {
@@ -825,10 +892,7 @@
             }
 
             <div class="profile-card">
-                <div class="profile-header">
-                    <h1>Мой профиль</h1>
-                    <p>Управление личными данными и аватаром</p>
-                </div>
+                <div class="profile-header"><h1>Мой профиль</h1><p>Управление личными данными и аватаром</p></div>
 
                 <form method="post" id="profileForm">
                     @Html.AntiForgeryToken()
@@ -838,32 +902,28 @@
                         <div class="avatar-preview" id="avatarPreview">
                             @if (!string.IsNullOrEmpty(Model.AvatarUrl))
                             {
-                                bool isDataUrl = Model.AvatarUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
-                                <img src="@(isDataUrl? Model.AvatarUrl: Model.AvatarUrl + "?t=" + DateTime.Now.Ticks)" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user\'></i>';" />
+                                bool isDataUrlAv = Model.AvatarUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
+                                <img src="@(isDataUrlAv? Model.AvatarUrl: Model.AvatarUrl + "?t=" + DateTime.Now.Ticks)" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user\'></i>';" />
                             }
                             else
                             {
+
                                 <i class="fas fa-user"></i>
                             }
                         </div>
-                        <label class="avatar-upload-btn" for="avatarFile" title="Загрузить аватар">
-                            <i class="fas fa-camera"></i>
-                        </label>
+                        <label class="avatar-upload-btn" for="avatarFile" title="Загрузить аватар"><i class="fas fa-camera"></i></label>
                         <input type="file" id="avatarFile" accept="image/*" style="display: none;" />
                     </div>
 
                     <div class="avatar-url-field" style="max-width: 400px; margin: 0 auto 20px auto;">
-                        <div class="form-group">
-                            <label for="AvatarUrlInput">URL аватара</label>
-                            <input type="text" id="AvatarUrlInput" name="AvatarUrl" class="url-input" placeholder="https://example.com/avatar.jpg" value="@Model.AvatarUrl" />
-                        </div>
+                        <div class="form-group"><label for="AvatarUrlInput">URL аватара</label><input type="text" id="AvatarUrlInput" name="AvatarUrl" class="url-input" placeholder="https://example.com/avatar.jpg" value="@Model.AvatarUrl" /></div>
                     </div>
 
-                    <!-- ИГРОВОЙ БЛОК ЛОЯЛЬНОСТИ -->
+                    <!-- 🌟 КАРТОЧКА ЛОЯЛЬНОСТИ -->
                     <div class="loyalty-card @GetLevelClass(Model.LoyaltyLevelName)">
-                        <div class="loyalty-header">
-                            <div class="loyalty-level">
-                                <div class="level-icon">
+                        <div class="loyalty-top">
+                            <div style="display: flex; align-items: center;">
+                                <div class="rank-icon">
                                     @switch (Model.LoyaltyLevelName)
                                     {
                                         case "Бронза":
@@ -879,82 +939,52 @@
                                             break;
                                         default:
 
-                                            <i class="fas fa-user"></i>
+                                            <i class="fas fa-seedling"></i>
                                             break;
                                     }
                                 </div>
-                                <div>
-                                    <div class="level-name">@Model.LoyaltyLevelName</div>
-                                    <div style="font-size:13px; color: var(--text-muted);">Завершено заказов: @Model.TotalCompletedOrders | Потрачено: @Model.TotalSpent.ToString("N0") ₽</div>
+                                <div class="rank-info">
+                                    <div class="rank-title">@Model.LoyaltyLevelName</div>
+                                    <div class="rank-stats">Заказов: @Model.TotalCompletedOrders | Потрачено: @Model.TotalSpent.ToString("N0") ₽</div>
                                 </div>
                             </div>
-                            <div class="level-discount">
-                                <i class="fas fa-tag"></i> Скидка @Model.CustomerDiscount%
-                            </div>
+                            <div class="discount-badge"><i class="fas fa-tag"></i> Скидка @Model.CustomerDiscount%</div>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: @Model.LoyaltyPercent%;"></div>
+
+                        <div class="progress-section">
+                            <div class="progress-bar"><div class="progress-fill" style="width: @Model.LoyaltyPercent%;"></div></div>
+                            <div class="progress-labels"><span>@Model.LoyaltyLevelName</span><span>@Model.NextLevelName</span></div>
+                            @if (!Model.IsMaxLevel)
+                            {
+                                <div class="next-level-hint">
+                                    <span><i class="fas fa-shopping-cart"></i> До @Model.NextLevelName: ещё @Model.OrdersToNextLevel заказ(ов)</span>
+                                    <span><i class="fas fa-ruble-sign"></i> или @Model.SumToNextLevel.ToString("N0") ₽</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="next-level-hint max-level-message"><i class="fas fa-star"></i> Максимальный уровень достигнут!</div>
+                            }
                         </div>
-                        <div class="progress-stats">
-                            <span>@Model.LoyaltyLevelName</span>
-                            <span>@Model.NextLevelName</span>
-                        </div>
-                        @if (!Model.IsMaxLevel)
-                        {
-                            <div class="next-level-info">
-                                <span><i class="fas fa-shopping-cart"></i> До @Model.NextLevelName: ещё @Model.OrdersToNextLevel заказ(ов)</span>
-                                <span><i class="fas fa-ruble-sign"></i> или @Model.SumToNextLevel.ToString("N0") ₽</span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="next-level-info" style="font-weight: 600; color: var(--primary);">
-                                <i class="fas fa-star"></i> Максимальный уровень достигнут!
-                            </div>
-                        }
                     </div>
 
                     <div class="profile-body">
                         <div class="form-section">
                             <h3><i class="fas fa-user-circle"></i> Основная информация</h3>
                             <div class="form-row">
-                                <div class="form-group">
-                                    <label asp-for="Input.FullName">ФИО *</label>
-                                    <input asp-for="Input.FullName" />
-                                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="Input.Email">Email</label>
-                                    <input asp-for="Input.Email" type="email" />
-                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
-                                </div>
+                                <div class="form-group"><label asp-for="Input.FullName">ФИО *</label><input asp-for="Input.FullName" /><span asp-validation-for="Input.FullName" class="text-danger"></span></div>
+                                <div class="form-group"><label asp-for="Input.Email">Email</label><input asp-for="Input.Email" type="email" /><span asp-validation-for="Input.Email" class="text-danger"></span></div>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label asp-for="Input.Phone">Телефон</label>
-                                    <input asp-for="Input.Phone" />
-                                    <span asp-validation-for="Input.Phone" class="text-danger"></span>
-                                </div>
-                            </div>
+                            <div class="form-row"><div class="form-group"><label asp-for="Input.Phone">Телефон</label><input asp-for="Input.Phone" /><span asp-validation-for="Input.Phone" class="text-danger"></span></div></div>
                         </div>
-
                         <div class="form-section">
                             <h3><i class="fas fa-lock"></i> Смена пароля</h3>
                             <p style="margin-bottom: 16px; font-size: 14px; color: var(--text-muted);">Оставьте поля пустыми, если не хотите менять пароль</p>
                             <div class="form-row">
-                                <div class="form-group">
-                                    <label asp-for="Input.NewPassword">Новый пароль</label>
-                                    <input asp-for="Input.NewPassword" type="password" />
-                                    <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="Input.ConfirmPassword">Подтверждение пароля</label>
-                                    <input asp-for="Input.ConfirmPassword" type="password" />
-                                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-                                </div>
+                                <div class="form-group"><label asp-for="Input.NewPassword">Новый пароль</label><input asp-for="Input.NewPassword" type="password" /><span asp-validation-for="Input.NewPassword" class="text-danger"></span></div>
+                                <div class="form-group"><label asp-for="Input.ConfirmPassword">Подтверждение пароля</label><input asp-for="Input.ConfirmPassword" type="password" /><span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span></div>
                             </div>
                         </div>
-
                         <div style="display: flex; gap: 16px; justify-content: flex-end; margin-top: 24px;">
                             <a href="/Client/Index" class="btn-secondary"><i class="fas fa-arrow-left"></i> На главную</a>
                             <button type="submit" class="btn-save"><i class="fas fa-save"></i> Сохранить изменения</button>
@@ -965,31 +995,17 @@
         }
     </main>
 
-    <footer class="footer">
-        <p>© 2026 Моноплист — строительные материалы с доставкой</p>
-        <p><a href="/Client/About">О компании</a> | <a href="/Client/Contacts">Контакты</a> | <a href="/Client/Delivery">Доставка и оплата</a></p>
-    </footer>
+    <footer class="footer"><p>© 2026 Моноплист — строительные материалы с доставкой</p><p><a href="/Client/About">О компании</a> | <a href="/Client/Contacts">Контакты</a> | <a href="/Client/Delivery">Доставка и оплата</a></p></footer>
 
     <script>
         const themeToggle = document.getElementById('themeToggle');
         const icon = themeToggle.querySelector('i');
         const savedTheme = localStorage.getItem('clientTheme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark');
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        }
+        if (savedTheme === 'dark') { document.body.classList.add('dark'); icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark');
-            if (document.body.classList.contains('dark')) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-                localStorage.setItem('clientTheme', 'dark');
-            } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-                localStorage.setItem('clientTheme', 'light');
-            }
+            if (document.body.classList.contains('dark')) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); localStorage.setItem('clientTheme', 'dark'); }
+            else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); localStorage.setItem('clientTheme', 'light'); }
         });
 
         const avatarFile = document.getElementById('avatarFile');
@@ -997,62 +1013,12 @@
         const avatarUrlInput = document.getElementById('AvatarUrlInput');
         const avatarDataUrl = document.getElementById('AvatarDataUrl');
 
-        function updatePreview(src) {
-            if (src) {
-                avatarPreview.innerHTML = `<img src="${src}" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user\'></i>';" />`;
-            } else {
-                avatarPreview.innerHTML = '<i class="fas fa-user"></i>';
-            }
-        }
-
-        if (avatarFile) {
-            avatarFile.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const dataUrl = e.target.result;
-                        updatePreview(dataUrl);
-                        avatarUrlInput.value = '';
-                        avatarDataUrl.value = dataUrl;
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    avatarDataUrl.value = '';
-                }
-            });
-        }
-
-        if (avatarUrlInput) {
-            avatarUrlInput.addEventListener('input', function() {
-                const url = this.value.trim();
-                if (url) {
-                    updatePreview(url);
-                    avatarFile.value = '';
-                    avatarDataUrl.value = '';
-                } else {
-                    updatePreview('@Model.AvatarUrl');
-                    avatarDataUrl.value = '';
-                }
-            });
-        }
+        function updatePreview(src) { if (src) { avatarPreview.innerHTML = `<img src="${src}" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user\'></i>';" />`; } else { avatarPreview.innerHTML = '<i class="fas fa-user"></i>'; } }
+        if (avatarFile) { avatarFile.addEventListener('change', function(e) { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = function(e) { const dataUrl = e.target.result; updatePreview(dataUrl); avatarUrlInput.value = ''; avatarDataUrl.value = dataUrl; }; reader.readAsDataURL(file); } else { avatarDataUrl.value = ''; } }); }
+        if (avatarUrlInput) { avatarUrlInput.addEventListener('input', function() { const url = this.value.trim(); if (url) { updatePreview(url); avatarFile.value = ''; avatarDataUrl.value = ''; } else { updatePreview('@Model.AvatarUrl'); avatarDataUrl.value = ''; } }); }
 
         async function updateCartCount() {
-            try {
-                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-                const response = await fetch('/Client/Cart?handler=Count', {
-                    method: 'GET',
-                    headers: { 'RequestVerificationToken': token }
-                });
-                const data = await response.json();
-                const countSpan = document.getElementById('cartCount');
-                if (data.count > 0) {
-                    countSpan.style.display = 'inline-block';
-                    countSpan.innerText = data.count;
-                } else {
-                    countSpan.style.display = 'none';
-                }
-            } catch (error) { console.error('Ошибка получения количества товаров', error); }
+            try { const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value; const response = await fetch('/Client/Cart?handler=Count', { method: 'GET', headers: { 'RequestVerificationToken': token } }); const data = await response.json(); const countSpan = document.getElementById('cartCount'); if (data.count > 0) { countSpan.style.display = 'inline-block'; countSpan.innerText = data.count; } else { countSpan.style.display = 'none'; } } catch (error) { console.error('Ошибка получения количества товаров', error); }
         }
         updateCartCount();
     </script>
@@ -1062,9 +1028,9 @@
 @functions {
     string GetLevelClass(string levelName) => levelName switch
     {
-        "Бронза" => "level-bronze",
-        "Серебро" => "level-silver",
-        "Золото" => "level-gold",
-        _ => "level-newbie"
+        "Бронза" => "rank-bronze",
+        "Серебро" => "rank-silver",
+        "Золото" => "rank-gold",
+        _ => "rank-newbie"
     };
 }

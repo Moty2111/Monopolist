@@ -119,10 +119,17 @@ public class EditModel : PageModel
                 customerToUpdate.AvatarUrl = Customer.AvatarUrl;
             }
 
+            // Основные данные
             customerToUpdate.FullName = Customer.FullName;
             customerToUpdate.Phone = Customer.Phone;
             customerToUpdate.Email = Customer.Email;
             customerToUpdate.Discount = Customer.Discount;
+
+            // Поля лояльности (теперь редактируются администратором)
+            customerToUpdate.TotalCompletedOrders = Customer.TotalCompletedOrders;
+            customerToUpdate.TotalSpent = Customer.TotalSpent;
+            customerToUpdate.LoyaltyDiscount = Customer.LoyaltyDiscount;
+
             customerToUpdate.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

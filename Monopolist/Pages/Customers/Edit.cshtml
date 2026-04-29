@@ -210,15 +210,13 @@
                         transition: var(--transition);
                     }
 
-                    .sidebar-nav li a:hover,
-                    .sidebar-nav li a.active {
+                    .sidebar-nav li a:hover, .sidebar-nav li a.active {
                         background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
                         color: var(--primary);
                         transform: translateX(4px);
                     }
 
-                        .sidebar-nav li a:hover i,
-                        .sidebar-nav li a.active i {
+                        .sidebar-nav li a:hover i, .sidebar-nav li a.active i {
                             color: var(--primary);
                         }
 
@@ -404,32 +402,6 @@
                 border-color: var(--primary);
             }
 
-        .btn-logout {
-            background: none;
-            border: 2px solid var(--accent);
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-            .btn-logout:hover {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                border-color: transparent;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(255,107,0,0.3);
-            }
-
-                .btn-logout:hover i {
-                    color: white;
-                }
-
         .content {
             padding: 24px;
             flex: 1;
@@ -596,7 +568,6 @@
             display: block;
         }
 
-        /* Стили аватара */
         .avatar-upload-area {
             display: flex;
             align-items: center;
@@ -687,16 +658,6 @@
             .btn-primary, .btn-secondary {
                 width: 100%;
                 justify-content: center;
-            }
-        }
-
-        @@media (max-width: 480px) {
-            .btn-logout span {
-                display: none;
-            }
-
-            .btn-logout {
-                padding: 8px 12px;
             }
         }
     </style>
@@ -833,6 +794,30 @@
                                 <div class="input-hint" style="font-size:0.85rem; color: var(--text-muted); margin-top:4px;">
                                     @(Model.Language == "ru" ? "Целое число от 0 до 100" : Model.Language == "en" ? "Integer from 0 to 100" : "0-ден 100-ге дейінгі бүтін сан")
                                 </div>
+                            </div>
+
+                            <!-- БЛОК СТАТИСТИКИ ЛОЯЛЬНОСТИ -->
+                            <!-- БЛОК СТАТИСТИКИ ЛОЯЛЬНОСТИ (теперь редактируемый) -->
+                            <hr style="margin: 20px 0; border-color: var(--border);" />
+                            <h3 style="color: var(--primary); margin-bottom: 15px;">@(Model.Language == "ru" ? "Статистика лояльности" : Model.Language == "en" ? "Loyalty statistics" : "Адалдық статистикасы")</h3>
+                            <div class="form-group">
+                                <label asp-for="Customer.TotalCompletedOrders">@(Model.Language == "ru" ? "Завершено заказов" : Model.Language == "en" ? "Completed orders" : "Аяқталған тапсырыстар")</label>
+                                <input asp-for="Customer.TotalCompletedOrders" class="form-control" type="number" min="0" />
+                                <span asp-validation-for="Customer.TotalCompletedOrders" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Customer.TotalSpent">@(Model.Language == "ru" ? "Общая сумма покупок" : Model.Language == "en" ? "Total spent" : "Жалпы сома")</label>
+                                <input asp-for="Customer.TotalSpent" class="form-control" type="number" step="0.01" min="0" />
+                                <span asp-validation-for="Customer.TotalSpent" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Customer.LoyaltyDiscount">@(Model.Language == "ru" ? "Авто‑скидка" : Model.Language == "en" ? "Loyalty discount" : "Адалдық жеңілдігі")</label>
+                                <input asp-for="Customer.LoyaltyDiscount" class="form-control" type="number" step="0.01" min="0" max="100" />
+                                <span asp-validation-for="Customer.LoyaltyDiscount" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label>@(Model.Language == "ru" ? "Итоговая скидка" : Model.Language == "en" ? "Effective discount" : "Тиімді жеңілдік")</label>
+                                <input type="text" class="form-control" value="@Model.Customer.EffectiveDiscount%" readonly />
                             </div>
 
                             <hr style="margin: 20px 0; border-color: var(--border);" />

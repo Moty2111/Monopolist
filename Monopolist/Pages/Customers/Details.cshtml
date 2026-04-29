@@ -777,10 +777,20 @@
                                 <dt>@(Model.Language == "ru" ? "Пароль" : Model.Language == "en" ? "Password" : "Құпиясөз")</dt>
                                 <dd>@Model.Customer.Password</dd>
                             }
-                            <dt>@(Model.Language == "ru" ? "Скидка" : Model.Language == "en" ? "Discount" : "Жеңілдік")</dt>
+                            <dt>@(Model.Language == "ru" ? "Скидка (ручная)" : Model.Language == "en" ? "Manual discount" : "Қолмен жеңілдік")</dt>
                             <dd>@Model.Customer.Discount%</dd>
                             <dt>@(Model.Language == "ru" ? "Дата регистрации" : Model.Language == "en" ? "Registration date" : "Тіркеу күні")</dt>
                             <dd>@Model.Customer.RegistrationDate.ToString("dd.MM.yyyy")</dd>
+
+                            <!-- Новые поля лояльности -->
+                            <dt>@(Model.Language == "ru" ? "Завершено заказов" : Model.Language == "en" ? "Completed orders" : "Аяқталған тапсырыстар")</dt>
+                            <dd>@Model.Customer.TotalCompletedOrders</dd>
+                            <dt>@(Model.Language == "ru" ? "Общая сумма покупок" : Model.Language == "en" ? "Total spent" : "Жалпы сома")</dt>
+                            <dd>@Model.Customer.TotalSpent.ToString("N0") ₽</dd>
+                            <dt>@(Model.Language == "ru" ? "Авто‑скидка" : Model.Language == "en" ? "Loyalty discount" : "Адалдық жеңілдігі")</dt>
+                            <dd>@Model.Customer.LoyaltyDiscount%</dd>
+                            <dt>@(Model.Language == "ru" ? "Итоговая скидка" : Model.Language == "en" ? "Effective discount" : "Тиімді жеңілдік")</dt>
+                            <dd>@Model.Customer.EffectiveDiscount%</dd>
                         </dl>
 
                         @if (Model.Customer.Orders != null && Model.Customer.Orders.Any())
