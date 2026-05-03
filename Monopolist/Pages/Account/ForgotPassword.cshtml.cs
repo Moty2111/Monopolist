@@ -27,6 +27,16 @@ public class ForgotPasswordModel : PageModel
     [TempData]
     public string? GeneratedToken { get; set; }
 
+    // Поля для капчи
+    [TempData]
+    public string? CaptchaQuestion { get; set; }
+
+    [TempData]
+    public int? CaptchaAnswer { get; set; }
+
+    [BindProperty]
+    public string? CaptchaInput { get; set; }
+
     public class InputModel
     {
         [Required(ErrorMessage = "Логин обязателен.")]
@@ -36,12 +46,26 @@ public class ForgotPasswordModel : PageModel
 
     public void OnGet()
     {
+        // Генерируем капчу при загрузке страницы
+        GenerateCaptcha();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid)
+        // Проверяем капчу
+        if (CaptchaAnswer == null || string.IsNullOrWhiteSpace(CaptchaInput) ||
+            !int.TryParse(CaptchaInput, out int userAnswer) || userAnswer != CaptchaAnswer.Value)
+        {
+            ModelState.AddModelError("CaptchaInput", "Неверный ответ на контрольный вопрос.");
+            GenerateCaptcha(); // перегенерируем вопрос
             return Page();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            GenerateCaptcha();
+            return Page();
+        }
 
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Username == Input.Username);
@@ -49,23 +73,35 @@ public class ForgotPasswordModel : PageModel
         if (user == null)
         {
             _logger.LogWarning("Попытка восстановления пароля для несуществующего логина: {Username}", Input.Username);
-            // Не показываем, что пользователь не найден (безопасность)
-            SuccessMessage = "Если указанный логин существует, администратор получит уведомление. Свяжитесь с администратором для получения одноразового ключа.";
+            // Сообщение об успехе, чтобы не раскрывать существование пользователя
+            SuccessMessage = "Если указанный логин существует, на экране отобразится одноразовый ключ. Свяжитесь с администратором для сброса пароля.";
+            GenerateCaptcha();
             return Page();
         }
 
-        // Генерация одноразового токена (8 символов: цифры и заглавные буквы)
+        // Генерация одноразового токена (8 символов)
         var token = GenerateRandomToken(8);
         user.ResetToken = token;
-        user.ResetTokenExpiry = DateTime.UtcNow.AddHours(24); // токен действует 24 часа
+        user.ResetTokenExpiry = DateTime.UtcNow.AddHours(24);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Сгенерирован ключ восстановления для пользователя {Username}: {Token}", user.Username, token);
+        _logger.LogInformation("Сгенерирован ключ восстановления для {Username}: {Token}", user.Username, token);
 
         GeneratedToken = token;
-        SuccessMessage = $"Сгенерирован одноразовый ключ доступа: {token}\nПередайте его администратору. Администратор сможет сбросить ваш пароль.\nКлюч действителен 24 часа.";
+        SuccessMessage = $"Ваш одноразовый ключ: {token}. Используйте его для сброса пароля у администратора. Ключ действителен 24 часа.";
 
+        // Перегенерируем капчу для новой формы
+        GenerateCaptcha();
         return Page();
+    }
+
+    private void GenerateCaptcha()
+    {
+        var rnd = new Random();
+        int a = rnd.Next(1, 10);
+        int b = rnd.Next(1, 10);
+        CaptchaQuestion = $"Сколько будет {a} + {b}?";
+        CaptchaAnswer = a + b;
     }
 
     private string GenerateRandomToken(int length)

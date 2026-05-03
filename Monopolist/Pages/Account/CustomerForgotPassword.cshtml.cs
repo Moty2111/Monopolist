@@ -24,6 +24,15 @@ public class CustomerForgotPasswordModel : PageModel
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
+    [TempData]
+    public string? CaptchaQuestion { get; set; }
+
+    [TempData]
+    public int? CaptchaAnswer { get; set; }
+
+    [BindProperty]
+    public string? CaptchaInput { get; set; }
+
     public class InputModel
     {
         [Required(ErrorMessage = "Введите email")]
@@ -31,19 +40,35 @@ public class CustomerForgotPasswordModel : PageModel
         public string Email { get; set; } = string.Empty;
     }
 
+    public void OnGet()
+    {
+        GenerateCaptcha();
+    }
+
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid)
+        if (CaptchaAnswer == null || string.IsNullOrWhiteSpace(CaptchaInput) ||
+            !int.TryParse(CaptchaInput, out int userAnswer) || userAnswer != CaptchaAnswer.Value)
+        {
+            ModelState.AddModelError("CaptchaInput", "Неверный ответ на контрольный вопрос.");
+            GenerateCaptcha();
             return Page();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            GenerateCaptcha();
+            return Page();
+        }
 
         var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == Input.Email);
         if (customer == null)
         {
             ModelState.AddModelError(string.Empty, "Пользователь с таким email не найден.");
+            GenerateCaptcha();
             return Page();
         }
 
-        // Генерация токена
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var resetToken = new CustomerPasswordResetToken
         {
@@ -56,19 +81,22 @@ public class CustomerForgotPasswordModel : PageModel
         _context.CustomerPasswordResetTokens.Add(resetToken);
         await _context.SaveChangesAsync();
 
-        // Ссылка для сброса
         var resetLink = Url.Page("/Account/CustomerResetPassword", null, new { token, email = customer.Email }, Request.Scheme);
-
-        // Для демонстрации выводим ссылку прямо на странице
         TempData["ResetLink"] = resetLink;
         _logger.LogInformation("Ссылка для сброса пароля для {Email}: {ResetLink}", customer.Email, resetLink);
 
-        // Если бы был реальный email-сервис, отправляли бы письмо
-        // await _emailSender.SendEmailAsync(customer.Email, "Сброс пароля", $"Ссылка: {resetLink}");
-
-        // Очищаем модель состояния, чтобы не показывать старые ошибки
         ModelState.Clear();
-        Input.Email = string.Empty; // опционально очищаем поле
+        Input.Email = string.Empty;
+        GenerateCaptcha();
         return Page();
+    }
+
+    private void GenerateCaptcha()
+    {
+        var rnd = new Random();
+        int a = rnd.Next(1, 10);
+        int b = rnd.Next(1, 10);
+        CaptchaQuestion = $"Сколько будет {a} + {b}?";
+        CaptchaAnswer = a + b;
     }
 }

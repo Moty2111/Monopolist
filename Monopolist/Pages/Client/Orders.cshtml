@@ -989,10 +989,15 @@
                                 <div class="payment-method">
                                     <i class="fas fa-credit-card"></i> @(order.PaymentMethod switch { "Card" => "Оплата картой", "Cash" => "Наличными", "Credit" => "Кредит/Рассрочка", _ => order.PaymentMethod ?? "Способ не указан" })
                                 </div>
-                                <button class="reorder-btn" data-order-id="@order.Id">
-                                    <i class="fas fa-redo-alt"></i> Повторить заказ
-                                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-pulse"></i></span>
-                                </button>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="reorder-btn" onclick="window.open('/Client/Receipt?orderId=@order.Id', '_blank')">
+                                        <i class="fas fa-print"></i> Чек
+                                    </button>
+                                    <button class="reorder-btn" data-order-id="@order.Id">
+                                        <i class="fas fa-redo-alt"></i> Повторить заказ
+                                        <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-pulse"></i></span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     }
