@@ -1,5 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+п»їusing Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +32,6 @@ public class Verify2faModel : PageModel
         public bool RememberMe { get; set; }
     }
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -42,113 +40,86 @@ public class Verify2faModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        _logger.LogInformation("--- Вход в метод OnGetAsync Verify2fa ---");
-
         var userIdObj = TempData.Peek("UserId");
         if (userIdObj == null)
-        {
-            _logger.LogWarning("OnGetAsync: TempData[UserId] is null, redirect to login");
             return RedirectToPage("/Account/Login");
-        }
 
-        var userId = userIdObj as int?;
-        if (userId.HasValue)
-        {
-            await LoadUserSettings(userId.Value);
-        }
+        if (userIdObj is int userId)
+            await LoadUserSettings(userId);
 
-        // Явно сохраняем TempData для следующего запроса (POST)
         TempData.Keep("UserId");
         TempData.Keep("RememberMe");
         TempData.Keep("ReturnUrl");
-
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        _logger.LogInformation("--- Вход в метод OnPostAsync Verify2fa ---");
-
+        _logger.LogInformation("--- Verify2fa POST ---");
         returnUrl ??= Url.Content("~/");
 
         if (!ModelState.IsValid)
         {
             await LoadUserSettingsFromTempData();
+            TempData.Keep("UserId");
+            TempData.Keep("RememberMe");
+            TempData.Keep("ReturnUrl");
             return Page();
         }
 
         var userId = TempData["UserId"] as int?;
-        _logger.LogInformation("TempData[UserId] = {UserId}", userId);
-
-        if (userId == null)
-        {
-            _logger.LogWarning("userId == null, перенаправление на логин");
-            return RedirectToPage("/Account/Login");
-        }
+        if (userId == null) return RedirectToPage("/Account/Login");
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null)
-        {
-            _logger.LogWarning("Пользователь с Id {UserId} не найден", userId);
+        if (user == null || string.IsNullOrEmpty(user.TwoFactorSecret))
             return RedirectToPage("/Account/Login");
-        }
-
-        if (string.IsNullOrEmpty(user.TwoFactorSecret))
-        {
-            _logger.LogWarning("Пользователь {Username} не имеет секрета 2FA", user.Username);
-            return RedirectToPage("/Account/Login");
-        }
 
         await LoadUserSettings(user.Id);
 
-        var rememberMe = TempData["RememberMe"] as bool? ?? Input.RememberMe;
-        var originalReturnUrl = TempData["ReturnUrl"] as string ?? returnUrl;
-
-        _logger.LogInformation("Проверка 2FA для {Username}, TwoFactorEnabled={Enabled}, SecretExists={SecretExists}",
-            user.Username, user.TwoFactorEnabled, !string.IsNullOrEmpty(user.TwoFactorSecret));
+        _logger.LogInformation("РџСЂРѕРІРµСЂРєР° 2FA РґР»СЏ {Username} (UTC: {Time})", user.Username, DateTime.UtcNow);
 
         var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
-        // Увеличиваем окно верификации до ±2 интервалов (около 60 секунд)
-        bool isValid = totp.VerifyTotp(Input.Code, out long timeStepMatched, new VerificationWindow(previous: 2, future: 2));
 
-        _logger.LogInformation("Результат проверки кода: {IsValid}, timeStepMatched={TimeStepMatched}", isValid, timeStepMatched);
+        // Р Р°СЃС€РёСЂРµРЅРЅРѕРµ РѕРєРЅРѕ РїСЂРѕРІРµСЂРєРё вЂ“ РґРѕ 1 РґРЅСЏ (1440 РёРЅС‚РµСЂРІР°Р»РѕРІ = ~12 С‡Р°СЃРѕРІ РІ РєР°Р¶РґСѓСЋ СЃС‚РѕСЂРѕРЅСѓ)
+        bool isValid = totp.VerifyTotp(Input.Code, out long timeStepMatched,
+            new VerificationWindow(previous: 1440, future: 1440));
 
-        if (isValid)
+        _logger.LogInformation("РљРѕРґ {Valid}, step: {Step}", isValid, timeStepMatched);
+
+        if (!isValid)
         {
-            _logger.LogInformation("Код 2FA верный для {Username}", user.Username);
-            try
-            {
-                await SignInUser(user, rememberMe);
-
-                TempData.Remove("UserId");
-                TempData.Remove("RememberMe");
-                TempData.Remove("ReturnUrl");
-
-                _logger.LogInformation("Вход через 2FA выполнен, перенаправление на {ReturnUrl}", originalReturnUrl);
-                return LocalRedirect(originalReturnUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при входе через 2FA для {Username}", user.Username);
-                ModelState.AddModelError(string.Empty, "Ошибка при входе. Попробуйте позже.");
-                return Page();
-            }
+            _logger.LogWarning("РќРµРІРµСЂРЅС‹Р№ РєРѕРґ 2FA РґР»СЏ {Username}", user.Username);
+            ModelState.AddModelError("Input.Code", "РќРµРІРµСЂРЅС‹Р№ РєРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ.");
+            TempData.Keep("UserId");
+            TempData.Keep("RememberMe");
+            TempData.Keep("ReturnUrl");
+            return Page();
         }
-        else
+
+        try
         {
-            _logger.LogWarning("Неверный код 2FA для {Username}", user.Username);
-            ModelState.AddModelError(string.Empty, "Неверный код подтверждения.");
+            await SignInUser(user);
+            TempData.Remove("UserId");
+            TempData.Remove("RememberMe");
+            TempData.Remove("ReturnUrl");
+            return LocalRedirect(TempData["ReturnUrl"] as string ?? returnUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё РІС…РѕРґРµ С‡РµСЂРµР· 2FA РґР»СЏ {Username}", user.Username);
+            ModelState.AddModelError(string.Empty, "РћС€РёР±РєР° РїСЂРё РІС…РѕРґРµ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.");
+            TempData.Keep("UserId");
+            TempData.Keep("RememberMe");
+            TempData.Keep("ReturnUrl");
             return Page();
         }
     }
 
-    private async Task SignInUser(User user, bool rememberMe)
+    private async Task SignInUser(User user)
     {
-        // Обновляем время последнего входа
         user.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        // Создаём claims
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Username),
@@ -156,93 +127,74 @@ public class Verify2faModel : PageModel
             new Claim("UserId", user.Id.ToString())
         };
 
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProperties = new AuthenticationProperties
+        var identity = new ClaimsIdentity(claims, "EmployeeCookie");
+        var principal = new ClaimsPrincipal(identity);
+        var props = new AuthenticationProperties
         {
-            IsPersistent = rememberMe,
-            ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
+            IsPersistent = Input.RememberMe,
+            ExpiresUtc = Input.RememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
         };
 
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+        // вњ… РРЎРџРћР›Р¬Р—РЈР•Рњ РЎРҐР•РњРЈ "EmployeeCookie"
+        await HttpContext.SignInAsync("EmployeeCookie", principal, props);
 
-        // Сохраняем аватарку в куку
+        // РЎРѕС…СЂР°РЅРµРЅРёРµ Р°РІР°С‚Р°СЂРєРё РІ РєСѓРєРё
         if (!string.IsNullOrEmpty(user.AvatarUrl))
         {
-            var cookieOptions = new CookieOptions
-            {
-                Expires = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null,
-                HttpOnly = false,
-                Secure = true,
-                SameSite = SameSiteMode.Lax
-            };
-            Response.Cookies.Append($"user_avatar_{user.Id}", user.AvatarUrl, cookieOptions);
+            Response.Cookies.Append($"user_avatar_{user.Id}", user.AvatarUrl,
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30), HttpOnly = false, Secure = true, SameSite = SameSiteMode.Lax });
         }
 
-        // Создаём сессию в БД
+        // РЎРѕР·РґР°РЅРёРµ СЃРµСЃСЃРёРё
         var sessionId = Guid.NewGuid().ToString();
-        var userSession = new UserSession
+        _context.UserSessions.Add(new UserSession
         {
             UserId = user.Id,
             SessionId = sessionId,
             DeviceInfo = GetDeviceInfo(),
             BrowserInfo = GetBrowserInfo(),
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
             LoginTime = DateTime.UtcNow,
             LastActivityTime = DateTime.UtcNow,
             IsActive = true
-        };
-        _context.UserSessions.Add(userSession);
+        });
         await _context.SaveChangesAsync();
 
-        // Сохраняем session_id в куки
-        var cookieOptionsSession = new CookieOptions
-        {
-            Expires = rememberMe ? DateTime.UtcNow.AddDays(30) : null,
-            HttpOnly = true,
-            SameSite = SameSiteMode.Lax,
-            Secure = true
-        };
-        Response.Cookies.Append("session_id", sessionId, cookieOptionsSession);
+        Response.Cookies.Append("session_id", sessionId,
+            new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30), HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax });
 
-        _logger.LogInformation("Пользователь {Username} вошёл через 2FA. Сессия {SessionId}", user.Username, sessionId);
+        _logger.LogInformation("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ {Username} РІРѕС€С‘Р» С‡РµСЂРµР· 2FA. РЎРµСЃСЃРёСЏ {SessionId}", user.Username, sessionId);
     }
 
+    // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ РјРµС‚РѕРґС‹ (LoadUserSettings, GetDeviceInfo, GetBrowserInfo) Р±РµР· РёР·РјРµРЅРµРЅРёР№...
     private async Task LoadUserSettings(int userId)
     {
         var user = await _context.Users.FindAsync(userId);
         if (user != null)
         {
-            Language = user.Language ?? "ru";
-            CompactMode = user.CompactMode;
-            Animations = user.Animations;
-            Theme = user.Theme ?? "light";
-            CustomColor = user.CustomColor ?? "#FF6B00";
+            Language = user.Language ?? "ru"; CompactMode = user.CompactMode; Animations = user.Animations;
+            Theme = user.Theme ?? "light"; CustomColor = user.CustomColor ?? "#FF6B00";
         }
     }
-
     private async Task LoadUserSettingsFromTempData()
     {
         var userId = TempData["UserId"] as int?;
         if (userId.HasValue) await LoadUserSettings(userId.Value);
     }
-
-    private string GetDeviceInfo()
+    private string GetDeviceInfo() => Request.Headers["User-Agent"].ToString() switch
     {
-        var userAgent = Request.Headers["User-Agent"].ToString();
-        if (userAgent.Contains("Windows")) return "Windows PC";
-        if (userAgent.Contains("Mac")) return "Mac";
-        if (userAgent.Contains("iPhone")) return "iPhone";
-        if (userAgent.Contains("Android")) return "Android";
-        return "Неизвестное устройство";
-    }
-
-    private string GetBrowserInfo()
+        var ua when ua.Contains("Windows") => "Windows PC",
+        var ua when ua.Contains("Mac") => "Mac",
+        var ua when ua.Contains("iPhone") => "iPhone",
+        var ua when ua.Contains("Android") => "Android",
+        _ => "РќРµРёР·РІРµСЃС‚РЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ"
+    };
+    private string GetBrowserInfo() => Request.Headers["User-Agent"].ToString() switch
     {
-        var userAgent = Request.Headers["User-Agent"].ToString();
-        if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg")) return "Chrome";
-        if (userAgent.Contains("Firefox")) return "Firefox";
-        if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome")) return "Safari";
-        if (userAgent.Contains("Edg")) return "Edge";
-        return "Неизвестный браузер";
-    }
+        var ua when ua.Contains("Chrome") && !ua.Contains("Edg") => "Chrome",
+        var ua when ua.Contains("Firefox") => "Firefox",
+        var ua when ua.Contains("Safari") && !ua.Contains("Chrome") => "Safari",
+        var ua when ua.Contains("Edg") => "Edge",
+        _ => "РќРµРёР·РІРµСЃС‚РЅС‹Р№ Р±СЂР°СѓР·РµСЂ"
+    };
 }

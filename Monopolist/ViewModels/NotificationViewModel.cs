@@ -1,5 +1,4 @@
-﻿// ViewModels/NotificationViewModel.cs
-namespace Monoplist.ViewModels;
+﻿namespace Monoplist.ViewModels;
 
 public class NotificationViewModel
 {

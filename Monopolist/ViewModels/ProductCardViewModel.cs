@@ -8,7 +8,7 @@ public class ProductCardViewModel
     public string CategoryName { get; set; } = string.Empty;
     public string Unit { get; set; } = "шт";
     public decimal SalePrice { get; set; }
-    public decimal DiscountedPrice { get; set; } // Цена со скидкой
+    public decimal DiscountedPrice { get; set; } 
     public int CurrentStock { get; set; }
     public string? ImageUrl { get; set; }
     public string? Description { get; set; }

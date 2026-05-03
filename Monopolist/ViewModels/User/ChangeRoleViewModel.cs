@@ -2,9 +2,9 @@
 
 namespace Monopolist.ViewModels.User;
 
-/// <summary>
+
 /// Модель для передачи данных при смене роли.
-/// </summary>
+
 public class ChangeRoleViewModel
 {
     [Required]

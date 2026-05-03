@@ -10,22 +10,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Вход | Моноплист</title>
-
-    <!-- Preconnect for fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <!-- Google Fonts: индустриальные шрифты -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet" />
-
-    <!-- Font Awesome 6 (иконки) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
-    <!-- Основной стиль сайта (если есть) -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
     <style>
-        /* ===== БАЗОВЫЕ ПЕРЕМЕННЫЕ ===== */
         body.login-page {
             margin: 0;
             padding: 0;
@@ -411,72 +401,6 @@
                 color: #FFD700;
             }
 
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 10px 0 15px 0;
-            cursor: pointer;
-        }
-
-        .form-check-input {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .form-check-label {
-            position: relative;
-            padding-left: 34px;
-            font-size: 16px;
-            color: #222;
-            font-weight: 600;
-            cursor: pointer;
-            user-select: none;
-            transition: color 0.2s;
-        }
-
-            .form-check-label:before {
-                content: '';
-                position: absolute;
-                left: 0;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 24px;
-                height: 24px;
-                border: 2px solid #FF6B00;
-                background: #fff;
-                border-radius: 6px;
-                transition: background 0.2s, border-color 0.2s;
-            }
-
-            .form-check-label:after {
-                content: '\f00c';
-                font-family: 'Font Awesome 6 Free';
-                font-weight: 900;
-                position: absolute;
-                left: 4px;
-                top: 50%;
-                transform: translateY(-50%) scale(0);
-                color: #FFD700;
-                font-size: 18px;
-                transition: transform 0.2s;
-            }
-
-        .form-check-input:checked + .form-check-label:after {
-            transform: translateY(-50%) scale(1);
-        }
-
-        .form-check-input:checked + .form-check-label:before {
-            background: #FF6B00;
-            border-color: #FFD700;
-        }
-
-        .form-check-input:focus + .form-check-label:before {
-            box-shadow: 0 0 0 3px rgba(255,107,0,0.4);
-        }
-
         .login-btn {
             width: 100%;
             padding: 18px;
@@ -631,7 +555,7 @@
             transition: color 0.3s, border-color 0.3s;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
+        /* Тёмная тема */
         body.dark-theme {
             background: #1a1a1a;
         }
@@ -655,14 +579,9 @@
                 border-color: #FFD700;
             }
 
-            body.dark-theme .logo-tagline {
+            body.dark-theme .logo-tagline, body.dark-theme .brand-subtitle {
                 color: #aaa;
-                border-top-color: #FF6B00;
-            }
-
-            body.dark-theme .brand-subtitle {
-                color: #ccc;
-                border-bottom-color: #FF6B00;
+                border-color: #FF6B00;
             }
 
             body.dark-theme .login-form label {
@@ -687,21 +606,7 @@
                 color: #FFD700;
             }
 
-            body.dark-theme .form-check-label {
-                color: #ccc;
-            }
-
-                body.dark-theme .form-check-label:before {
-                    background: #333;
-                    border-color: #FFD700;
-                }
-
-            body.dark-theme .form-check-input:checked + .form-check-label:before {
-                background: #FF6B00;
-                border-color: #FFD700;
-            }
-
-            body.dark-theme .forgot-password {
+            body.dark-theme .forgot-password, body.dark-theme .customer-info a {
                 color: #FFD700;
             }
 
@@ -738,20 +643,11 @@
                 border-color: #FF6B00;
             }
 
-            body.dark-theme .customer-info {
-                color: #aaa;
-            }
-
-                body.dark-theme .customer-info a {
-                    color: #FFD700;
-                }
-
             body.dark-theme .footer {
                 color: #888;
                 border-top-color: #FF6B00;
             }
 
-            /* Дополнительный стиль для подсказки в тёмной теме */
             body.dark-theme .form-text {
                 color: #a0aec0 !important;
             }
@@ -763,7 +659,48 @@
             display: block;
         }
 
-        /* ===== ПРЕЛОАДЕР ===== */
+        /* Гость */
+        .guest-section {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,107,0,0.3);
+        }
+
+        .guest-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,107,0,0.1);
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: #FF6B00;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+            .guest-link:hover {
+                background: rgba(255,107,0,0.2);
+                text-decoration: underline;
+            }
+
+        .guest-note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        body.dark-theme .guest-link {
+            background: rgba(255,107,0,0.2);
+            color: #FFD700;
+        }
+
+        body.dark-theme .guest-note {
+            color: #aaa;
+        }
+
+        /* Прелоадер */
         .preloader {
             position: fixed;
             top: 0;
@@ -862,7 +799,6 @@
 
         body.dark-theme .preloader {
             background: rgba(20, 20, 20, 0.98);
-            backdrop-filter: blur(10px);
         }
 
         body.dark-theme .preloader-message {
@@ -872,47 +808,6 @@
         body.dark-theme .preloader-spinner {
             border-color: rgba(255, 215, 0, 0.3);
             border-top-color: #FFD700;
-        }
-
-        /* ===== СТИЛИ ДЛЯ ГОСТЯ ===== */
-        .guest-section {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255,107,0,0.3);
-        }
-
-        .guest-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,107,0,0.1);
-            padding: 10px 20px;
-            border-radius: 40px;
-            color: #FF6B00;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-            .guest-link:hover {
-                background: rgba(255,107,0,0.2);
-                text-decoration: underline;
-            }
-
-        .guest-note {
-            font-size: 12px;
-            color: #666;
-            margin-top: 8px;
-        }
-
-        body.dark-theme .guest-link {
-            background: rgba(255,107,0,0.2);
-            color: #FFD700;
-        }
-
-        body.dark-theme .guest-note {
-            color: #aaa;
         }
 
         @@media (max-width: 480px) {
@@ -968,19 +863,14 @@
     <!-- Preloader -->
     <div class="preloader" id="preloader">
         <div class="preloader-content">
-            <div class="preloader-logo">
-                <i class="fas fa-helmet-safety"></i>
-                <span>Моноплист</span>
-            </div>
+            <div class="preloader-logo"><i class="fas fa-helmet-safety"></i><span>Моноплист</span></div>
             <div class="preloader-message">Добро пожаловать в систему</div>
             <div class="preloader-spinner"></div>
         </div>
     </div>
 
     <!-- Кнопка переключения темы -->
-    <div class="theme-toggle" id="themeToggle" title="Сменить тему">
-        <i class="fas fa-sun"></i>
-    </div>
+    <div class="theme-toggle" id="themeToggle" title="Сменить тему"><i class="fas fa-sun"></i></div>
 
     <!-- Индустриальный фон -->
     <div class="industrial-bg"></div>
@@ -998,10 +888,7 @@
 
     <div class="login-card">
         <div class="logo-container">
-            <div class="logo">
-                <i class="fas fa-helmet-safety"></i>
-                <span>Моноплист</span>
-            </div>
+            <div class="logo"><i class="fas fa-helmet-safety"></i><span>Моноплист</span></div>
             <div class="logo-tagline">Стройматериалы для дома</div>
         </div>
 
@@ -1045,9 +932,7 @@
                     <div class="input-icon password-wrapper">
                         <i class="fas fa-lock"></i>
                         <input asp-for="Input.Password" class="form-control" placeholder="Введите пароль или одноразовый ключ" autocomplete="current-password" id="password-field" />
-                        <button type="button" class="toggle-password" aria-label="Показать/скрыть пароль">
-                            <i class="far fa-eye"></i>
-                        </button>
+                        <button type="button" class="toggle-password" aria-label="Показать/скрыть пароль"><i class="far fa-eye"></i></button>
                     </div>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                     <small class="form-text">Вы можете использовать одноразовый ключ, полученный при восстановлении пароля.</small>
@@ -1071,7 +956,7 @@
             }
         </div>
 
-        <!-- Форма для клиентов (исправлены имена полей) -->
+        <!-- Форма для клиентов (с демо-аккаунтами) -->
         <div id="customer-form" class="auth-form hidden-form">
             <form class="login-form" method="post" action="/Account/CustomerLogin">
                 @Html.AntiForgeryToken()
@@ -1089,9 +974,7 @@
                     <div class="input-icon password-wrapper">
                         <i class="fas fa-lock"></i>
                         <input type="password" name="Password" class="form-control" placeholder="Введите пароль" id="customer-password-field" />
-                        <button type="button" class="toggle-password" data-target="customer-password-field" aria-label="Показать/скрыть пароль">
-                            <i class="far fa-eye"></i>
-                        </button>
+                        <button type="button" class="toggle-password" data-target="customer-password-field" aria-label="Показать/скрыть пароль"><i class="far fa-eye"></i></button>
                     </div>
                 </div>
 
@@ -1106,16 +989,22 @@
                 <p>Нет аккаунта? <a asp-page="/Account/CustomerRegister">Зарегистрируйтесь</a></p>
                 <p>Для юридических лиц и оптовых закупок используйте форму для сотрудников.</p>
             </div>
+
+            @if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                <div class="demo-accounts">
+                    <h3>ДЕМО-КЛИЕНТЫ</h3>
+                    <div class="account-item"><span class="role">ООО "СтройРисуем"</span><span class="credentials">info@stroyrisuem.ru / pass123</span></div>
+                    <div class="account-item"><span class="role">ИП Петров А.В.</span><span class="credentials">petrov@mail.ru / pass123</span></div>
+                    <div class="account-item"><span class="role">ЖК "Новый Город"</span><span class="credentials">zakupki@novgorod.ru / pass123</span></div>
+                </div>
+            }
         </div>
 
         <!-- Режим гостя -->
         <div class="guest-section">
-            <a href="/Account/GuestLogin" class="guest-link">
-                <i class="fas fa-user-friends"></i> Продолжить как гость
-            </a>
-            <div class="guest-note">
-                <i class="fas fa-info-circle"></i> Гость может просматривать товары, но для покупки потребуется регистрация.
-            </div>
+            <a href="/Account/GuestLogin" class="guest-link"><i class="fas fa-user-friends"></i> Продолжить как гость</a>
+            <div class="guest-note"><i class="fas fa-info-circle"></i> Гость может просматривать товары, но для покупки потребуется регистрация.</div>
         </div>
 
         <footer class="footer">© 2026 Моноплист</footer>
@@ -1125,7 +1014,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Переключение табов
             const tabButtons = document.querySelectorAll('.auth-tab');
             const employeeForm = document.getElementById('employee-form');
             const customerForm = document.getElementById('customer-form');
@@ -1133,10 +1021,8 @@
             tabButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tab = this.getAttribute('data-tab');
-                    // Удаляем active у всех
                     tabButtons.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    // Показываем нужную форму
                     if (tab === 'employee') {
                         employeeForm.classList.remove('hidden-form');
                         customerForm.classList.add('hidden-form');
@@ -1147,7 +1033,6 @@
                 });
             });
 
-            // Переключение видимости пароля (работает для обоих форм)
             const toggleButtons = document.querySelectorAll('.toggle-password');
             toggleButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -1156,7 +1041,6 @@
                     if (targetId) {
                         passwordField = document.getElementById(targetId);
                     } else {
-                        // Для формы сотрудников (поле имеет id="password-field")
                         passwordField = this.closest('.password-wrapper')?.querySelector('input');
                     }
                     if (passwordField) {
@@ -1169,18 +1053,12 @@
                 });
             });
 
-            // Эффект фокуса на полях
             const inputs = document.querySelectorAll('.input-icon input');
             inputs.forEach(input => {
-                input.addEventListener('focus', () => {
-                    input.closest('.input-icon').classList.add('focused');
-                });
-                input.addEventListener('blur', () => {
-                    input.closest('.input-icon').classList.remove('focused');
-                });
+                input.addEventListener('focus', () => input.closest('.input-icon').classList.add('focused'));
+                input.addEventListener('blur', () => input.closest('.input-icon').classList.remove('focused'));
             });
 
-            // Авто-скрытие алерта
             const alert = document.querySelector('.validation-summary');
             if (alert) {
                 setTimeout(() => {
@@ -1190,7 +1068,6 @@
                 }, 8000);
             }
 
-            // Кнопка закрытия алерта
             const closeBtn = document.querySelector('.alert .btn-close');
             if (closeBtn) {
                 closeBtn.addEventListener('click', function() {
@@ -1201,18 +1078,15 @@
                 });
             }
 
-            // Переключение темы
             const themeToggle = document.getElementById('themeToggle');
             const icon = themeToggle.querySelector('i');
             const body = document.body;
-
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 body.classList.add('dark-theme');
                 icon.classList.remove('fa-sun');
                 icon.classList.add('fa-moon');
             }
-
             themeToggle.addEventListener('click', function() {
                 body.classList.toggle('dark-theme');
                 if (body.classList.contains('dark-theme')) {
@@ -1226,7 +1100,6 @@
                 }
             });
 
-            // Прелоадер
             const preloader = document.getElementById('preloader');
             if (preloader) {
                 window.addEventListener('load', function() {

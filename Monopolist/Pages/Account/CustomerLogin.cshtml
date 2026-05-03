@@ -555,6 +555,7 @@
             float: right;
         }
 
+        /* Демо-аккаунты */
         .demo-accounts {
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid #FF6B00;
@@ -1008,6 +1009,26 @@
                     <a asp-page="/Account/CustomerForgotPassword" class="forgot-password">Забыли пароль?</a>
                 </div>
             </form>
+
+            <!-- ДЕМО-АККАУНТЫ ДЛЯ ТЕСТИРОВАНИЯ КЛИЕНТОВ -->
+            @if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                <div class="demo-accounts">
+                    <h3>ДЕМО-АККАУНТЫ КЛИЕНТОВ</h3>
+                    <div class="account-item">
+                        <span class="role">ООО "СтройРисуем"</span>
+                        <span class="credentials">info@stroyrisuem.ru / pass123</span>
+                    </div>
+                    <div class="account-item">
+                        <span class="role">ООО "СтройМастер"</span>
+                        <span class="credentials">info@stroymaster.ru / pass123</span>
+                    </div>
+                    <div class="account-item">
+                        <span class="role">ЖК "Новый Город"</span>
+                        <span class="credentials">zakupki@novgorod.ru / pass123</span>
+                    </div>
+                </div>
+            }
 
             <div class="customer-info">
                 <p>Нет аккаунта? <a asp-page="/Account/CustomerRegister">Зарегистрируйтесь</a></p>

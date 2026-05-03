@@ -6,9 +6,9 @@ namespace Monoplist.Services;
 
 public static class NotificationService
 {
-    /// <summary>
+
     /// Создать уведомление для конкретного пользователя
-    /// </summary>
+
     public static async Task CreateForUserAsync(AppDbContext context, int userId, string title, string message, NotificationType type, string? link = null)
     {
         var notification = new Notification

@@ -4,13 +4,10 @@ namespace Monoplist.Helpers
 {
     public static class TimeZoneHelper
     {
-        // Целевое смещение от UTC (UTC+5 для Алматы/Астаны)
-        // При необходимости измените это значение на нужное (например, TimeSpan.FromHours(3) для MSK)
+      
         private static readonly TimeSpan TargetOffset = TimeSpan.FromHours(5);
 
-        /// <summary>
         /// Преобразует UTC-время в локальное время с заданным смещением.
-        /// </summary>
         public static DateTime ConvertToLocal(DateTime utcDateTime)
         {
             // Если время уже имеет тип Utc, просто добавляем смещение.

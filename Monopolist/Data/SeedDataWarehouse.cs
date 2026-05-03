@@ -7,13 +7,11 @@ public static class SeedDataWarehouse
 {
     public static void Initialize(AppDbContext context)
     {
-        // Проверяем, есть ли уже склады
         if (context.Warehouses.Any()) return;
 
         using var transaction = context.Database.BeginTransaction();
         try
         {
-            // Создаем склады с реальными изображениями
             var warehouses = new[]
             {
                 new Warehouse

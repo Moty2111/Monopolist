@@ -1,5 +1,4 @@
-﻿// Pages/Settings/Security.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -91,7 +90,6 @@ public class SecurityModel : PageModel
         }
 
         TempData["SecretKey"] = secretKey;
-        TempData["ManualSetupKey"] = secretKey;
 
         TempData["Success"] = GetLocalizedMessage(
             "Отсканируйте QR-код в приложении Google Authenticator и введите код для подтверждения.",
@@ -119,10 +117,14 @@ public class SecurityModel : PageModel
             return RedirectToPage();
         }
 
-        _logger.LogInformation("Проверка 2FA для пользователя {Username}, секрет: {Secret}", user.Username, user.TwoFactorSecret);
+        _logger.LogInformation("Проверка 2FA для пользователя {Username}, текущее время (UTC): {Now}", user.Username, DateTime.UtcNow);
 
         var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
-        bool isValid = totp.VerifyTotp(code, out long timeStepMatched, new VerificationWindow(previous: 2, future: 2));
+
+        // Увеличенное окно проверки: ±1440 интервалов (~12 часов в каждую сторону)
+        const int oneDayIntervals = 1440;
+        bool isValid = totp.VerifyTotp(code, out long timeStepMatched,
+            new VerificationWindow(previous: oneDayIntervals, future: oneDayIntervals));
 
         _logger.LogInformation("Результат проверки 2FA: {IsValid}, timeStepMatched: {TimeStep}", isValid, timeStepMatched);
 
@@ -138,10 +140,14 @@ public class SecurityModel : PageModel
         }
         else
         {
+            // Сохраняем QR-код и секретный ключ, чтобы пользователь мог повторно ввести код
+            TempData.Keep("QrCodeBase64");
+            TempData.Keep("SecretKey");
+
             TempData["Error"] = GetLocalizedMessage(
-                "Неверный код подтверждения.",
-                "Invalid verification code.",
-                "Қате растау коды.");
+                "Неверный код подтверждения. Убедитесь, что время на вашем устройстве синхронизировано, и попробуйте снова.",
+                "Invalid verification code. Make sure your device's time is synchronized and try again.",
+                "Қате растау коды. Құрылғыңыздың уақыты синхрондалғанына көз жеткізіп, қайталаңыз.");
         }
 
         return RedirectToPage();
