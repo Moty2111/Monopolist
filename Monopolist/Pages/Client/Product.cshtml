@@ -32,6 +32,7 @@
             --border: #e2e8f0;
             --shadow: 0 2px 4px -1px rgba(0,0,0,0.05);
             --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-card: 0 8px 20px rgba(0,0,0,0.06);
             --radius: 16px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -44,6 +45,7 @@
             --text-secondary: #cbd5e1;
             --text-muted: #94a3b8;
             --border: #334155;
+            --shadow-card: 0 8px 20px rgba(0,0,0,0.4);
         }
 
         * {
@@ -113,13 +115,17 @@
         }
 
         .header {
-            background: rgba(var(--surface-rgb), 0.95);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
             z-index: 100;
             border-bottom: 1px solid var(--border);
+        }
+
+        body.dark .header {
+            background: rgba(30,41,59,0.95);
         }
 
         .header-container {
@@ -289,7 +295,7 @@
             flex-wrap: wrap;
             gap: 2rem;
             padding: 2rem;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-card);
         }
 
         .product-image {
@@ -428,6 +434,216 @@
             background: #2a2a2a;
         }
 
+        /* ОТЗЫВЫ */
+        .reviews-section {
+            margin-top: 2rem;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .reviews-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .review-card {
+            background: var(--surface-hover);
+            border-radius: 16px;
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+            .review-card:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-hover);
+            }
+
+        .review-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 0.8rem;
+        }
+
+        .review-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+            .review-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .review-author-info {
+            flex: 1;
+        }
+
+        .review-author-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .review-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .review-rating {
+            color: var(--accent);
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+        }
+
+        .review-text {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .admin-reply {
+            margin-top: 12px;
+            background: rgba(255,107,0,0.06);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+            .admin-reply .reply-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 600;
+                color: var(--primary);
+                margin-bottom: 4px;
+            }
+
+                .admin-reply .reply-header i {
+                    font-size: 1rem;
+                }
+
+            .admin-reply .reply-date {
+                font-size: 0.7rem;
+                color: var(--text-muted);
+                margin-left: 8px;
+            }
+
+            .admin-reply .reply-body {
+                margin-top: 4px;
+                line-height: 1.4;
+            }
+
+        .no-reviews {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .add-review-form {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--surface-hover);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+            .add-review-form h3 {
+                margin-bottom: 1rem;
+                color: var(--primary);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+            .form-group label {
+                display: block;
+                font-weight: 500;
+                margin-bottom: 0.3rem;
+                color: var(--text-secondary);
+            }
+
+            .form-group textarea {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text-primary);
+                font-family: inherit;
+                resize: vertical;
+                min-height: 80px;
+            }
+
+        .rating-stars {
+            display: flex;
+            gap: 0.3rem;
+            font-size: 1.8rem;
+            color: var(--accent);
+            cursor: pointer;
+        }
+
+            .rating-stars i {
+                transition: color 0.2s;
+            }
+
+                .rating-stars i:hover, .rating-stars i.selected {
+                    color: var(--primary);
+                }
+
+        .btn-review {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+            .btn-review:hover {
+                transform: translateY(-2px);
+            }
+
         .footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -506,6 +722,10 @@
             .price {
                 font-size: 1.5rem;
             }
+
+            .reviews-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @@media (max-width: 480px) {
@@ -532,10 +752,7 @@
 
     <header class="header">
         <div class="header-container">
-            <a href="/Client/Index" class="logo">
-                <i class="fas fa-helmet-safety"></i>
-                <span>Моноплист</span>
-            </a>
+            <a href="/Client/Index" class="logo"><i class="fas fa-helmet-safety"></i><span>Моноплист</span></a>
             <div class="nav-links">
                 <a href="/Client/Index" class="nav-link"><i class="fas fa-home"></i> Главная</a>
                 <a href="/Client/Orders" class="nav-link"><i class="fas fa-truck"></i> Заказы</a>
@@ -545,10 +762,7 @@
             </div>
             <div class="user-actions">
                 <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-                <a href="/Client/Cart" class="cart-icon" id="cartIcon">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cartCount">0</span>
-                </a>
+                <a href="/Client/Cart" class="cart-icon" id="cartIcon"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a>
                 <div class="customer-badge">
                     <a href="/Client/Profile" class="customer-avatar-link">
                         <div class="customer-avatar">
@@ -558,6 +772,7 @@
                             }
                             else
                             {
+
                                 <i class="fas fa-user-circle"></i>
                             }
                         </div>
@@ -565,12 +780,11 @@
                     <span class="customer-name">@Model.CustomerName</span>
                     @if (!Model.IsGuest)
                     {
-                        <form method="post" asp-page="/Account/CustomerLogout">
-                            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
-                        </form>
+                        <form method="post" asp-page="/Account/CustomerLogout"><button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button></form>
                     }
                     else
                     {
+
                         <a href="/Account/Login" class="logout-btn" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i></a>
                     }
                 </div>
@@ -587,6 +801,7 @@
                 }
                 else
                 {
+
                     <i class="fas fa-box-open"></i>
                 }
             </div>
@@ -604,36 +819,114 @@
                     }
                     else
                     {
+
                         <span style="background:#ef4444;"><i class="fas fa-times-circle"></i> Нет в наличии</span>
                     }
                 </div>
-                <div class="price">
-                    @Model.Product.SalePrice.ToString("N0") <small>₽ / @Model.Product.Unit</small>
-                </div>
-                <div class="description">
-                    @Model.Product.Description
-                </div>
-                <div class="supplier">
-                    <i class="fas fa-truck"></i> Поставщик: @Model.Product.SupplierName
-                </div>
+                <div class="price">@Model.Product.SalePrice.ToString("N0") <small>₽ / @Model.Product.Unit</small></div>
+                <div class="description">@Model.Product.Description</div>
+                <div class="supplier"><i class="fas fa-truck"></i> Поставщик: @Model.Product.SupplierName</div>
 
                 @if (!Model.IsGuest)
                 {
-                    <button class="add-to-cart-btn" data-product-id="@Model.Product.Id" data-product-name="@Model.Product.Name" data-product-price="@Model.Product.SalePrice">
-                        <i class="fas fa-shopping-cart"></i> В корзину
-                    </button>
+                    <button class="add-to-cart-btn" data-product-id="@Model.Product.Id" data-product-name="@Model.Product.Name" data-product-price="@Model.Product.SalePrice"><i class="fas fa-shopping-cart"></i> В корзину</button>
                 }
                 else
                 {
-                    <div class="guest-message">
-                        <a href="/Account/Login">Войдите</a> или <a href="/Account/CustomerRegister">зарегистрируйтесь</a>, чтобы купить
-                    </div>
-                }
 
-                <div>
-                    <a href="/Client/Index" class="back-link"><i class="fas fa-arrow-left"></i> Назад к товарам</a>
-                </div>
+                    <div class="guest-message"><a href="/Account/Login">Войдите</a> или <a href="/Account/CustomerRegister">зарегистрируйтесь</a>, чтобы купить</div>
+                }
+                <div><a href="/Client/Index" class="back-link"><i class="fas fa-arrow-left"></i> Назад к товарам</a></div>
             </div>
+        </div>
+
+        <!-- Отзывы -->
+        <div class="reviews-section">
+            <h2 class="reviews-title"><i class="fas fa-comments"></i> Отзывы (@Model.Reviews.Count)</h2>
+
+            @if (Model.Reviews.Any())
+            {
+                <div class="reviews-grid">
+                    @foreach (var review in Model.Reviews)
+                    {
+                        <div class="review-card">
+                            <div class="review-card-header">
+                                <div class="review-avatar">
+                                    @if (!string.IsNullOrEmpty(review.CustomerAvatar))
+                                    {
+                                        <img src="@review.CustomerAvatar" alt="@review.CustomerName" onerror="this.onerror=null; this.innerHTML='@review.CustomerName.FirstOrDefault()';" />
+                                    }
+                                    else
+                                    {
+
+                                        @review.CustomerName.FirstOrDefault()
+                                    }
+                                </div>
+                                <div class="review-author-info">
+                                    <div class="review-author-name">@review.CustomerName</div>
+                                    <div class="review-date">@review.CreatedAt.ToString("dd.MM.yyyy")</div>
+                                </div>
+                            </div>
+                            <div class="review-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star" style="color: @(i <= review.Rating ? "var(--accent)" : "var(--border)");"></i>
+                                }
+                            </div>
+                            <p class="review-text">@review.Text</p>
+                            @if (!string.IsNullOrEmpty(review.AdminReply))
+                            {
+                                <div class="admin-reply">
+                                    <div class="reply-header">
+                                        <i class="fas fa-reply"></i> Ответ администратора
+                                        @if (review.RepliedAt.HasValue)
+                                        {
+                                            <span class="reply-date">@review.RepliedAt.Value.ToString("dd.MM.yyyy")</span>
+                                        }
+                                    </div>
+                                    <div class="reply-body">@review.AdminReply</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+
+                <div class="no-reviews"><i class="far fa-comment-dots"></i> Пока нет отзывов. Будьте первым!</div>
+            }
+
+            @if (!Model.IsGuest)
+            {
+                <div class="add-review-form">
+                    <h3><i class="fas fa-pen"></i> Оставить отзыв</h3>
+                    <form method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="form-group">
+                            <label>Ваша оценка</label>
+                            <div class="rating-stars" id="starRating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star" data-rating="@i"></i>
+                                }
+                            </div>
+                            <input type="hidden" id="Rating" name="ReviewInput.Rating" value="5" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reviewText">Текст отзыва</label>
+                            <textarea id="reviewText" name="ReviewInput.Text" rows="3">@Model.ReviewInput.Text</textarea>
+                            <span asp-validation-for="ReviewInput.Text" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn-review">Отправить отзыв</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+
+                <div class="guest-message" style="margin-top: 1rem;"><a href="/Account/Login">Войдите</a>, чтобы оставить отзыв.</div>
+            }
         </div>
     </main>
 
@@ -685,6 +978,20 @@
                 const name = btn.getAttribute('data-product-name');
                 const price = btn.getAttribute('data-product-price');
                 await addToCart(id, name, price, btn);
+            });
+        });
+
+        const stars = document.querySelectorAll('#starRating i');
+        const ratingInput = document.getElementById('Rating');
+        stars.forEach((s, index) => { if (index < 5) s.classList.add('selected'); });
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = parseInt(star.getAttribute('data-rating'));
+                ratingInput.value = rating;
+                stars.forEach((s2, index) => {
+                    if (index < rating) s2.classList.add('selected');
+                    else s2.classList.remove('selected');
+                });
             });
         });
 

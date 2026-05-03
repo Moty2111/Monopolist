@@ -15,10 +15,7 @@ public class CartModel : PageModel
 {
     private readonly AppDbContext _context;
 
-    public CartModel(AppDbContext context)
-    {
-        _context = context;
-    }
+    public CartModel(AppDbContext context) => _context = context;
 
     public List<CartItemViewModel> CartItems { get; set; } = new();
     public string CustomerName { get; set; } = "Гость";
@@ -43,8 +40,8 @@ public class CartModel : PageModel
                     CustomerName = customer.FullName;
                     AvatarUrl = customer.AvatarUrl;
 
-                    // Актуализируем лояльность перед показом корзины
-                    await UpdateLoyaltyDiscount(customer);
+                    // Быстрый пересчёт лояльности перед показом корзины
+                    await UpdateLoyaltyDiscountFast(customer);
                     CustomerDiscount = customer.EffectiveDiscount;
                 }
 
@@ -66,7 +63,7 @@ public class CartModel : PageModel
                     Quantity = ci.Quantity,
                     Unit = ci.Product.Unit,
                     CurrentStock = ci.Product.CurrentStock,
-                    ImageUrl = ci.Product.ImageUrl ?? (ci.Product.Warehouse != null ? ci.Product.Warehouse.ImageUrl : null)
+                    ImageUrl = ci.Product.ImageUrl ?? (ci.Product.Warehouse?.ImageUrl)
                 }).ToList();
 
                 TotalAmount = CartItems.Sum(i => i.Price * i.Quantity);
@@ -77,7 +74,6 @@ public class CartModel : PageModel
                 CustomerName = "Гость";
             }
         }
-
         return Page();
     }
 
@@ -103,77 +99,57 @@ public class CartModel : PageModel
         if (product == null) return NotFound("Товар не найден");
         if (product.CurrentStock < quantity) return BadRequest("Недостаточно товара на складе");
 
-        // Первая попытка – найти существующий элемент
+        // Ищем существующую запись (без вызова UpdateLoyalty – не нужен)
         var cartItem = await _context.CartItems
             .FirstOrDefaultAsync(ci => ci.CustomerId == customerId && ci.ProductId == productId);
 
         if (cartItem != null)
         {
-            int newQuantity = cartItem.Quantity + quantity;
-            if (product.CurrentStock < newQuantity)
-                return BadRequest("Недостаточно товара на складе");
-            cartItem.Quantity = newQuantity;
+            int newQty = cartItem.Quantity + quantity;
+            if (product.CurrentStock < newQty) return BadRequest("Недостаточно товара на складе");
+            cartItem.Quantity = newQty;
             cartItem.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return new JsonResult(new { success = true });
         }
 
-        // Элемента нет – пробуем добавить с обработкой возможной гонки
-        bool saved = false;
-        while (!saved)
+        try
         {
-            try
+            var newItem = new CartItem
             {
-                var newItem = new CartItem
-                {
-                    CustomerId = customerId.Value,
-                    ProductId = productId,
-                    Quantity = quantity
-                };
-                _context.CartItems.Add(newItem);
-                await _context.SaveChangesAsync();
-                saved = true;
-            }
-            catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
-            {
-                // Откатываем добавленную сущность (она конфликтует)
-                var entry = _context.ChangeTracker.Entries<CartItem>()
-                    .FirstOrDefault(e => e.Entity.CustomerId == customerId && e.Entity.ProductId == productId);
-                if (entry != null)
-                    entry.State = EntityState.Detached;
-
-                // Загружаем реальную запись, созданную параллельным запросом
-                cartItem = await _context.CartItems
-                    .AsNoTracking()   // важно загрузить без отслеживания, чтобы избежать конфликтов
-                    .FirstOrDefaultAsync(ci => ci.CustomerId == customerId && ci.ProductId == productId);
-
-                if (cartItem != null)
-                {
-                    // Присоединяем к контексту и обновляем
-                    _context.CartItems.Attach(cartItem);
-                    int newQuantity = cartItem.Quantity + quantity;
-                    if (product.CurrentStock < newQuantity)
-                        return BadRequest("Недостаточно товара на складе");
-                    cartItem.Quantity = newQuantity;
-                    cartItem.UpdatedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
-                    saved = true;
-                }
-                else
-                {
-                    // На всякий случай, если запись всё ещё не появилась – повторяем попытку
-                    // (не должно случиться, но защита от бесконечного цикла)
-                    await Task.Delay(50);
-                }
-            }
-            catch (Exception)
-            {
-                // Если другая ошибка – пробрасываем
-                throw;
-            }
+                CustomerId = customerId.Value,
+                ProductId = productId,
+                Quantity = quantity
+            };
+            _context.CartItems.Add(newItem);
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
         }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
+        {
+            // Конфликт: другая сессия уже добавила этот товар
+            var entry = _context.ChangeTracker.Entries<CartItem>()
+                .FirstOrDefault(e => e.Entity.CustomerId == customerId && e.Entity.ProductId == productId);
+            entry.State = EntityState.Detached;
 
-        return new JsonResult(new { success = true });
+            // Загружаем реальную запись и увеличиваем количество
+            cartItem = await _context.CartItems
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ci => ci.CustomerId == customerId && ci.ProductId == productId);
+
+            if (cartItem != null)
+            {
+                _context.CartItems.Attach(cartItem);
+                int newQty = cartItem.Quantity + quantity;
+                if (product.CurrentStock < newQty) return BadRequest("Недостаточно товара на складе");
+                cartItem.Quantity = newQty;
+                cartItem.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+
+            throw; // что-то пошло не так
+        }
     }
 
     [HttpPost]
@@ -190,9 +166,7 @@ public class CartModel : PageModel
         if (cartItem == null) return NotFound();
 
         if (quantity <= 0)
-        {
             _context.CartItems.Remove(cartItem);
-        }
         else
         {
             if (cartItem.Product.CurrentStock < quantity)
@@ -227,7 +201,6 @@ public class CartModel : PageModel
     public async Task<IActionResult> OnPostCheckoutAsync([FromBody] CheckoutRequest request)
     {
         if (request == null) return BadRequest("Не указан способ оплаты");
-
         if (IsGuest) return Unauthorized();
         var customerId = GetCustomerId();
         if (customerId == null || customerId <= 0) return Unauthorized();
@@ -242,14 +215,14 @@ public class CartModel : PageModel
 
         if (!cartItems.Any()) return BadRequest("Корзина пуста");
 
-        // Обновляем скидку на основе завершённых заказов
-        await UpdateLoyaltyDiscount(customer);
+        // Один раз обновляем лояльность перед расчётом скидки
+        await UpdateLoyaltyDiscountFast(customer);
         var discountFactor = 1 - (customer.EffectiveDiscount / 100m);
 
         foreach (var item in cartItems)
         {
             if (item.Product.CurrentStock < item.Quantity)
-                return BadRequest($"Товар \"{item.Product.Name}\" в количестве {item.Quantity} шт. отсутствует на складе. Доступно: {item.Product.CurrentStock}");
+                return BadRequest($"Товар \"{item.Product.Name}\" в количестве {item.Quantity} шт. отсутствует на складе.");
         }
 
         var validMethods = new[] { "Card", "Cash", "Credit" };
@@ -260,9 +233,7 @@ public class CartModel : PageModel
 
         // Списание остатков
         foreach (var item in cartItems)
-        {
             item.Product.CurrentStock -= item.Quantity;
-        }
 
         var orderItems = cartItems.Select(ci => new OrderItem
         {
@@ -279,7 +250,7 @@ public class CartModel : PageModel
             CustomerId = customerId.Value,
             OrderDate = DateTime.UtcNow,
             TotalAmount = total,
-            Status = "Pending",                // ← обычный статус ожидания
+            Status = "Pending",                // стандартное ожидание
             PaymentMethod = request.PaymentMethod,
             OrderItems = orderItems
         };
@@ -288,8 +259,8 @@ public class CartModel : PageModel
         _context.CartItems.RemoveRange(cartItems);
         await _context.SaveChangesAsync();
 
-        // Лояльность не обновляем немедленно – она пересчитается при следующем входе в корзину/профиль,
-        // когда администратор завершит заказ.
+        // После создания заказа нет нужды обновлять лояльность,
+        // так как статус Pending не влияет на неё.
 
         return new JsonResult(new { success = true, orderId = order.Id });
     }
@@ -297,8 +268,7 @@ public class CartModel : PageModel
     private int? GetCustomerId()
     {
         var claim = User.FindFirst("CustomerId")?.Value;
-        if (claim != null && int.TryParse(claim, out int id) && id > 0) return id;
-        return null;
+        return int.TryParse(claim, out int id) ? id : null;
     }
 
     private async Task<string> GenerateOrderNumberAsync()
@@ -320,18 +290,20 @@ public class CartModel : PageModel
         return $"{prefix}{nextNumber:D3}";
     }
 
-    private async Task UpdateLoyaltyDiscount(Customer customer)
+    /// <summary>Быстрое обновление лояльности (один SQL‑запрос).</summary>
+    private async Task UpdateLoyaltyDiscountFast(Customer customer)
     {
-        var completedOrders = await _context.Orders
+        // Один запрос к БД вместо загрузки всех сущностей
+        int count = await _context.Orders
             .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
-            .ToListAsync();
+            .CountAsync();
 
-        int count = completedOrders.Count;
-        decimal sum = completedOrders.Sum(o => o.TotalAmount);
+        decimal sum = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
 
         customer.TotalCompletedOrders = count;
         customer.TotalSpent = sum;
-
         customer.LoyaltyDiscount = (count, sum) switch
         {
             ( >= 20, >= 200000) => 7m,
@@ -339,7 +311,6 @@ public class CartModel : PageModel
             ( >= 5, >= 10000) => 3m,
             _ => 0m
         };
-
         customer.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }

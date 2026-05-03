@@ -1,0 +1,849 @@
+﻿@page
+@model Monoplist.Pages.Settings.ReviewManagementModel
+@{
+    Layout = null;
+    ViewData["Title"] = Model.Language == "ru" ? "Модерация отзывов" : (Model.Language == "en" ? "Review moderation" : "Пікірлерді модерациялау");
+    var userId = User.FindFirst("UserId")?.Value;
+    var avatarUrl = HttpContext.Request.Cookies[$"user_avatar_{userId}"] ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="@Model.Language">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Моноплист</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        :root {
+            --primary: @Model.CustomColor;
+            --primary-dark: #E05E00;
+            --primary-light: #FF9500;
+            --accent: #FFD700;
+            --accent-dark: #CC5500;
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --surface-hover: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.25);
+            --transition: all 0.2s ease;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+        }
+
+        body.dark-theme {
+            --bg: #1a1a1a;
+            --surface: #2d2d2d;
+            --surface-hover: #3a3a3a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #ccc;
+            --text-muted: #999;
+            --border: #444;
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+            --shadow-hover: 0 12px 28px rgba(255,107,0,0.5);
+            --success-bg: #064e3b;
+            --danger-bg: #7f1d1d;
+        }
+
+        body.compact-mode .sidebar {
+            width: 240px;
+        }
+
+        body.compact-mode .sidebar-header {
+            padding: 16px 16px;
+        }
+
+            body.compact-mode .sidebar-header i {
+                font-size: 32px;
+            }
+
+            body.compact-mode .sidebar-header h2 {
+                font-size: 20px;
+            }
+
+        body.compact-mode .sidebar-nav li a {
+            padding: 8px 12px;
+        }
+
+        body.compact-mode .top-bar {
+            padding: 12px 24px;
+        }
+
+        body.compact-mode .dashboard {
+            padding: 16px;
+        }
+
+            body.compact-mode .dashboard h1 {
+                font-size: 1.8rem;
+            }
+
+        body.compact-mode .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        body.no-animations * {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            transition: transform 0.3s ease, background 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .sidebar-header i {
+                font-size: 40px;
+                background: linear-gradient(145deg, var(--primary), var(--accent));
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                filter: drop-shadow(0 0 5px rgba(255,107,0,0.5));
+            }
+
+            .sidebar-header h2 {
+                font-size: 24px;
+                font-weight: 700;
+                background: linear-gradient(135deg, var(--accent), var(--primary));
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                margin: 0;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+            .sidebar-nav ul {
+                list-style: none;
+            }
+
+            .sidebar-nav li {
+                margin: 4px 8px;
+            }
+
+                .sidebar-nav li a {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 16px;
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    font-weight: 500;
+                    border-radius: 12px;
+                    transition: var(--transition);
+                    gap: 12px;
+                }
+
+                    .sidebar-nav li a i {
+                        width: 24px;
+                        text-align: center;
+                        font-size: 1.25rem;
+                        color: var(--text-muted);
+                        transition: var(--transition);
+                    }
+
+                    .sidebar-nav li a:hover,
+                    .sidebar-nav li a.active {
+                        background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
+                        color: var(--primary);
+                        transform: translateX(4px);
+                    }
+
+                        .sidebar-nav li a:hover i,
+                        .sidebar-nav li a.active i {
+                            color: var(--primary);
+                        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            min-width: 0;
+        }
+
+        .top-bar {
+            background: var(--surface);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 2px solid var(--accent);
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+            .menu-toggle:hover {
+                background: rgba(255,107,0,0.1);
+                color: var(--primary);
+            }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-right: auto;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface-hover);
+            border-radius: 40px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+            .user-profile:hover {
+                background: var(--surface);
+                box-shadow: var(--shadow-sm);
+            }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+            .user-avatar i {
+                font-size: 40px;
+            }
+
+            .user-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 220px;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+            .user-menu.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+            .menu-item:hover {
+                background: var(--surface-hover);
+                color: var(--primary);
+            }
+
+            .menu-item.logout {
+                color: var(--danger);
+            }
+
+                .menu-item.logout:hover {
+                    background: var(--danger-bg);
+                }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--accent);
+            border-radius: 50px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+            .theme-toggle:hover {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+        .content {
+            padding: 24px;
+            flex: 1;
+        }
+
+        .dashboard {
+            background: var(--surface);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+            .dashboard h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--primary);
+                margin-bottom: 8px;
+            }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 12px;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+            .filter-btn.active {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+            .filter-btn:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+            }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 12px;
+            background: var(--surface-hover);
+            border-bottom: 2px solid var(--accent);
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: rgba(255,107,0,0.03);
+        }
+
+        .btn-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-sm:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .reply-form {
+            display: none;
+            margin-top: 8px;
+        }
+
+            .reply-form.show {
+                display: block;
+            }
+
+            .reply-form input[type="text"] {
+                padding: 6px 10px;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                background: var(--surface);
+                color: var(--text-primary);
+                width: 160px;
+            }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background: var(--surface);
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+            .back-link:hover {
+                background: var(--surface-hover);
+                border-color: var(--primary);
+                color: var(--primary);
+                transform: translateY(-2px);
+            }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transform: translateX(-100%);
+            }
+
+            body.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .top-bar {
+                padding: 12px 16px;
+            }
+
+            .page-title {
+                font-size: 1.25rem;
+            }
+
+            .user-profile .user-details {
+                display: none;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            .dashboard {
+                padding: 16px;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body class="@(Model.Theme == "dark" ? "dark-theme" : "") @(Model.CompactMode ? "compact-mode" : "") @(Model.Animations ? "" : "no-animations")">
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-helmet-safety"></i>
+                <h2>Моноплист</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a asp-page="/Index"><i class="fas fa-home"></i> @(Model.Language == "ru" ? "Главная панель" : "Dashboard")</a></li>
+                    <li><a asp-page="/Products/Index"><i class="fas fa-box"></i> @(Model.Language == "ru" ? "Каталог товаров" : "Products")</a></li>
+                    <li><a asp-page="/Orders/Index"><i class="fas fa-shopping-cart"></i> @(Model.Language == "ru" ? "Продажи" : "Orders")</a></li>
+                    <li><a asp-page="/Customers/Index"><i class="fas fa-users"></i> @(Model.Language == "ru" ? "Клиенты" : "Customers")</a></li>
+                    <li><a asp-page="/Warehouse/Index"><i class="fas fa-warehouse"></i> @(Model.Language == "ru" ? "Склад" : "Warehouse")</a></li>
+                    <li><a asp-page="/Suppliers/Index"><i class="fas fa-truck"></i> @(Model.Language == "ru" ? "Поставщики" : "Suppliers")</a></li>
+                    <li><a asp-page="/Reports/Index"><i class="fas fa-chart-line"></i> @(Model.Language == "ru" ? "Отчеты" : "Reports")</a></li>
+                    <li><a asp-page="/Settings/Index" class="active"><i class="fas fa-cog"></i> @(Model.Language == "ru" ? "Настройки" : "Settings")</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="user-info">
+                    <div class="theme-toggle" id="themeToggle" title="@(Model.Language == "ru" ? "Сменить тему" : "Toggle theme")"><i class="fas fa-sun"></i></div>
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <div class="user-avatar">
+                            @if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <img src="@avatarUrl" alt="Avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>';" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle"></i>
+                            }
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">@User.Identity?.Name</span>
+                            <span class="user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="user-menu" id="userMenu">
+                        <a asp-page="/Settings/Profile" class="menu-item"><i class="fas fa-user"></i> @(Model.Language == "ru" ? "Профиль" : "Profile")</a>
+                        <a asp-page="/Settings/Security" class="menu-item"><i class="fas fa-shield-alt"></i> @(Model.Language == "ru" ? "Безопасность" : "Security")</a>
+                        <a asp-page="/Settings/Appearance" class="menu-item"><i class="fas fa-palette"></i> @(Model.Language == "ru" ? "Внешний вид" : "Appearance")</a>
+                        <div class="menu-divider"></div>
+                        <form method="post" asp-page="/Account/Logout" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="menu-item logout"><i class="fas fa-sign-out-alt"></i> @(Model.Language == "ru" ? "Выйти" : "Logout")</button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="dashboard">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> @TempData["Error"]</div>
+                    }
+
+                    <h1>@ViewData["Title"]</h1>
+                    <p class="subtitle">@(Model.Language == "ru" ? "Управление отзывами клиентов" : "Customer review management")</p>
+
+                    <div class="filter-bar">
+                        <a asp-page="./ReviewManagement" asp-route-filterStatus="" class="filter-btn @(string.IsNullOrEmpty(Model.FilterStatus) ? "active" : "")">Все</a>
+                        <a asp-page="./ReviewManagement" asp-route-filterStatus="pending" class="filter-btn @(Model.FilterStatus == "pending" ? "active" : "")">Ожидают</a>
+                        <a asp-page="./ReviewManagement" asp-route-filterStatus="approved" class="filter-btn @(Model.FilterStatus == "approved" ? "active" : "")">Одобрены</a>
+                        <a asp-page="./ReviewManagement" asp-route-filterStatus="replied" class="filter-btn @(Model.FilterStatus == "replied" ? "active" : "")">С ответом</a>
+                    </div>
+
+                    @if (Model.Reviews.Any())
+                    {
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Товар</th>
+                                        <th>Клиент</th>
+                                        <th>Оценка</th>
+                                        <th>Отзыв</th>
+                                        <th>Дата</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var review in Model.Reviews)
+                                    {
+                                        <tr>
+                                            <td>@review.ProductName</td>
+                                            <td>@review.CustomerName</td>
+                                            <td>
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <i class="fas fa-star" style="color: @(i <= review.Rating ? "var(--accent)" : "var(--border)");"></i>
+                                                }
+                                            </td>
+                                            <td style="max-width: 250px; word-wrap: break-word;">@review.Text</td>
+                                            <td>@review.CreatedAt.ToString("dd.MM.yyyy")</td>
+                                            <td>
+                                                @if (!review.IsApproved)
+                                                {
+                                                    <form method="post" asp-page-handler="Approve" asp-route-reviewId="@review.Id" style="display:inline;">
+                                                        <button class="btn-sm btn-success"><i class="fas fa-check"></i> Одобрить</button>
+                                                    </form>
+                                                    <form method="post" asp-page-handler="Reject" asp-route-reviewId="@review.Id" style="display:inline;">
+                                                        <button class="btn-sm btn-danger"><i class="fas fa-times"></i> Отклонить</button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn-sm btn-warning" onclick="toggleReplyForm(@review.Id)"><i class="fas fa-reply"></i> Ответить</button>
+                                                    <div class="reply-form" id="replyForm-@review.Id">
+                                                        <form method="post" asp-page-handler="Reply" asp-route-reviewId="@review.Id">
+                                                            <input type="text" name="adminReply" placeholder="Ваш ответ" />
+                                                            <button type="submit" class="btn-sm btn-primary">Отправить</button>
+                                                        </form>
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(review.AdminReply))
+                                                    {
+                                                        <div style="margin-top: 6px; font-style: italic; color: var(--primary);">
+                                                            <i class="fas fa-reply"></i> @review.AdminReply
+                                                        </div>
+                                                    }
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p style="color: var(--text-muted); padding: 20px;">@(Model.Language == "ru" ? "Нет отзывов по выбранному фильтру." : "No reviews for this filter.")</p>
+                    }
+
+                    <a asp-page="Index" class="back-link">
+                        <i class="fas fa-arrow-left"></i> @(Model.Language == "ru" ? "Вернуться к настройкам" : "Back to settings")
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const body = document.body;
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => body.classList.toggle('sidebar-open'));
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.querySelector('.sidebar');
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && body.classList.contains('sidebar-open')) {
+                            body.classList.remove('sidebar-open');
+                        }
+                    }
+                });
+            }
+
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                const themeIcon = themeToggle.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || '@Model.Theme';
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-theme');
+                    themeIcon?.classList.remove('fa-sun');
+                    themeIcon?.classList.add('fa-moon');
+                }
+                themeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-theme');
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon?.classList.remove('fa-sun');
+                        themeIcon?.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon?.classList.remove('fa-moon');
+                        themeIcon?.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }, 5000);
+            });
+        });
+
+        function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
+        window.addEventListener('click', function(event) {
+            const userInfo = document.querySelector('.user-info');
+            const userMenu = document.getElementById('userMenu');
+            if (!userInfo.contains(event.target) && userMenu.classList.contains('show')) {
+                userMenu.classList.remove('show');
+            }
+        });
+
+        function toggleReplyForm(reviewId) {
+            const form = document.getElementById('replyForm-' + reviewId);
+            if (form) form.classList.toggle('show');
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
@@ -65,21 +66,62 @@ public class IndexModel : PageModel
                     EF.Functions.Like(c.Email, $"%{SearchString}%"));
             }
 
+            // Сортировка
             query = SortField switch
             {
                 "Phone" => SortOrder == "asc" ? query.OrderBy(c => c.Phone) : query.OrderByDescending(c => c.Phone),
                 "Email" => SortOrder == "asc" ? query.OrderBy(c => c.Email) : query.OrderByDescending(c => c.Email),
                 "Discount" => SortOrder == "asc" ? query.OrderBy(c => c.Discount) : query.OrderByDescending(c => c.Discount),
                 "RegistrationDate" => SortOrder == "asc" ? query.OrderBy(c => c.RegistrationDate) : query.OrderByDescending(c => c.RegistrationDate),
+                "TotalCompletedOrders" => SortOrder == "asc" ? query.OrderBy(c => c.TotalCompletedOrders) : query.OrderByDescending(c => c.TotalCompletedOrders),
                 _ => SortOrder == "asc" ? query.OrderBy(c => c.FullName) : query.OrderByDescending(c => c.FullName)
             };
 
             Customers = await query.ToListAsync();
+
+            // Актуализация лояльности для каждого клиента (быстрый агрегатный запрос)
+            foreach (var customer in Customers)
+            {
+                await UpdateLoyaltyDiscountFast(customer);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при загрузке списка клиентов");
             TempData["Error"] = GetLocalizedMessage("Не удалось загрузить список клиентов.", "Failed to load customers.", "Клиенттер тізімін жүктеу мүмкін болмады.");
+        }
+    }
+
+    private async Task UpdateLoyaltyDiscountFast(Customer customer)
+    {
+        int count = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .CountAsync();
+
+        decimal sum = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+        customer.TotalCompletedOrders = count;
+        customer.TotalSpent = sum;
+        customer.LoyaltyDiscount = (count, sum) switch
+        {
+            ( >= 20, >= 200000) => 7m,
+            ( >= 10, >= 50000) => 5m,
+            ( >= 5, >= 10000) => 3m,
+            _ => 0m
+        };
+        customer.UpdatedAt = DateTime.UtcNow;
+    }
+
+    // Сохраняем все изменения после цикла
+    public override async Task OnPageHandlerExecutionAsync(PageHandlerExecutingContext context, PageHandlerExecutionDelegate next)
+    {
+        await next();
+        // Сохраняем изменения, сделанные в цикле
+        if (context.HandlerMethod?.HttpMethod == "GET")
+        {
+            await _context.SaveChangesAsync();
         }
     }
 

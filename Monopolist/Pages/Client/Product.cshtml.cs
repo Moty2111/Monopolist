@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Monoplist.Data;
 using Monoplist.Models;
-using Monoplist.ViewModels;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace Monoplist.Pages.Client;
@@ -27,6 +27,23 @@ public class ProductModel : PageModel
     public decimal CustomerDiscount { get; set; }
     public bool IsGuest { get; private set; }
 
+    // Отзывы
+    public List<ReviewViewModel> Reviews { get; set; } = new();
+
+    // Свойство для привязки формы отзыва
+    [BindProperty]
+    public ReviewInputModel ReviewInput { get; set; } = new();
+
+    public class ReviewInputModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Введите текст отзыва")]
+        [StringLength(2000, MinimumLength = 2)]
+        public string Text { get; set; } = string.Empty;
+
+        [Range(1, 5)]
+        public int Rating { get; set; } = 5;
+    }
+
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -41,7 +58,7 @@ public class ProductModel : PageModel
                 if (customer != null)
                 {
                     CustomerName = customer.FullName;
-                    CustomerDiscount = customer.Discount;
+                    CustomerDiscount = customer.EffectiveDiscount;
                     AvatarUrl = customer.AvatarUrl;
                 }
             }
@@ -71,8 +88,71 @@ public class ProductModel : PageModel
             MinimumStock = product.MinimumStock
         };
 
+        // Загружаем только одобренные отзывы
+        Reviews = await _context.Reviews
+            .Where(r => r.ProductId == id && r.IsApproved)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new ReviewViewModel
+            {
+                Id = r.Id,
+                CustomerName = r.Customer.FullName,
+                CustomerAvatar = r.Customer.AvatarUrl,
+                Rating = r.Rating,
+                Text = r.Text,
+                CreatedAt = r.CreatedAt,
+                AdminReply = r.AdminReply,
+                RepliedAt = r.RepliedAt
+            })
+            .ToListAsync();
+
         return Page();
     }
+
+    // Обработчик отправки отзыва
+    public async Task<IActionResult> OnPostAsync(int id)
+    {
+        if (!ModelState.IsValid)
+        {
+            // Повторно загружаем страницу (с товаром и отзывами)
+            await OnGetAsync(id);
+            return Page();
+        }
+
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "Customer")
+            return Challenge(); // только авторизованные клиенты
+
+        var customerIdClaim = User.FindFirst("CustomerId")?.Value;
+        if (!int.TryParse(customerIdClaim, out int customerId))
+            return Challenge();
+
+        var review = new Review
+        {
+            ProductId = id,
+            CustomerId = customerId,
+            Text = ReviewInput.Text,
+            Rating = ReviewInput.Rating,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Reviews.Add(review);
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Ваш отзыв отправлен на модерацию и появится после одобрения.";
+        return RedirectToPage(new { id });
+    }
+}
+
+public class ReviewViewModel
+{
+    public int Id { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
+    public int Rating { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string? AdminReply { get; set; }
+    public DateTime? RepliedAt { get; set; }
+    public string? CustomerAvatar { get; set; }
 }
 
 public class ProductDetailViewModel

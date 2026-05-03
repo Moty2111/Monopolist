@@ -1,4 +1,3 @@
-// Pages/Customers/Details.cshtml.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -21,7 +20,6 @@ public class DetailsModel : PageModel
 
     public Customer Customer { get; set; } = new();
 
-    // Свойства для персонализации
     public string Language { get; set; } = "ru";
     public bool CompactMode { get; set; }
     public bool Animations { get; set; } = true;
@@ -30,8 +28,7 @@ public class DetailsModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
-        if (id == null)
-            return NotFound();
+        if (id == null) return NotFound();
 
         await LoadUserSettings();
 
@@ -40,10 +37,35 @@ public class DetailsModel : PageModel
                 .ThenInclude(o => o.OrderItems)
             .FirstOrDefaultAsync(c => c.Id == id);
 
-        if (Customer == null)
-            return NotFound();
+        if (Customer == null) return NotFound();
+
+        // Быстрый пересчёт лояльности
+        await UpdateLoyaltyDiscountFast(Customer);
 
         return Page();
+    }
+
+    private async Task UpdateLoyaltyDiscountFast(Customer customer)
+    {
+        int count = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .CountAsync();
+
+        decimal sum = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+        customer.TotalCompletedOrders = count;
+        customer.TotalSpent = sum;
+        customer.LoyaltyDiscount = (count, sum) switch
+        {
+            ( >= 20, >= 200000) => 7m,
+            ( >= 10, >= 50000) => 5m,
+            ( >= 5, >= 10000) => 3m,
+            _ => 0m
+        };
+        customer.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
     }
 
     private async Task LoadUserSettings()

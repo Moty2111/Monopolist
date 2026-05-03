@@ -93,7 +93,6 @@ public class EditModel : PageModel
                     return Page();
                 }
 
-                // Удаляем старый файл, если он локальный
                 if (!string.IsNullOrEmpty(customerToUpdate.AvatarUrl) && customerToUpdate.AvatarUrl.StartsWith("/uploads/"))
                 {
                     var oldFilePath = Path.Combine(_env.WebRootPath, customerToUpdate.AvatarUrl.TrimStart('/'));
@@ -115,22 +114,27 @@ public class EditModel : PageModel
             }
             else if (!string.IsNullOrEmpty(Customer.AvatarUrl))
             {
-                // Если указан URL (и файл не загружен)
                 customerToUpdate.AvatarUrl = Customer.AvatarUrl;
             }
 
-            // Основные данные
             customerToUpdate.FullName = Customer.FullName;
             customerToUpdate.Phone = Customer.Phone;
             customerToUpdate.Email = Customer.Email;
             customerToUpdate.Discount = Customer.Discount;
+            customerToUpdate.UpdatedAt = DateTime.UtcNow;
 
-            // Поля лояльности (теперь редактируются администратором)
+            // Поля лояльности – берём из формы
             customerToUpdate.TotalCompletedOrders = Customer.TotalCompletedOrders;
             customerToUpdate.TotalSpent = Customer.TotalSpent;
-            customerToUpdate.LoyaltyDiscount = Customer.LoyaltyDiscount;
 
-            customerToUpdate.UpdatedAt = DateTime.UtcNow;
+            // Пересчитываем автоматическую скидку на основе введённых данных
+            customerToUpdate.LoyaltyDiscount = (Customer.TotalCompletedOrders, Customer.TotalSpent) switch
+            {
+                ( >= 20, >= 200000) => 7m,
+                ( >= 10, >= 50000) => 5m,
+                ( >= 5, >= 10000) => 3m,
+                _ => 0m
+            };
 
             await _context.SaveChangesAsync();
 

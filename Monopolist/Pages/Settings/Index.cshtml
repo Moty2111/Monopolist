@@ -550,6 +550,15 @@
                             <h3>@(Model.Language == "ru" ? "Журнал активности" : Model.Language == "en" ? "Activity log" : "Әрекеттер журналы")</h3>
                             <p>@(Model.Language == "ru" ? "История действий в системе" : Model.Language == "en" ? "System activity history" : "Жүйедегі әрекеттер тарихы")</p>
                         </a>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                        {
+                            <a asp-page="ReviewManagement" class="settings-card">
+                                <div class="settings-icon"><i class="fas fa-comment-dots"></i></div>
+                                <h3>@(Model.Language == "ru" ? "Модерация отзывов" : Model.Language == "en" ? "Review moderation" : "Пікірлерді модерациялау")</h3>
+                                <p>@(Model.Language == "ru" ? "Одобрение и ответы на отзывы" : Model.Language == "en" ? "Approve and reply to reviews" : "Пікірлерді мақұлдау және жауап беру")</p>
+                                <span class="admin-badge">@(Model.Language == "ru" ? "Администратор/Менеджер" : Model.Language == "en" ? "Admin/Manager" : "Админ/Менеджер")</span>
+                            </a>
+                        }
                     </div>
                 </div>
             </div>

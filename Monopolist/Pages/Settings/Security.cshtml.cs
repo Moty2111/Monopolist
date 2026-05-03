@@ -122,7 +122,6 @@ public class SecurityModel : PageModel
         _logger.LogInformation("Проверка 2FA для пользователя {Username}, секрет: {Secret}", user.Username, user.TwoFactorSecret);
 
         var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
-        // Используем расширенное окно верификации (как в Verify2fa)
         bool isValid = totp.VerifyTotp(code, out long timeStepMatched, new VerificationWindow(previous: 2, future: 2));
 
         _logger.LogInformation("Результат проверки 2FA: {IsValid}, timeStepMatched: {TimeStep}", isValid, timeStepMatched);
@@ -169,8 +168,7 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
-    // Остальные методы (SendEmailConfirmation, SendPhoneConfirmation, VerifyPhone, RevokeSession, RevokeAllSessions)
-    // остаются без изменений (как в предыдущей версии)
+    // Отправка подтверждения email
     public async Task<IActionResult> OnPostSendEmailConfirmationAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -188,6 +186,7 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
+    // Отправка кода подтверждения телефона
     public async Task<IActionResult> OnPostSendPhoneConfirmationAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -208,6 +207,7 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
+    // Подтверждение телефона
     public async Task<IActionResult> OnPostVerifyPhoneAsync(string code)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -236,6 +236,7 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
+    // Завершение конкретной сессии
     public async Task<IActionResult> OnPostRevokeSessionAsync(string sessionId)
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -261,6 +262,7 @@ public class SecurityModel : PageModel
         return RedirectToPage();
     }
 
+    // Завершение всех сессий, кроме текущей
     public async Task<IActionResult> OnPostRevokeAllSessionsAsync()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -289,6 +291,9 @@ public class SecurityModel : PageModel
     {
         var currentSessionId = Request.Cookies["session_id"];
 
+        // Получаем реальный IP для подстановки в текущую сессию, если IP в базе пуст
+        var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+
         var sessions = await _context.UserSessions
             .Where(s => s.UserId == userId && s.IsActive)
             .OrderByDescending(s => s.LoginTime)
@@ -297,7 +302,10 @@ public class SecurityModel : PageModel
                 Id = s.SessionId,
                 Device = s.DeviceInfo ?? "Неизвестно",
                 Browser = s.BrowserInfo ?? "",
-                IpAddress = s.IpAddress ?? "",
+                // Используем сохранённый IP, а для текущей сессии подставляем реальный, если сохранённый пуст
+                IpAddress = string.IsNullOrWhiteSpace(s.IpAddress) && s.SessionId == currentSessionId
+                    ? currentIp
+                    : s.IpAddress ?? "",
                 LoginTime = s.LoginTime,
                 IsCurrent = s.SessionId == currentSessionId
             })

@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<CustomerPasswordResetToken> CustomerPasswordResetTokens { get; set; }
+    public DbSet<Review> Reviews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -102,6 +103,17 @@ public class AppDbContext : DbContext
             .HasOne(f => f.Product)
             .WithMany()
             .HasForeignKey(f => f.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Review>()
+    .HasOne(r => r.Product)
+    .WithMany()
+    .HasForeignKey(r => r.ProductId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Review>()
+            .HasOne(r => r.Customer)
+            .WithMany()
+            .HasForeignKey(r => r.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

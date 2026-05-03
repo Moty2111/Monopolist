@@ -85,13 +85,13 @@ public class ProfileModel : PageModel
                     Input.Email = customer.Email;
                     Input.Phone = customer.Phone;
 
-                    // Актуализируем лояльность перед показом
-                    await UpdateLoyaltyDiscount(customer);
+                    // Быстрое обновление лояльности (агрегатные запросы, без выгрузки всех заказов)
+                    await UpdateLoyaltyDiscountFast(customer);
                     CustomerDiscount = customer.EffectiveDiscount;
 
                     TotalCompletedOrders = customer.TotalCompletedOrders;
                     TotalSpent = customer.TotalSpent;
-                    CalculateLoyaltyLevel(customer);
+                    CalculateLoyaltyLevel();
                 }
             }
             else
@@ -103,18 +103,22 @@ public class ProfileModel : PageModel
         return Page();
     }
 
-    private async Task UpdateLoyaltyDiscount(Customer customer)
+    /// <summary>
+    /// Быстрое обновление статистики лояльности — выполняет COUNT и SUM на уровне БД,
+    /// не загружая сущности заказов в память.
+    /// </summary>
+    private async Task UpdateLoyaltyDiscountFast(Customer customer)
     {
-        var completedOrders = await _context.Orders
+        int count = await _context.Orders
             .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
-            .ToListAsync();
+            .CountAsync();
 
-        int count = completedOrders.Count;
-        decimal sum = completedOrders.Sum(o => o.TotalAmount);
+        decimal sum = await _context.Orders
+            .Where(o => o.CustomerId == customer.Id && o.Status == "Completed")
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
 
         customer.TotalCompletedOrders = count;
         customer.TotalSpent = sum;
-
         customer.LoyaltyDiscount = (count, sum) switch
         {
             ( >= 20, >= 200000) => 7m,
@@ -122,12 +126,11 @@ public class ProfileModel : PageModel
             ( >= 5, >= 10000) => 3m,
             _ => 0m
         };
-
         customer.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
-    private void CalculateLoyaltyLevel(Customer customer)
+    private void CalculateLoyaltyLevel()
     {
         int orders = TotalCompletedOrders;
         decimal sum = TotalSpent;
