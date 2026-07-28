@@ -48,6 +48,7 @@
 ### Требования
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - [SQL Server](https://www.microsoft.com/sql-server) (рекомендуется Express Edition) и [SQL Server Management Studio (SSMS)](https://learn.microsoft.com/ru-ru/ssms/install/install) версии 22 или выше
+Статья публикации https://habr.com/ru/sandbox/296698/
 
 ### 1. Клонирование репозитория
 ```bash
